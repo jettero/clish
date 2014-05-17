@@ -1,4 +1,4 @@
-package example::cmds::ping;
+package example::cmds::mtr;
 
 use Term::ReadLine::CLISH::Command::Moose;
 use namespace::autoclean;
@@ -8,35 +8,32 @@ use IPC::System::Simple 'systemx';
 use Scalar::Util qw(looks_like_number);
 use common::sense;
 
-command( name => 'ping',
-    help => "send icmp echo requests to a host",
+command( name => 'mtr',
+    help => "trace route and ping combined into a neat ncurses display",
     arguments => [
         required_argument(
             target => ['validate_ipv4', 'validate_ipv6', 'validate_hostname'],
             tag_optional=>1, help => "target host for the pings" ),
 
         optional_argument( count => 'Scalar::Util::looks_like_number',
-            help => "number of packets to send" ),
+            help => "after this many cycles, exit normally" ),
 
-        optional_argument( size  => 'Scalar::Util::looks_like_number',
-            help => "size of the packets in bytes" ),
-
-        optional_argument( df => undef, help => "set the don't fragment bit" ),
+        optional_argument( interval => 'Scalar::Util::looks_like_number',
+            help => "wait this many seconds between waves" ),
     ],
 );
 
 __PACKAGE__->meta->make_immutable;
 
-sub cmd_ping {
+sub cmd_mtr {
    my $target = shift; # this is validated already
    my %opts => shift;
 
-   my @args;
-   push @args, -c => $opts{count} if defined $opts{count};
-   push @args, -s => $opts{size}  if defined $opts{size};
-   push @args, -M => "dont"       if defined $opts{df};
+   my @args, "--show-ips";
+   push @args, '--report-cycles' => $opts{count}    if defined $opts{count};
+   push @args, '--interval'      => $opts{interval} if defined $opts{interval};
 
-   return eval { systemx( ping => $target, @args ); 1};
+   return eval { systemx( mtr => $target, @args ); 1};
 }
 
 sub validate_ipv6 {
