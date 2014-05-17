@@ -21,7 +21,12 @@ and context help (via ? key binding), intended to feel like IOS.
 
 =head1 NAME
 
-I stole the name from some other guy's project.  I may have to later change the
-name.  We shall see.
+I loved the CLISH project, but ultimately didn't want to do this in that way.  I
+wanted Perl, obviously, and didn't want to deal with XML.  I don't personally
+find it human readable (ymmv).
 
 L<http://clish.sourceforge.net/>
+
+I asked the author if he minded, and he did not.  We feel the names are
+sufficiently different that it wouldn't cause any confusion for anyone, and even
+if it did (he said) it's not trademarked anyway.
