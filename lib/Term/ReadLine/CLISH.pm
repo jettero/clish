@@ -16,25 +16,20 @@ XXX: Cut from example/MyShell.pm
 use Moose;
 use namespace::autoclean;
 use Term::ReadLine;
-use Moose::Util::TypeConstraints;
+use Term::ReadLine::CLISH::Parser;
 use common::sense;
 
 our $VERSION = '0.0000'; # string for the CPAN
 
-subtype 'pathArray', as 'ArrayRef[Str]';
-coerce 'pathArray', from 'Str', via { [ split m/[:; ]+/ ] };
-
 has qw(prompt is rw isa Str default) => "clish> ";
-has qw(path   is rw isa Str default) => sub { [@INC] };
+has qw(path   is rw isa pathArray coerce 1 default) => sub { [@INC] };
 has qw(prefix is rw isa Str default) => "Term::ReadLine::CLISH::Command";
 
 has qw(name is ro isa Str default) => "CLISH";
 has qw(version is ro isa Str default) => $VERSION;
-has qw(prompt is rw isa Str default) => "clish> ";
-has qw(prefix is rw isa Str default) => "Term::ReadLine::CLISH::Command";
-has qw(path is rw isa pathArray default) => sub { [@INC] };
 has qw(history_location is rw);
 has qw(term is rw isa Term::ReadLine);
+has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
 
 my $done;
 my @CLEANUP;
@@ -43,8 +38,10 @@ END { $_->() for @CLEANUP }
 sub run {
     my $this = shift;
     my $term = Term::ReadLine->new($this->name);
+    my $prsr = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
 
     $this->term( $term );
+    $this->parser( $prsr );
 
     eval { $term->ornaments('', '', '', '') };
     $this->init_history;
