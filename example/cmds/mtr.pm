@@ -20,6 +20,8 @@ command( name => 'mtr',
 
         optional_argument( interval => 'Scalar::Util::looks_like_number',
             help => "wait this many seconds between waves" ),
+
+        optional_argument( size => 'Scalar::Util::looks_like_number', help => "ping size (bytes)" ),
     ],
 );
 
@@ -32,6 +34,7 @@ sub cmd_mtr {
    my @args, "--show-ips";
    push @args, '--report-cycles' => $opts{count}    if defined $opts{count};
    push @args, '--interval'      => $opts{interval} if defined $opts{interval};
+   push @args, '--psize'         => $opts{size}     if defined $opts{size};
 
    return eval { systemx( mtr => $target, @args ); 1};
 }
