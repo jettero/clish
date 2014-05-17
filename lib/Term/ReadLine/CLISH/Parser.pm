@@ -5,6 +5,7 @@ use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
 use Term::ReadLine::CLISH::Error;
+use Term::ReadLine::CLISH::Warning;
 use common::sense;
 
 subtype 'pathArray', as 'ArrayRef[Str]';

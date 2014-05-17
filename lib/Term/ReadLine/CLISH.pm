@@ -31,14 +31,23 @@ has qw(history_location is rw);
 has qw(term is rw isa Term::ReadLine);
 has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
 
-my $done;
-my @CLEANUP;
-END { $_->() for @CLEANUP }
+has qw(done is rw isa Bool);
+has qw(cleanup is rw isa ArrayRef[CodeRef] default), sub {[]};
+
+sub DEMOLISH {
+    my $this = shift;
+
+    for my $cr (@{ $this->cleanup }) {
+        eval { $cr->($this); 1} or Term::ReadLine::CLISH::Warning->new->spew("during cleanup");
+    }
+}
 
 sub run {
     my $this = shift;
     my $term = Term::ReadLine->new($this->name);
     my $prsr = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
+
+    push @{ $this->cleanup }, sub {say "\r\e[2Kbye"};
 
     $this->term( $term );
     $this->parser( $prsr );
@@ -48,9 +57,9 @@ sub run {
 
     print "Welcome to " . $this->name . " v" . $this->version . ".\n\n";
 
-    push @CLEANUP, sub { $this->save_history };
+    push @{ $this->cleanup }, sub { shift->save_history };
 
-    INPUT: while(1) {
+    INPUT: while( not $this->done ) {
         my $prompt = $this->prompt;
         $_ = $term->readline($prompt);
         last INPUT unless defined;
