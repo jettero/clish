@@ -13,7 +13,7 @@ WriteMakefile(
         map {($_=>0)} qw(
             common::sense
             Moose
-            Term::Shelly
+            Term::ReadLine
             IPC::System::Simple
             Net::IP
         )

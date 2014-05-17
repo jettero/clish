@@ -3,6 +3,7 @@ package example::myshell;
 use Moose;
 use common::sense;
 use namespace::autoclean;
+use Term::ReadLine::CLISH;
 
 extends "Term::ReadLine::CLISH";
 

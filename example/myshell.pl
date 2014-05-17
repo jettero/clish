@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -Ilib
 
 use common::sense;
 use example::myshell;
