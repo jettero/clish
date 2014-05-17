@@ -21,9 +21,13 @@ sub command {
 
     my @def_arg = @{$options{arguments} || []};
 
+    # warn "$meta";
+    # Moose::Meta::Class
+
     $meta->add_attribute( qw(name is ro isa Str default) => $options{name} );
     $meta->add_attribute( qw(help is ro isa Str default) => $options{help} || "??" );
     $meta->add_attribute( qw(arguments is ro isa ArrayRef[Option] default), sub { [@def_arg] } );
+    $meta->superclasses("Term::ReadLine::CLISH::Command");
 }
 
 sub argument {
