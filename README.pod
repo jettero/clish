@@ -1,0 +1,27 @@
+=encoding UTF-8
+
+=head1 NAME
+
+Term::ReadLine::CLISH — command line interface shell
+
+=head1 SYNOPSIS
+
+This is a bundle of OO interfaces to quickly built shells with tab completion
+and context help (via ? key binding), intended to feel like IOS.
+
+    my-shell> ping count 1 size 1300 2001:470:1f10:456:0:56:48:42
+    PING 2001:470:1f10:456:0:56:48:42(2001:470:1f10:456:0:56:48:42) 1300 data bytes
+    1308 bytes from 2001:470:1f10:456:0:56:48:42: icmp_seq=1 ttl=64 time=0.047 ms
+
+    --- 2001:470:1f10:456:0:56:48:42 ping statistics ---
+    1 packets transmitted, 1 received, 0% packet loss, time 0ms
+    rtt min/avg/max/mdev = 0.047/0.047/0.047/0.000 ms
+
+    my-shell>
+
+=head1 NAME
+
+I stole the name from some other guy's project.  I may have to later change the
+name.  We shall see.
+
+L<http://clish.sourceforge.net/>
