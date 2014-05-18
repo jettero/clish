@@ -4,7 +4,9 @@ package Term::ReadLine::CLISH::Parser;
 use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
+use Term::ReadLine::CLISH::Warning;
 use Term::ReadLine::CLISH::Error;
+use Term::ReadLine::CLISH::Message;
 use common::sense;
 use Parse::RecDescent;
 
@@ -33,15 +35,15 @@ sub parse {
 
     my $prefix = $this->output_prefix;
     my $parser = $this->parser;
+
     my $result = $parser->tokens($line);
 
     # XXX: disable this, but provide some kind of parser introspection later too
     use Data::Dump qw(dump);
-    say "$prefix parsed: " . dump($result);
+    Term::ReadLine::CLISH::Message->new(caption => "DEBUG parse result", msg => dump($result))->spew;
 
-    unless( $result ) {
-        say "$prefix parse error"
-    }
+    Term::ReadLine::CLISH::Error->new(caption => "during input parsing")->spew
+        unless $result;
 
     return;
 }
@@ -62,9 +64,8 @@ sub build_parser {
     my $parser = Parse::RecDescent->new(q
 
         tokens: token(s) { $return = $item[1] } /$/
-              | <error: tokenization failure>
 
-        token: word | string | /\s*/ <error: mysterious goo in column $thiscolumn, "... $text">
+        token: word | string | /\s*/ <reject: $@ = "mysterious goo on line $thisline column $thiscolumn near, \"$text\"">
 
         word: /[\w\d_.-]+/ { $return = $item[1] }
 
