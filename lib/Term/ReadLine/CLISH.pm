@@ -37,41 +37,34 @@ sub DEMOLISH {
     $_->($this) for @{ $this->cleanup };
 }
 
-sub run {
+sub BUILD {
     my $this = shift;
     my $term = Term::ReadLine->new($this->name);
-    my $prsr = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
+    my $parser = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
+
+    # XXX: I hate ornaments, but this should probably be an option later
+    eval { $term->ornaments('', '', '', '') };
 
     $this->term( $term );
-    $this->parser( $prsr );
+    $this->parser( $parser );
 
-    eval { $term->ornaments('', '', '', '') };
+    push @{ $this->cleanup }, sub { shift->save_history };
+}
+
+sub run {
+    my $this = shift;
+
     $this->init_history;
 
     print "Welcome to " . $this->name . " v" . $this->version . ".\n\n";
 
-    push @{ $this->cleanup }, sub { shift->save_history };
-
     INPUT: while(!$this->done) {
         my $prompt = $this->prompt;
-        $_ = $term->readline($prompt);
+        $_ = $this->term->readline($prompt);
         last INPUT unless defined;
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
-        my @P = $prsr->parse($_);
-        if( @P == 1 ) {
-            my ($obj, @args) = @{ $P[0] };
-
-            $obj->exec( @args );
-
-        } elsif( @P ) {
-            my @names = map { $_[0]->name } @{ $P[0] };
-            local $" = ", ";
-            say "% Ambiguous command: @names"
-
-        } else {
-            say "% unknown command: \"$_\""
-        }
+        $this->parser->parse($_); # generates/prints errors and executes commands
     }
 }
 
