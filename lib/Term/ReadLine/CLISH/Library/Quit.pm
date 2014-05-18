@@ -10,7 +10,7 @@ command( name => 'quit',
 
 __PACKAGE__->meta->make_immutable;
 
-sub cmd_quit {
+sub exec {
     exit 0
 }
 

@@ -27,7 +27,7 @@ command( name => 'ping',
 
 __PACKAGE__->meta->make_immutable;
 
-sub cmd_ping {
+sub exec {
    my $target = shift; # this is validated already
    my %opts => shift;
 
