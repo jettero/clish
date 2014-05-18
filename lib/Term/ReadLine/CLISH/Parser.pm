@@ -6,6 +6,7 @@ use namespace::autoclean;
 use Moose::Util::TypeConstraints;
 use Term::ReadLine::CLISH::Error;
 use common::sense;
+use Parse::RecDescent;
 
 subtype 'pathArray', as 'ArrayRef[Str]';
 coerce 'pathArray', from 'Str', via { [ split m/[:; ]+/ ] };
@@ -20,13 +21,71 @@ coerce 'cmdArray', from 'cmd', via { [ $_ ] };
 has qw(path is rw isa pathArray coerce 1);
 has qw(prefix is rw isa prefixArray);
 has qw(cmds is rw isa cmdArray coerce 1);
+has qw(parser is rw isa Parse::RecDescent);
+
+has qw(output_prefix is rw isa Str default) => "% ";
 
 __PACKAGE__->meta->make_immutable;
 
+sub parse {
+    my $this = shift;
+    my $line = shift;
+
+    my $prefix = $this->output_prefix;
+    my $parser = $this->parser;
+    my $result = $parser->tokens($line);
+
+    # XXX: disable this, but provide some kind of parser introspection later too
+    use Data::Dump qw(dump);
+    say "$prefix parsed: " . dump($result);
+
+    unless( $result ) {
+        say "$prefix parse error"
+    }
+
+    return;
+}
+
 sub BUILD {
     my $this = shift;
+       $this->reload_commands;
+       $this->build_parser;
+}
 
-    $this->reload_commands;
+sub build_parser {
+    my $this = shift;
+
+    # NOTE: $::blah is $main::blah, RD uses it all over
+
+    $::RD_HINT = 1; # let the parser generator give meaningful errors
+
+    my $parser = Parse::RecDescent->new(q
+
+        tokens: token(s) { $return = $item[1] } /$/
+              | <error: tokenization failure>
+
+        token: word | string | /\s*/ <error: mysterious goo in column $thiscolumn, "... $text">
+
+        word: /[\w\d_.-]+/ { $return = $item[1] }
+
+        string: "'" /[^']*/ "'" { $return = $item[2] }
+              | '"' /[^"]*/ '"' { $return = $item[2] }
+
+    );
+
+    # my @names = $this->command_names;
+    # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blah"));
+    # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blarg"));
+    # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blat"));
+
+    die "unable to parse command grammar in parser generator\n" unless $parser;
+    # XXX: should have a better error handler later
+
+    $this->parser($parser);
+}
+
+sub command_names {
+    return sort map { $_->name } @{ shift->cmds };
 }
 
 sub prefix_regex {
