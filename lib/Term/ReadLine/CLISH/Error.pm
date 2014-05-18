@@ -4,6 +4,7 @@ use Moose;
 use namespace::autoclean;
 use common::sense;
 
+has qw(output_prefix is ro isa Str default) => "% ";
 has qw(error is ro isa Str default), sub {
     my $e = $@;
     $e =~ s/\s+at\s+\(eval\s+\d+\)\s+line \d+\.//;
@@ -16,7 +17,7 @@ sub spew {
     my $this = shift;
     my $msg = shift;
 
-    say "ERROR $msg: " . $this->error;
+    say $this->output_prefix . "ERROR $msg: " . $this->error;
 }
 
 1;
