@@ -4,8 +4,10 @@ use Moose;
 use namespace::autoclean;
 use common::sense;
 
-has qw(output_prefix is ro isa Str default) => "% ";
-has qw(error is ro isa Str default), sub {
+extends 'Term::ReadLine::CLISH::Message';
+
+has qw(+format default) => "%% ERROR %s";
+has qw(+msg default) => sub {
     my $e = $@;
     $e =~ s/\s+at\s+\(eval\s+\d+\)\s+line \d+\.//;
     $e
@@ -13,11 +15,5 @@ has qw(error is ro isa Str default), sub {
 
 __PACKAGE__->meta->make_immutable;
 
-sub spew {
-    my $this = shift;
-    my $msg = shift;
-
-    say $this->output_prefix . "ERROR $msg: " . $this->error;
-}
-
 1;
+
