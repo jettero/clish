@@ -12,10 +12,11 @@ WriteMakefile(
     PREREQ_PM => {
         map {($_=>0)} qw(
             common::sense
-            Moose
-            Term::ReadLine
             IPC::System::Simple
+            Moose
             Net::IP
+            Parse::RecDescent
+            Term::ReadLine
         )
     },
 
