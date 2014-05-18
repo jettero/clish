@@ -27,7 +27,7 @@ command( name => 'mtr',
 
 __PACKAGE__->meta->make_immutable;
 
-sub cmd_mtr {
+sub exec {
    my $target = shift; # this is validated already
    my %opts => shift;
 
