@@ -17,6 +17,7 @@ WriteMakefile(
             Net::IP
             Parse::RecDescent
             Term::ReadLine
+            File::Find::Object
         )
     },
 

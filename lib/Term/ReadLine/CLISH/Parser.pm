@@ -112,10 +112,16 @@ sub reload_commands {
 
     my @cmds;
 
-    for my $path (grep {$_ =~ $prreg} @$PATH) {
-        debug "consider path=$path";
-        for my $f (glob("$path/*.pm")) {
-            if( my ($ppackage) = $f =~ m{($:rreg.*?)\.pm} ) {
+    use File::Find::Object;
+
+    for my $path (@$PATH) {
+        my $ffo = File::Find::Object->new({}, "lib");
+
+        debug "trying to load commands from $path using $prreg";
+
+        while( my $f = $ffo->next ) {
+            debug "file=$f";
+            if( -f $f and my ($ppackage) = $f =~ m{($prreg.*?)\.pm} ) {
                 debug "try to load $ppackage";
                 my $package = $ppackage; $package =~ s{/}{::}g;
                 my $newcall = "use $package; $package" . "->new";
