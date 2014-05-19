@@ -16,6 +16,8 @@ sub spew {
     my $msg = $this->msg;
     my $cap = $this->caption;
 
+    $msg =~ s/[\x0d\x0a]+/\x0a/g;
+    $msg =~ s/[\x0d\x0a]+$//g;
     $msg = "$cap: $msg" if $cap;
 
     say sprintf($this->format, $msg);

@@ -36,8 +36,8 @@ sub error($;$) {
 }
 
 sub install_generic_message_handlers {
-    $SIG{__WARN__} = sub { warning "uncaught warning", $_ };
-    $SIG{__DIE__}  = sub { error "uncaught fatal error", $_; exit 0 };
+    $SIG{__WARN__} = sub { warning "uncaught warning", "$_[0]" };
+    $SIG{__DIE__}  = sub { error "uncaught fatal error", "$_[0]"; exit 0 };
 }
 
 sub _probably_just_a_caption {
