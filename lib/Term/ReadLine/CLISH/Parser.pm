@@ -5,8 +5,9 @@ use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
 use Term::ReadLine::CLISH::MessageSystem;;
-use common::sense;
 use Parse::RecDescent;
+use File::Find::Object;
+use common::sense;
 
 subtype 'pathArray', as 'ArrayRef[Str]';
 coerce 'pathArray', from 'Str', via { [ split m/[:; ]+/ ] };
@@ -112,8 +113,6 @@ sub reload_commands {
     my $prreg = $this->prefix_regex;
 
     my @cmds;
-
-    use File::Find::Object;
 
     for my $path (@$PATH) {
         my $ffo = File::Find::Object->new({}, $path);
