@@ -34,7 +34,7 @@ sub parse {
     my $prefix = $this->output_prefix;
     my $parser = $this->parser;
 
-    my $result = $parser->tokens($line);
+    my $result = $parser->cmd($line);
 
     # XXX: disable this, but provide some kind of parser introspection later too
     use Data::Dump qw(dump);
@@ -57,7 +57,14 @@ sub build_parser {
 
     $::RD_HINT = 1; # let the parser generator give meaningful errors
 
+    @::CMD = $this->command_names;
+
+    debug "hrm(@::CMD)";
+
     my $parser = Parse::RecDescent->new(q
+        cmd: word {
+            local $"="-"; warn "here: @item @::CMD";
+            $return = [ grep { m/^\Q$item[1]\E/ } @::CMD ] }
 
         tokens: token(s) { $return = $item[1] } /$/
 
@@ -82,7 +89,12 @@ sub build_parser {
 }
 
 sub command_names {
-    return sort map { $_->name } @{ shift->cmds };
+    my $this = shift;
+    my @cmd  = @{ $this->cmds };
+
+    debug "hrm(@cmd)";
+
+    return sort map { $_->name } @cmd;
 }
 
 sub prefix_regex {
@@ -101,8 +113,10 @@ sub reload_commands {
     my @cmds;
 
     for my $path (grep {$_ =~ $prreg} @$PATH) {
+        debug "consider path=$path";
         for my $f (glob("$path/*.pm")) {
             if( my ($ppackage) = $f =~ m{($:rreg.*?)\.pm} ) {
+                debug "try to load $ppackage";
                 my $package = $ppackage; $package =~ s{/}{::}g;
                 my $newcall = "use $package; $package" . "->new";
                 my $obj     = eval $newcall;
@@ -116,6 +130,11 @@ sub reload_commands {
             }
         }
     }
+
+    my $c = @cmds;
+    my $p = $c == 1 ? "" : "s";
+
+    Term::ReadLine::CLISH::Message->new(msg=>"[loaded $c command$p from PATH]")->spew;
 
     $this->cmds(\@cmds);
 }

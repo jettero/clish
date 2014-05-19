@@ -1,6 +1,8 @@
 #!/usr/bin/perl -Ilib
 
 use common::sense;
-use example::myshell;
+use Term::ReadLine::CLISH;
 
-example::myshell->new->run;
+Term::ReadLine::CLISH->new
+    -> add_namespace("example::cmds")
+    -> run;
