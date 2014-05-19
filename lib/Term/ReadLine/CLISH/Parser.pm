@@ -4,10 +4,7 @@ package Term::ReadLine::CLISH::Parser;
 use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
-use Term::ReadLine::CLISH::Warning;
-use Term::ReadLine::CLISH::Error;
-use Term::ReadLine::CLISH::Warning;
-use Term::ReadLine::CLISH::Message;
+use Term::ReadLine::CLISH::MessageSystem;;
 use common::sense;
 use Parse::RecDescent;
 
@@ -41,10 +38,8 @@ sub parse {
 
     # XXX: disable this, but provide some kind of parser introspection later too
     use Data::Dump qw(dump);
-    Term::ReadLine::CLISH::Message->new(caption => "DEBUG parse result", msg => dump($result))->spew;
-
-    Term::ReadLine::CLISH::Error->new(caption => "during input parsing")->spew
-        unless $result;
+    debug "parse result", dump($result);
+    error "during input parsing" unless $result;
 
     return;
 }
@@ -116,7 +111,7 @@ sub reload_commands {
                     push @cmds, $obj;
 
                 } else {
-                    Term::ReadLine::CLISH::Error->new->spew("while trying to load '$ppackage as $package'");
+                    error "while trying to load '$ppackage as $package'";
                 }
             }
         }

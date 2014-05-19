@@ -17,6 +17,7 @@ use Moose;
 use namespace::autoclean;
 use Term::ReadLine;
 use Term::ReadLine::CLISH::Parser;
+use Term::ReadLine::CLISH::MessageSystem;
 use common::sense;
 
 our $VERSION = '0.0000'; # string for the CPAN
@@ -36,7 +37,7 @@ sub DEMOLISH {
     my $this = shift;
 
     for my $cr (@{ $this->cleanup }) {
-        eval { $cr->($this); 1} or Term::ReadLine::CLISH::Warning->new->spew("during cleanup");
+        eval { $cr->($this); 1} or warning "during cleanup";
     }
 }
 
