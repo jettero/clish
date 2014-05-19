@@ -99,7 +99,8 @@ sub command_names {
 
 sub prefix_regex {
     my $this = shift;
-    my @prefixes = map {s{::}{/}g} @{ $this->prefix };
+    my @prefixes = @{ $this->prefix };
+    s{::}{/}g for @prefixes;
     local $" = "|";
     my $RE = qr{(?:@prefixes)};
     return $RE;
