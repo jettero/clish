@@ -60,6 +60,8 @@ sub run {
 
     $this->init_history;
 
+    install_generic_message_handlers();
+
     print "Welcome to " . $this->name . " v" . $this->version . ".\n\n";
 
     INPUT: while( not $this->done ) {

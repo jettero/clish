@@ -9,7 +9,7 @@ use Term::ReadLine::CLISH::Warning;
 use Term::ReadLine::CLISH::Debug;
 use Carp;
 
-our @EXPORT = qw(debug info warning error);
+our @EXPORT = qw(debug info warning error install_generic_message_handlers);
 
 sub debug($;$) {
     my @args = _possibly_captioned_message(@_);
@@ -35,8 +35,10 @@ sub error($;$) {
     Term::ReadLine::CLISH::Error->new(@args)->spew;
 }
 
-$SIG{__WARN__} = sub { warning "uncaught warning", $_ };
-$SIG{__DIE__}  = sub { error "uncaught fatal error", $_ };
+sub install_generic_message_handlers {
+    $SIG{__WARN__} = sub { warning "uncaught warning", $_ };
+    $SIG{__DIE__}  = sub { error "uncaught fatal error", $_; exit 0 };
+}
 
 sub _probably_just_a_caption {
     my @args;
