@@ -1,5 +1,9 @@
 
 0.0000 Sat May 17 2014
-   - trying to get my thoughts together
-   - wrote the very first shell loop
-   - made a parser that loads commands (but doesn't parse anything, yet)
+    - restructure the messaging system
+    - built a really basic parser (with lots of fur and bugs)
+
+0.0000 Sat May 17 2014
+    - trying to get my thoughts together
+    - wrote the very first shell loop
+    - made a parser that loads commands (but doesn't parse anything, yet)
