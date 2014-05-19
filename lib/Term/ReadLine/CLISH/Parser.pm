@@ -57,13 +57,10 @@ sub build_parser {
     # NOTE: $::blah is $main::blah, RD uses it all over
 
     $::RD_HINT = 1; # let the parser generator give meaningful errors
-
-    @::CMD = $this->command_names;
+    $::this = $this;
 
     my $parser = Parse::RecDescent->new(q
-        cmd: word {
-            local $"="-"; warn "here: @item @::CMD";
-            $return = [ grep { m/^\Q$item[1]\E/ } @::CMD ] }
+        cmd: word { $return = [ grep { $_->name() =~ m/^\Q$item[1]\E/ } @{ $::this->cmds } ] }
 
         tokens: token(s) { $return = $item[1] } /$/
 
