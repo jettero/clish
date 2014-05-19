@@ -48,8 +48,6 @@ sub BUILD {
     # XXX: I hate ornaments, but this should probably be an option later
     eval { $term->ornaments('', '', '', '') };
 
-    push @{ $this->cleanup }, sub {say "\r\e[2Kbye"};
-
     $this->term( $term );
     $this->parser( $parser );
 
