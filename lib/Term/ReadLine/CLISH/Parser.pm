@@ -126,8 +126,13 @@ sub reload_commands {
                 my $obj     = eval $newcall;
 
                 if( $obj ) {
-                    debug "loaded $ppackage as $package";
-                    push @cmds, $obj;
+                    if( $obj->isa("Term::ReadLine::CLISH::Command") ) {
+                        debug "loaded $ppackage as $package";
+                        push @cmds, $obj;
+
+                    } else {
+                        debug "loaded $ppackage as $package — but it didn't appear to be a Term::ReadLine::CLISH::Command";
+                    }
 
                 } else {
                     error "while trying to load '$ppackage as $package'";
