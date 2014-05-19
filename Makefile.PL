@@ -10,14 +10,15 @@ WriteMakefile(
     VERSION_FROM => 'lib/Term/ReadLine/CLISH.pm',
 
     PREREQ_PM => {
-        map {($_=>0)} qw(
+        map {($_=>0)} qw( 
             common::sense
+            File::Find::Object
             IPC::System::Simple
             Moose
+            namespace::sweep
             Net::IP
             Parse::RecDescent
             Term::ReadLine
-            File::Find::Object
         )
     },
 
