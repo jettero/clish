@@ -60,8 +60,6 @@ sub build_parser {
 
     @::CMD = $this->command_names;
 
-    debug "hrm(@::CMD)";
-
     my $parser = Parse::RecDescent->new(q
         cmd: word {
             local $"="-"; warn "here: @item @::CMD";
@@ -93,8 +91,6 @@ sub command_names {
     my $this = shift;
     my @cmd  = @{ $this->cmds };
 
-    debug "hrm(@cmd)";
-
     return sort map { $_->name } @cmd;
 }
 
@@ -120,6 +116,8 @@ sub reload_commands {
         debug "trying to load commands from $path using $prreg";
 
         while( my $f = $ffo->next ) {
+            debug "    considering $f";
+
             if( -f $f and my ($ppackage) = $f =~ m{($prreg.*?)\.pm} ) {
                 my $package = $ppackage; $package =~ s{/}{::}g;
                 my $newcall = "use $package; $package" . "->new";
@@ -127,15 +125,15 @@ sub reload_commands {
 
                 if( $obj ) {
                     if( $obj->isa("Term::ReadLine::CLISH::Command") ) {
-                        debug "loaded $ppackage as $package";
+                        debug "    loaded $ppackage as $package";
                         push @cmds, $obj;
 
                     } else {
-                        debug "loaded $ppackage as $package — but it didn't appear to be a Term::ReadLine::CLISH::Command";
+                        debug "    loaded $ppackage as $package — but it didn't appear to be a Term::ReadLine::CLISH::Command";
                     }
 
                 } else {
-                    error "while trying to load '$ppackage as $package'";
+                    error "    while trying to load '$ppackage as $package'";
                 }
             }
         }
