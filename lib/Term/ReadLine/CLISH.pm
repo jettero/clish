@@ -35,6 +35,16 @@ has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
 has qw(done is rw isa Bool);
 has qw(cleanup is rw isa ArrayRef[CodeRef] default) => sub { [sub { say "\r\e[2Kbye" }] };
 
+after 'path' => sub {
+    my $this = shift;
+    $this->rebuild_parser if @_;
+};
+
+after 'prefix' => sub {
+    my $this = shift;
+    $this->rebuild_parser if @_;
+};
+
 sub add_namespace {
     my $this = shift;
     my $ns   = shift;
@@ -62,26 +72,31 @@ sub DEMOLISH {
 
 sub BUILD {
     my $this = shift;
+    my $term = Term::ReadLine->new($this->name);
+
+    # XXX: I hate ornaments, but this should probably be an option later
+    eval { $term->ornaments('', '', '', '') };
+    $this->term( $term );
 
     install_generic_message_handlers();
 
     push @{ $this->cleanup }, sub { shift->save_history };
+
+    $this->rebuild_parser;
+}
+
+sub rebuild_parser {
+    my $this = shift;
+
+    my $parser = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
+    $this->parser( $parser );
+    debug "path: " . $this->path_string;
 }
 
 sub run {
     my $this = shift;
 
-    my $term = Term::ReadLine->new($this->name);
-    my $parser = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
-
-    # XXX: I hate ornaments, but this should probably be an option later
-    eval { $term->ornaments('', '', '', '') };
-
-    $this->term( $term );
-    $this->parser( $parser );
     $this->init_history;
-
-    debug "path: " . $this->path_string;
 
     print "Welcome to " . $this->name . " v" . $this->version . ".\n\n";
 
