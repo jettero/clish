@@ -27,8 +27,8 @@ our $VERSION = '0.0000'; # string for the CPAN
 has qw(prompt is rw isa Str default) => "clish> ";
 has qw(path   is rw isa pathArray coerce 1 default) => sub { [File::Spec->catfile(dirname(__FILE__), "Library")] };
 has qw(prefix is rw isa prefixArray coerce 1 default) => sub {['Term::ReadLine::CLISH::Library::Commands']};
-has qw(name is ro isa Str default) => "CLISH";
-has qw(version is ro isa Str default) => $VERSION;
+has qw(name is rw isa Str default) => "CLISH";
+has qw(version is rw isa Str default) => $VERSION;
 has qw(history_location is rw);
 has qw(term is rw isa Term::ReadLine);
 has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
