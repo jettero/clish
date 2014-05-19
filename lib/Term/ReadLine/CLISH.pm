@@ -49,6 +49,8 @@ sub BUILD {
     # XXX: I hate ornaments, but this should probably be an option later
     eval { $term->ornaments('', '', '', '') };
 
+    install_generic_message_handlers();
+
     $this->term( $term );
     $this->parser( $parser );
 
@@ -59,8 +61,6 @@ sub run {
     my $this = shift;
 
     $this->init_history;
-
-    install_generic_message_handlers();
 
     print "Welcome to " . $this->name . " v" . $this->version . ".\n\n";
 
