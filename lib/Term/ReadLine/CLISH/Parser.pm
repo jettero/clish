@@ -67,9 +67,12 @@ sub build_parser {
 
     my $parser = Parse::RecDescent->new(q
 
-        full_command_line: cmd tokens { $return = [ $item[1], $item[2] ] }
+        full_command_line: cmd argument(s?) { $return = [ $item[1], $item[2] ] }
 
-        cmd: token { $return = [ grep { $_->name() =~ m/^\Q$item[1]\E/ } @{ $::this->cmds } ] }
+        cmd: token { $return = [ grep { $_->_start_parse($item[1]) } @{ $::this->cmds } ] } <reject: !@$return >
+
+        argument: token       { $return = [ grep { $_->_continue_parse($item[1]) }           $::this->cmds ] } <reject: !@$return >
+                | token token { $return = [ grep { $_->_continue_parse($item[1], $item[2]) } $::this->cmds ] } <reject: !@$return >
 
         tokens: token(s?) { $return = $item[1] } /$/
 
