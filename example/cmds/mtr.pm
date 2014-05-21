@@ -28,35 +28,38 @@ command( name => 'mtr',
 __PACKAGE__->meta->make_immutable;
 
 sub exec {
-   my $target = shift; # this is validated already
-   my %opts => shift;
+    my $this   = shift;
+    my $target = shift; # this is validated already
+    my %opts   = @_;
 
-   my @args, "--show-ips";
-   push @args, '--report-cycles' => $opts{count}    if defined $opts{count};
-   push @args, '--interval'      => $opts{interval} if defined $opts{interval};
-   push @args, '--psize'         => $opts{size}     if defined $opts{size};
+    my @args, "--show-ips";
+    push @args, '--report-cycles' => $opts{count}    if defined $opts{count};
+    push @args, '--interval'      => $opts{interval} if defined $opts{interval};
+    push @args, '--psize'         => $opts{size}     if defined $opts{size};
 
-   return eval { systemx( mtr => $target, @args ); 1};
+    return eval { systemx( mtr => $target, @args ); 1};
 }
 
 sub validate_ipv6 {
-   my $arg = shift;
+    my $this = shift;
+    my $arg  = shift;
 
-   return eval { Net::IP->new($arg) };
+    return eval { Net::IP->new($arg) };
 }
 
 sub validate_ipv4 {
-   my $arg = shift;
+    my $this = shift;
+    my $arg  = shift;
 
-   # Don't let people ping local NAT things
-   return if $arg =~ m/^10\./;
-   return if $arg =~ m/^192\./;
-   return if $arg =~ m/^172\./;
+    # Don't let people ping local NAT things
+    return if $arg =~ m/^10\./;
+    return if $arg =~ m/^192\./;
+    return if $arg =~ m/^172\./;
 
-   # or this host
-   return if $arg eq "1.2.3.4"; # also naughty
+    # or this host
+    return if $arg eq "1.2.3.4"; # also naughty
 
-   return eval { Net::IP->new($arg) };
+    return eval { Net::IP->new($arg) };
 }
 
 1;
