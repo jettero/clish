@@ -100,7 +100,8 @@ sub run {
         last INPUT unless defined;
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
-        my $result = $this->parser->parse($_); # generates/prints errors for us
+        my $result = $this->parser->parse($_);
+        # prints relevant errors for us
 
         if( $result ) {
             my ($cmd_ar, $arg_ar) = @$result;
@@ -109,7 +110,7 @@ sub run {
                 $cmd_ar->[0]->exec( @$arg_ar );
 
             } elsif( @$cmd_ar > 1 ) {
-                error("ambiguous command, which of these: @$cmd");
+                error("ambiguous command, which of these: @$cmd_ar");
             }
 
         } else {
