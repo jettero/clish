@@ -6,7 +6,7 @@ use common::sense;
 
 # NOTE: this is just a stub.  use Term::ReadLine::CLISH::Command::Moose instead
 
-has '_parse_info is rw as ArrayRef default';
+has qw(_parse_info is rw isa ArrayRef default) => sub {[]};
 
 __PACKAGE__->meta->make_immutable;
 
