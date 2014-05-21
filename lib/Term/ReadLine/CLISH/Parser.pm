@@ -40,8 +40,10 @@ sub parse {
     # XXX: disable this, but provide some kind of parser introspection later too
     use Data::Dump qw(dump dumpf);
     use Scalar::Util qw(blessed);
-    my $to_dump = [@$result];
-       $_ = "$_" for @$to_dump;
+    my $to_dump = [
+        [map {"$_"} @{ $result->[0] }],
+        [map {"$_"} @{ $result->[1] }],
+    ];
     debug "parse result", dump($to_dump);
     error "during input parsing" unless $result;
 
@@ -64,7 +66,7 @@ sub build_parser {
 
     my $parser = Parse::RecDescent->new(q
 
-        full_command_line: cmd tokens { $return = [ @{$item[1]}, @{$item[2]} ] }
+        full_command_line: cmd tokens { $return = [ $item[1], $item[2] ] }
 
         cmd: token { $return = [ grep { $_->name() =~ m/^\Q$item[1]\E/ } @{ $::this->cmds } ] }
 
