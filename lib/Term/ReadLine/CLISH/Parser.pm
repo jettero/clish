@@ -35,11 +35,14 @@ sub parse {
     my $prefix = $this->output_prefix;
     my $parser = $this->parser;
 
-    my $result = $parser->cmd($line);
+    my $result = $parser->full_command_line($line);
 
     # XXX: disable this, but provide some kind of parser introspection later too
-    use Data::Dump qw(dump);
-    debug "parse result", dump($result);
+    use Data::Dump qw(dump dumpf);
+    use Scalar::Util qw(blessed);
+    my $to_dump = [@$result];
+       $_ = "$_" for @$to_dump;
+    debug "parse result", dump($to_dump);
     error "during input parsing" unless $result;
 
     return;
@@ -60,9 +63,12 @@ sub build_parser {
     $::this = $this;
 
     my $parser = Parse::RecDescent->new(q
-        cmd: word { $return = [ grep { $_->name() =~ m/^\Q$item[1]\E/ } @{ $::this->cmds } ] }
 
-        tokens: token(s) { $return = $item[1] } /$/
+        full_command_line: cmd tokens { $return = [ @{$item[1]}, @{$item[2]} ] }
+
+        cmd: token { $return = [ grep { $_->name() =~ m/^\Q$item[1]\E/ } @{ $::this->cmds } ] }
+
+        tokens: token(s?) { $return = $item[1] } /$/
 
         token: word | string | /\s*/ <reject: $@ = "mysterious goo on line $thisline column $thiscolumn near, \"$text\"">
 
