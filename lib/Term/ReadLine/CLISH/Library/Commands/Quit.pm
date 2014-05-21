@@ -4,6 +4,8 @@ use Term::ReadLine::CLISH::Command::Moose;
 use namespace::autoclean;
 use common::sense;
 
+extends 'Term::ReadLine::CLISH::Command';
+
 command( name => 'quit',
     help => "exit the shell",
 );
