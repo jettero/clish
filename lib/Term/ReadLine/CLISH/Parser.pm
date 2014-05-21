@@ -45,6 +45,9 @@ sub parse {
     ];
     debug "parse result", dump($to_dump);
 
+    # act false if we didn't get any good parser results...
+    # otherwise, return the results
+    return unless @{$result->[0]} > 0;
     return $result;
 }
 
