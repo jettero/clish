@@ -100,7 +100,21 @@ sub run {
         last INPUT unless defined;
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
-        $this->parser->parse($_); # generates/prints errors and executes commands
+        my $result = $this->parser->parse($_); # generates/prints errors for us
+
+        if( $result ) {
+            my ($cmd_ar, $arg_ar) = @$result;
+
+            if( @$cmd_ar == 1 ) {
+                $cmd_ar->[0]->exec( @$arg_ar );
+
+            } elsif( @$cmd_ar > 1 ) {
+                error("ambiguous command, which of these: @$cmd");
+            }
+
+        } else {
+            error("error receiving instructions from attached human");
+        }
     }
 }
 

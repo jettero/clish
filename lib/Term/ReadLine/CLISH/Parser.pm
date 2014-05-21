@@ -4,7 +4,7 @@ package Term::ReadLine::CLISH::Parser;
 use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
-use Term::ReadLine::CLISH::MessageSystem;;
+use Term::ReadLine::CLISH::MessageSystem;
 use Parse::RecDescent;
 use File::Find::Object;
 use common::sense;
@@ -34,7 +34,6 @@ sub parse {
 
     my $prefix = $this->output_prefix;
     my $parser = $this->parser;
-
     my $result = $parser->full_command_line($line);
 
     # XXX: disable this, but provide some kind of parser introspection later too
@@ -45,9 +44,8 @@ sub parse {
         [map {"$_"} @{ $result->[1] }],
     ];
     debug "parse result", dump($to_dump);
-    error "during input parsing" unless $result;
 
-    return;
+    return $result;
 }
 
 sub BUILD {
