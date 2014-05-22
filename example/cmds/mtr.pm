@@ -28,16 +28,15 @@ command( name => 'mtr',
 __PACKAGE__->meta->make_immutable;
 
 sub exec {
-    my $this   = shift;
-    my $target = shift; # this is validated already
-    my %opts   = @_;
+    my $this = shift;
+    my %opts = @_;
+    my @args = ( "--show-ips", $opts{target});
 
-    my @args, "--show-ips";
     push @args, '--report-cycles' => $opts{count}    if defined $opts{count};
     push @args, '--interval'      => $opts{interval} if defined $opts{interval};
     push @args, '--psize'         => $opts{size}     if defined $opts{size};
 
-    return eval { systemx( mtr => $target, @args ); 1};
+    return eval { systemx( mtr => @args ); 1};
 }
 
 sub validate_ipv6 {
