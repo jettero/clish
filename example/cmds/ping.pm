@@ -29,7 +29,7 @@ __PACKAGE__->meta->make_immutable;
 
 sub exec {
     my $target = shift; # this is validated already
-    my %opts => shift;
+    my %opts = @_;
 
     my @args;
     push @args, -c => $opts{count} if defined $opts{count};
