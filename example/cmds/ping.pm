@@ -29,14 +29,14 @@ __PACKAGE__->meta->make_immutable;
 
 sub exec {
     my $target = shift; # this is validated already
-    my %opts => shift;
+    my %opts = @_;
+    my @args = ($opts{target});
 
-    my @args;
     push @args, -c => $opts{count} if defined $opts{count};
     push @args, -s => $opts{size}  if defined $opts{size};
     push @args, -M => "dont"       if defined $opts{df};
 
-    return eval { systemx( ping => $target, @args ); 1};
+    return eval { systemx( ping => @args ); 1};
 }
 
 sub validate_ipv6 {
