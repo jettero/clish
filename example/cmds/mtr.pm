@@ -29,12 +29,12 @@ __PACKAGE__->meta->make_immutable;
 
 sub exec {
     my $this = shift;
-    my %opts = @_;
-    my @args = ( "--show-ips", $opts{target});
+    my $opts = shift;
+    my @args = ( "--show-ips", $opts->{target});
 
-    push @args, '--report-cycles' => $opts{count}    if defined $opts{count};
-    push @args, '--interval'      => $opts{interval} if defined $opts{interval};
-    push @args, '--psize'         => $opts{size}     if defined $opts{size};
+    push @args, '--report-cycles' => $opts->{count}    if defined $opts->{count};
+    push @args, '--interval'      => $opts->{interval} if defined $opts->{interval};
+    push @args, '--psize'         => $opts->{size}     if defined $opts->{size};
 
     return eval { systemx( mtr => @args ); 1};
 }

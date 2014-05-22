@@ -29,12 +29,12 @@ __PACKAGE__->meta->make_immutable;
 
 sub exec {
     my $target = shift; # this is validated already
-    my %opts = @_;
-    my @args = ($opts{target});
+    my $opts = shift;
+    my @args = ($opts->{target});
 
-    push @args, -c => $opts{count} if defined $opts{count};
-    push @args, -s => $opts{size}  if defined $opts{size};
-    push @args, -M => "dont"       if defined $opts{df};
+    push @args, -c => $opts->{count} if defined $opts->{count};
+    push @args, -s => $opts->{size}  if defined $opts->{size};
+    push @args, -M => "dont"         if defined $opts->{df};
 
     return eval { systemx( ping => @args ); 1};
 }

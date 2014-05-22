@@ -104,14 +104,9 @@ sub run {
         # prints relevant errors for us
 
         if( $result ) {
-            my ($cmd_ar, $arg_ar) = @$result;
+            my ($cmd, $args) = @$result;
 
-            if( @$cmd_ar > 1 ) {
-                error("ambiguous command: @$cmd_ar?");
-
-            } else {
-                $cmd_ar->[0]->exec( @$arg_ar );
-            }
+            $cmd->[0]->exec( $args );
 
         } else {
             error("error interpreting line");

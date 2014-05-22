@@ -14,9 +14,9 @@ command( name => 'test1',
 
 sub exec {
     my $this = shift;
-    my %opts = @_;
+    my $opts = shift;
 
-    say exists $opts{msg} ? $opts{msg} : "$this";
+    say exists $opts->{msg} ? $opts->{msg} : "$this";
 }
 
 __PACKAGE__->meta->make_immutable;
