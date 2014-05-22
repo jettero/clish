@@ -34,7 +34,7 @@ sub parse {
 
     my $prefix = $this->output_prefix;
     my $parser = $this->parser;
-    my $result = $parser->full_command_line($line);
+    my $result = $parser->command_line($line);
 
     # XXX: disable this, but provide some kind of parser introspection later too
     use Data::Dump qw(dump dumpf);
@@ -94,18 +94,20 @@ sub build_parser {
         }
 
         continue {
-            $collision_strings{$r} = undef unless @m == 1;
+            $collision_strings{$r}{$n} = undef unless @m == 1;
         }
 
     }
 
-    use Data::Dump qw(dump);
-    error dump({names => \@names, collision_strings => [keys %collision_strings], namel => \%namel});
-    exit 1;
+    for my $cmd ($this->cmds) {
+    }
 
-    # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blah"));
-    # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blarg"));
-    # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blat"));
+    ADD_COLLISION_PRODUCTIONS: {
+        my @collision_strings = keys %collision_strings;
+        local $" = "|";
+        $parser->Extend("collision: /(?:@collision_strings)/ " . '<reject: $@ = "$item[1] could be any of: $::COLLISIONS{$item[1]}">');
+        %::COLLISIONS = %collision_strings;
+    }
 
     die "unable to parse command grammar in parser generator\n" unless $parser;
     # XXX: should have a better error handler later
