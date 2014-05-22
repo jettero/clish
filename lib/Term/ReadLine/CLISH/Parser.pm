@@ -67,12 +67,7 @@ sub build_parser {
 
     my $parser = Parse::RecDescent->new(q
 
-        full_command_line: cmd argument(s?) { $return = [ $item[1], $item[2] ] }
-
-        cmd: token { $return = [ grep { $_->_start_parse($item[1]) } @{$::this->cmds} ] } <reject: !@$return >
-
-        argument: token       { $return = [ grep { $_->_continue_parse($item[1]) }           @{$::this->cmds} ] } <reject: !@$return >
-                | token token { $return = [ grep { $_->_continue_parse($item[1], $item[2]) } @{$::this->cmds} ] } <reject: !@$return >
+        command_line: command
 
         tokens: token(s?) { $return = $item[1] } /$/
 
@@ -85,7 +80,29 @@ sub build_parser {
 
     );
 
-    # my @names = $this->command_names;
+    my @names = $this->command_names;
+    my %collision_strings;
+    my %namel;
+
+    for my $n (@names) {
+        my ($r,@m);
+
+        while( @m != 1 ) {
+            $namel{$n} ++;
+            $r = substr $n, 0, $namel{$n};
+            @m = grep { m/^\Q$r/ } @names;
+        }
+
+        continue {
+            $collision_strings{$r} = undef unless @m == 1;
+        }
+
+    }
+
+    use Data::Dump qw(dump);
+    error dump({names => \@names, collision_strings => [keys %collision_strings], namel => \%namel});
+    exit 1;
+
     # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blah"));
     # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blarg"));
     # $parser->Extend(sprintf('command: "%s" { $return = $item[1] }', "blat"));
@@ -100,7 +117,8 @@ sub command_names {
     my $this = shift;
     my @cmd  = @{ $this->cmds };
 
-    return sort map { $_->name } @cmd;
+    my %h;
+    return sort map { $_->name } grep { !$h{$_}++ } @cmd;
 }
 
 sub prefix_regex {
