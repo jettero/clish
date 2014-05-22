@@ -8,7 +8,7 @@ use common::sense;
 command( name => 'test4',
     help => "just a silly parser test command",
     arguments => [
-        optional_argument( msg => 'fupa', => "echo this text (only phrases beginning with \"fupa\" are valid)", tag_optional => 1 )
+        optional_argument( msg => 'fupa', help => "echo this text (only phrases beginning with \"fupa\" are valid)", tag_optional => 1 )
     ],
 );
 
