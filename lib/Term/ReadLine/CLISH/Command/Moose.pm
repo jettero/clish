@@ -6,6 +6,7 @@ use Moose::Exporter;
 use common::sense;
 use Term::ReadLine::CLISH::Command::Option;
 use Moose::Util::TypeConstraints;
+use Carp;
 
 subtype 'Option', as 'Term::ReadLine::CLISH::Command::Option';
 
@@ -23,6 +24,9 @@ sub command {
 
     # warn "$meta";
     # Moose::Meta::Class
+
+    croak "name must not contain any characters that don't belong in function names (\\w\\_\\d)"
+        if $options{name} =~ m/[^\w\_\d]/;
 
     $meta->add_attribute( qw(name is ro isa Str default) => $options{name} );
     $meta->add_attribute( qw(help is ro isa Str default) => $options{help} || "??" );
