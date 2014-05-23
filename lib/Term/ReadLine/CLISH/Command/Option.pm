@@ -11,7 +11,7 @@ subtype 'ChoiceOfMethods', as 'ArrayRef[MethodName]';
 coerce 'ChoiceOfMethods', from 'MethodName', via { [ $_ ] };
 
 has qw(name is ro isa Str default) => "??";
-has qw(target is ro isa ChoiceOfMethods coerce 1 default), sub { [] };
+has qw(validators is ro isa ChoiceOfMethods coerce 1 default), sub { [] };
 has qw(required is ro isa Bool default 0);
 has qw(help is ro isa Str default ??);
 
