@@ -100,17 +100,13 @@ sub run {
         last INPUT unless defined;
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
-        my $result = $this->parser->parse($_);
-        # prints relevant errors for us
-
-        if( $result ) {
+        if( my $result = $this->parser->parse($_) ) {
             my ($cmd, $args) = @$result;
 
             $cmd->[0]->exec( $args );
-
-        } else {
-            error("error interpreting line");
         }
+
+        # else { the parser prints the relevant errors for us }
     }
 }
 
