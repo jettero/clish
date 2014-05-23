@@ -34,20 +34,13 @@ sub parse {
 
     my $prefix = $this->output_prefix;
     my $parser = $this->parser;
-    my $result = $parser->command_line($line);
+    my $result = $parser->command($line);
 
-    # XXX: disable this, but provide some kind of parser introspection later too
-    use Data::Dump qw(dump dumpf);
-    use Scalar::Util qw(blessed);
-    my $to_dump = [
-        [map {"$_"} @{ $result->[0] }],
-        [map {"$_"} @{ $result->[1] }],
-    ];
-    debug "parse result", dump($to_dump);
+    error "parse error [1]" unless $result;
 
-    # act false if we didn't get any good parser results...
-    # otherwise, return the results
-    return unless @{$result->[0]} > 0;
+    use Data::Dump qw(dump);
+    debug "result: " . dump($result);
+
     return $result;
 }
 
@@ -66,9 +59,6 @@ sub build_parser {
     $::this = $this;
 
     my $parser = Parse::RecDescent->new(q
-
-        command_line: command
-
         tokens: token(s?) { $return = $item[1] } /$/
 
         token: word | string | /\s*/ <reject: $@ = "mysterious goo on line $thisline column $thiscolumn near, \"$text\"">
@@ -77,7 +67,6 @@ sub build_parser {
 
         string: "'" /[^']*/ "'" { $return = $item[2] }
               | '"' /[^"]*/ '"' { $return = $item[2] }
-
     );
 
     my @names = $this->command_names;
@@ -99,13 +88,27 @@ sub build_parser {
 
     }
 
-    for my $cmd ($this->cmds) {
+    for my $cmd (@{$this->cmds}) {
+        my $name = $cmd->name; local $" = "|";
+        my @shorts = grep { not exists $collision_strings{$_} } map { substr $name, 0, $_ } 1 .. length $name;
+        my $production = "command: /^(?:@shorts)\$/ { \$return = \$::CMDS_BY_NAME{'$name'} } ";
+
+        debug "adding production: $production";
+
+        $parser->Extend($production);
+        $::CMDS_BY_NAME{$name} = $cmd;
     }
 
     ADD_COLLISION_PRODUCTIONS: {
-        my @collision_strings = keys %collision_strings;
+        my @collision_strings = sort keys %collision_strings;
         local $" = "|";
-        $parser->Extend("collision: /(?:@collision_strings)/ " . '<reject: $@ = "$item[1] could be any of: $::COLLISIONS{$item[1]}">');
+        my $production = "command: /^(?:@collision_strings)\$/ "
+           . '<reject: do { my @c = sort keys %{$::COLLISIONS{$item[1]}}; '
+           . '$@ = "\"$item[1]\" could be any of: @c" }>';
+
+        debug "adding production: $production";
+
+        $parser->Extend($production);
         %::COLLISIONS = %collision_strings;
     }
 
