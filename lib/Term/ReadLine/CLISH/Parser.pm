@@ -89,14 +89,37 @@ sub build_parser {
     }
 
     for my $cmd (@{$this->cmds}) {
-        my $name = $cmd->name; local $" = "|";
-        my @shorts = grep { not exists $collision_strings{$_} } map { substr $name, 0, $_ } 1 .. length $name;
-        my $production = "command: /^(?:@shorts)\$/ { \$return = \$::CMDS_BY_NAME{'$name'} } ";
+        my $name = $cmd->name;
+        my $args = join("_", $name, "arguments");
 
-        debug "adding production: $production";
-
-        $parser->Extend($production);
+        local $" = "|";
+        die "$name has a name that simply won't work in a grammar" if $name =~ m/[^\w\_\d]/;
         $::CMDS_BY_NAME{$name} = $cmd;
+
+        my @shorts = grep { not exists $collision_strings{$_} } map { substr $name, 0, $_ } 1 .. length $name;
+        my $cmd_prod = "command: /^(?:@shorts)\\b/ { \$return = \$::CMDS_BY_NAME{$name} } $args";
+        my $arg_prod = "$args:";
+
+        for my $arg ($cmd->arguments) {
+            my $validators = $arg->validators;
+            my $tag        = $arg->name;
+
+            # XXX: huh, ::Option has no tag_optional member, … must add that.
+
+            if( $arg->required ) {
+                warn "XXX: $tag [required]";
+            }
+
+            else {
+                warn "XXX: $tag [optional]";
+            }
+        }
+
+        debug "adding cmd production: $cmd_prod";
+        debug "adding arg production: $arg_prod";
+
+        $parser->Extend($arg_prod);
+        $parser->Extend($cmd_prod);
     }
 
     ADD_COLLISION_PRODUCTIONS: {
