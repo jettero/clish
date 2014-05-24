@@ -104,7 +104,7 @@ sub build_parser {
             my $tag  = $arg->tag_optional ? "( $oreg )(?)" : "$oreg";
 
             my $pname = join("_", $type, $cname, $aname );
-            my $production = "$pname: $tag token <reject: !\$::OPTIONS_VALIDATORS{$pname}->(\$item[2])>";
+            my $production = "$pname: $tag token <reject: !\$::OPTIONS_VALIDATORS{$pname}->(\$item[2])> { +{$aname => \$item[2]} }";
 
             $::OPTIONS_VALIDATORS{$pname} = sub {
                 warn "XXX: $pname validator fired → ACCEPTING"
@@ -118,7 +118,7 @@ sub build_parser {
         $::CMDS_BY_NAME{$cname} = $cmd;
 
         my @shorts = grep { not exists $collision_strings{$_} } map { substr $cname, 0, $_ } 1 .. length $cname;
-        my $production = "command: /^(?:@shorts)\\b/ { \$return = [\$::CMDS_BY_NAME{$cname}, []] }";
+        my $production = "command: /^(?:@shorts)\\b/ /\$/ { \$return = [\$::CMDS_BY_NAME{$cname}, []] }";
 
         debug "adding command production: $production";
         $parser->Extend($production);
