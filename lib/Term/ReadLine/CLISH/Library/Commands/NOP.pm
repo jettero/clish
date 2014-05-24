@@ -6,6 +6,8 @@ use common::sense;
 
 extends 'Term::ReadLine::CLISH::Command';
 
+has qw'+unusual_invocation default' => 1;
+
 command( name => 'nop',
     help => "do nothing",
 );

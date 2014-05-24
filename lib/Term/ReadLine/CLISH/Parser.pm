@@ -184,7 +184,7 @@ sub reload_commands {
                     if( $obj->isa("Term::ReadLine::CLISH::Command") ) {
                         debug "    loaded $ppackage as $package";
                         if( $obj->unusual_invocation ) {
-                            debug("[intended for unusual invocation, skipping command list]");
+                            debug "    [intended for unusual invocation, skipping command list]";
 
                         } else {
                             push @cmds, $obj;
