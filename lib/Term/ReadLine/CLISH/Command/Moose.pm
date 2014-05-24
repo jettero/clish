@@ -25,7 +25,7 @@ sub command {
     # warn "$meta";
     # Moose::Meta::Class
 
-    croak "name must not contain any characters that don't belong in function names (\\w\\_\\d)"
+    croak "command name must not contain any characters that don't belong in function names (\\w\\_\\d)"
         if $options{name} =~ m/[^\w\_\d]/;
 
     $meta->add_attribute( qw(name is ro isa Str default) => $options{name} );
@@ -38,6 +38,9 @@ sub argument {
     my $name       = shift;
     my $validators = shift;
     my %options    = @_;
+
+    croak "argument name must not contain any characters that don't belong in function names (\\w\\_\\d)"
+        if $name =~ m/[^\w\_\d]/;
 
     return Term::ReadLine::CLISH::Command::Option->new(name=>$name, validators=>$validators, %options);
 }
