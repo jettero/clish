@@ -204,7 +204,7 @@ sub reload_commands {
     my $c = @cmds;
     my $p = $c == 1 ? "" : "s";
 
-    Term::ReadLine::CLISH::Message->new(msg=>"[loaded $c command$p from PATH]")->spew;
+    info "[loaded $c command$p from PATH]";
 
     $this->cmds(\@cmds);
 }
