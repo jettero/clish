@@ -5,6 +5,7 @@ use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
 use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::Library::Commands::NOP;
 use Parse::RecDescent;
 use File::Find::Object;
 use common::sense;
@@ -34,7 +35,7 @@ sub parse {
 
     my $prefix = $this->output_prefix;
     my $parser = $this->parser;
-    my $result = $parser->command($line);
+    my $result = $parser->command_line($line);
 
     error "parse error [1]" unless $result;
 
@@ -57,14 +58,16 @@ sub build_parser {
 
     $::RD_HINT = 1; # let the parser generator give meaningful errors
     $::this = $this;
+    $::NOP = [Term::ReadLine::CLISH::Library::Commands::NOP->new, +{}];
 
     my $parser = Parse::RecDescent->new(q
-        tokens: token(s?) { $return = $item[1] } /$/
-
-        token: word | string | /\s*/ <reject: $@ = "mysterious goo on line $thisline column $thiscolumn near, \"$text\"">
-
+        command_line: command(?) end_of_line
+        command: /\s*/ { $return = $::NOP }
+        tokens: token(s?) { $return = $item[1] } end_of_line
+        end_of_line: /$/ | bad_token
+        bad_token: /\s*/ <reject: $@ = "unrecognized token: $text">
+        token: word | string | bad_token
         word: /[\w\d_.-]+/ { $return = $item[1] }
-
         string: "'" /[^']*/ "'" { $return = $item[2] }
               | '"' /[^"]*/ '"' { $return = $item[2] }
     );
@@ -95,16 +98,25 @@ sub build_parser {
         my $cname = $cmd->name;
         die "$cmd\'s name has characters that simply won't work in a grammar" if $cname =~ m/[^\w\_\d]/;
 
+        my @ordered_arguments;
+        my $tagged_arguments = 0;
         for my $arg (@{$cmd->arguments}) {
             my $aname = $arg->name;
             die "$cmd\'s option '$aname' name has characters that simply won't work in a grammar" if $aname =~ m/[^\w\_\d]/;
 
-            my $type = $arg->required ? "argument" : "option";
-            my $oreg = do { my @a = split "", $aname; "m/$a[0]" . join("?", @a[1 .. $#a]) . "?/" };
-            my $tag  = $arg->tag_optional ? "( $oreg )(?)" : "$oreg";
+            my @shorts = map { substr $aname, 0, $_ } 1 .. length $aname;
+            my $oreg = do { local $" = "|"; "m/(?:@shorts)\\b/" };
+            my ($production, $pname);
+            if( $arg->tag_optional ) {
+                $pname = join("_", $cname => ordered_argument => $aname);
+                $production = "$pname: ( $oreg )(?) token <reject: !\$::OPTIONS_VALIDATORS{$pname}->(\$item[2])> { +{$aname => \$item[2]} }";
+                $tagged_arguments ++;
 
-            my $pname = join("_", $type, $cname, $aname );
-            my $production = "$pname: $tag token <reject: !\$::OPTIONS_VALIDATORS{$pname}->(\$item[2])> { +{$aname => \$item[2]} }";
+            } else {
+                $pname = join("_", $cname => 'tagged_argument');
+                $production = "$pname: $oreg token <reject: !\$::OPTIONS_VALIDATORS{$pname}->(\$item[2])> { +{$aname => \$item[2]} }";
+                push @ordered_arguments, $pname;
+            }
 
             $::OPTIONS_VALIDATORS{$pname} = sub {
                 warn "XXX: $pname validator fired → ACCEPTING"
@@ -114,11 +126,28 @@ sub build_parser {
             $parser->Extend($production);
         }
 
+        my $argument_syntax_invocation = '';
+        if( @ordered_arguments and $tagged_arguments ) {
+          # my $aggregate 'argument_list:';
+          # debug "adding argument/option aggregation production: $aggregate";
+          # $parser->Extend($aggregate);
+
+        } elsif( @ordered_arguments ) {
+          # my $aggregate 'argument_list:';
+          # debug "adding argument/option aggregation production: $aggregate";
+          # $parser->Extend($aggregate);
+
+        } elsif( $tagged_arguments ) {
+          # my $aggregate 'argument_list:';
+          # debug "adding argument/option aggregation production: $aggregate";
+          # $parser->Extend($aggregate);
+        }
+
         local $" = "|";
         $::CMDS_BY_NAME{$cname} = $cmd;
 
         my @shorts = grep { not exists $collision_strings{$_} } map { substr $cname, 0, $_ } 1 .. length $cname;
-        my $production = "command: /^(?:@shorts)\\b/ /\$/ { \$return = [\$::CMDS_BY_NAME{$cname}, []] }";
+        my $production = "command: /^(?:@shorts)\\b/ $argument_syntax_invocation { \$return = [\$::CMDS_BY_NAME{$cname}, +{}] }";
 
         debug "adding command production: $production";
         $parser->Extend($production);
