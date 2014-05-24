@@ -103,7 +103,7 @@ sub run {
         if( my $result = $this->parser->parse($_) ) {
             my ($cmd, $args) = @$result;
 
-            $cmd->[0]->exec( $args );
+            $cmd->exec( $args );
         }
 
         # else { the parser prints the relevant errors for us }

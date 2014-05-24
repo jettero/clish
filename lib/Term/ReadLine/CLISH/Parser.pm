@@ -118,7 +118,7 @@ sub build_parser {
         $::CMDS_BY_NAME{$cname} = $cmd;
 
         my @shorts = grep { not exists $collision_strings{$_} } map { substr $cname, 0, $_ } 1 .. length $cname;
-        my $production = "command: /^(?:@shorts)\\b/ { \$return = \$::CMDS_BY_NAME{$cname} }";
+        my $production = "command: /^(?:@shorts)\\b/ { \$return = [\$::CMDS_BY_NAME{$cname}, []] }";
 
         debug "adding command production: $production";
         $parser->Extend($production);
