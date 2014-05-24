@@ -18,7 +18,7 @@ sub debug($;$) {
 }
 
 sub info($;$) {
-    my @args = possibly_captioned_message(@_);
+    my @args = _possibly_captioned_message(@_);
 
     Term::ReadLine::CLISH::Message->new(@args)->spew;
 }
