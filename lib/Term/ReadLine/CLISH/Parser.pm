@@ -34,10 +34,15 @@ sub parse {
 
     my $prefix    = $this->output_prefix;
     my $tokenizer = $this->tokenizer;
-    my $tokens    = $tokenizer->tokens( $line );
+    my @tokens    = @{$tokenizer->tokens( $line ) || []};
+
+    return unless @tokens;
+
+    my @matching_commands = grep {substr($_->name, 0, length $tokens[0]) eq $tokens[0]} @{ $this->cmds };
 
     use Data::Dump qw(dump);
-    debug "tokens: " . dump($tokens);
+    debug "tokens: " . dump(\@tokens);
+    debug "matching commands: @matching_commands";
 
     return;
 }
