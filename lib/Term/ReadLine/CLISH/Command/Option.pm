@@ -13,6 +13,7 @@ coerce 'ChoiceOfMethods', from 'MethodName', via { [ $_ ] };
 has qw(name is ro isa Str default) => "??";
 has qw(validators is ro isa ChoiceOfMethods coerce 1 default), sub { [] };
 has qw(required is ro isa Bool default 0);
+has qw(tag_optional is ro isa Bool default 0);
 has qw(help is ro isa Str default ??);
 
 __PACKAGE__->meta->make_immutable;
