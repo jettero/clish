@@ -1,12 +1,17 @@
 package Term::ReadLine::CLISH::Command;
 
 use Moose;
+use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use common::sense;
 
+subtype 'Option', as 'Term::ReadLine::CLISH::Command::Option';
+
 # NOTE: this is just a stub.  use Term::ReadLine::CLISH::Command::Moose instead
 
-has qw(unusual_invocation is ro isa Bool default) => 0;
+has qw'name is ro isa Str default' => "unfinished command";
+has qw'help is ro isa Str default' => "unfinished command";
+has qw'arguments is ro isa ArrayRef[Option] default' => sub {[]};
 
 __PACKAGE__->meta->make_immutable;
 

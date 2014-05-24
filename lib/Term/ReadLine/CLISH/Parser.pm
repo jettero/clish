@@ -5,7 +5,6 @@ use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
 use Term::ReadLine::CLISH::MessageSystem;
-use Term::ReadLine::CLISH::Library::Commands::NOP;
 use Parse::RecDescent;
 use File::Find::Object;
 use common::sense;
@@ -23,7 +22,7 @@ coerce 'cmdArray', from 'cmd', via { [ $_ ] };
 has qw(path is rw isa pathArray coerce 1);
 has qw(prefix is rw isa prefixArray);
 has qw(cmds is rw isa cmdArray coerce 1);
-has qw(parser is rw isa Parse::RecDescent);
+has qw(tokenizer is rw isa Parse::RecDescent);
 
 has qw(output_prefix is rw isa Str default) => "% ";
 
@@ -33,16 +32,14 @@ sub parse {
     my $this = shift;
     my $line = shift;
 
-    my $prefix = $this->output_prefix;
-    my $parser = $this->parser;
-    my $result = $parser->command_line($line);
-
-    error "parse error [1]" unless $result;
+    my $prefix    = $this->output_prefix;
+    my $tokenizer = $this->tokenizer;
+    my $tokens    = $tokenizer->tokens( $line );
 
     use Data::Dump qw(dump);
-    debug "result: " . dump($result);
+    debug "tokens: " . dump($tokens);
 
-    return $result;
+    return;
 }
 
 sub BUILD {
@@ -54,122 +51,16 @@ sub BUILD {
 sub build_parser {
     my $this = shift;
 
-    # NOTE: $::blah is $main::blah, RD uses it all over
-
-    $::RD_HINT = 1; # let the parser generator give meaningful errors
-    $::this = $this;
-    $::NOP = [Term::ReadLine::CLISH::Library::Commands::NOP->new, +{}];
-
-    my $parser = Parse::RecDescent->new(q
-        command_line: command(?) end_of_line
-        command: /\s*/ { $return = $::NOP }
+    my $prd = Parse::RecDescent->new(q
         tokens: token(s?) { $return = $item[1] } end_of_line
-        end_of_line: /$/ | bad_token
-        bad_token: /\s*/ <reject: $@ = "unrecognized token: $text">
-        token: word | string | bad_token
+        end_of_line: /$/ | /\s*/ <reject: $text ? $@ = "unrecognized token: $text" : undef>
+        token: word | string
         word: /[\w\d_.-]+/ { $return = $item[1] }
         string: "'" /[^']*/ "'" { $return = $item[2] }
               | '"' /[^"]*/ '"' { $return = $item[2] }
     );
 
-    my @names = $this->command_names;
-    my %collision_strings;
-    my %namel;
-
-    for my $n (@names) {
-        my ($r,@m);
-
-        while( @m != 1 ) {
-            $namel{$n} ++;
-            $r = substr $n, 0, $namel{$n};
-            @m = grep { m/^\Q$r/ } @names;
-        }
-
-        continue {
-            $collision_strings{$r}{$n} = undef unless @m == 1;
-        }
-
-    }
-
-    %::CMDS_BY_NAME = ();
-    %::OPTIONS_VALIDATORS = ();
-
-    for my $cmd (@{$this->cmds}) {
-        my $cname = $cmd->name;
-        die "$cmd\'s name has characters that simply won't work in a grammar" if $cname =~ m/[^\w\_\d]/;
-
-        my @ordered_arguments;
-        my $tagged_arguments = 0;
-        for my $arg (@{$cmd->arguments}) {
-            my $aname = $arg->name;
-            die "$cmd\'s option '$aname' name has characters that simply won't work in a grammar" if $aname =~ m/[^\w\_\d]/;
-
-            my @shorts = map { substr $aname, 0, $_ } 1 .. length $aname;
-            my $oreg = do { local $" = "|"; "m/(?:@shorts)\\b/" };
-            my ($production, $pname);
-            if( $arg->tag_optional ) {
-                $pname = join("_", $cname => ordered_argument => $aname);
-                $production = "$pname: ( $oreg )(?) token <reject: !\$::OPTIONS_VALIDATORS{$pname}->(\$item[2])> { +{$aname => \$item[2]} }";
-                $tagged_arguments ++;
-
-            } else {
-                $pname = join("_", $cname => 'tagged_argument');
-                $production = "$pname: $oreg token <reject: !\$::OPTIONS_VALIDATORS{$pname}->(\$item[2])> { +{$aname => \$item[2]} }";
-                push @ordered_arguments, $pname;
-            }
-
-            $::OPTIONS_VALIDATORS{$pname} = sub {
-                warn "XXX: $pname validator fired → ACCEPTING"
-            };
-
-            debug "adding argument/option production: $production";
-            $parser->Extend($production);
-        }
-
-        my $argument_syntax_invocation = '';
-        if( @ordered_arguments and $tagged_arguments ) {
-          # my $aggregate 'argument_list:';
-          # debug "adding argument/option aggregation production: $aggregate";
-          # $parser->Extend($aggregate);
-
-        } elsif( @ordered_arguments ) {
-          # my $aggregate 'argument_list:';
-          # debug "adding argument/option aggregation production: $aggregate";
-          # $parser->Extend($aggregate);
-
-        } elsif( $tagged_arguments ) {
-          # my $aggregate 'argument_list:';
-          # debug "adding argument/option aggregation production: $aggregate";
-          # $parser->Extend($aggregate);
-        }
-
-        local $" = "|";
-        $::CMDS_BY_NAME{$cname} = $cmd;
-
-        my @shorts = grep { not exists $collision_strings{$_} } map { substr $cname, 0, $_ } 1 .. length $cname;
-        my $production = "command: /^(?:@shorts)\\b/ $argument_syntax_invocation { \$return = [\$::CMDS_BY_NAME{$cname}, +{}] }";
-
-        debug "adding command production: $production";
-        $parser->Extend($production);
-    }
-
-    ADD_COLLISION_PRODUCTIONS: {
-        my @collision_strings = sort keys %collision_strings;
-        local $" = "|";
-        my $production = "command: /^(?:@collision_strings)\$/ "
-           . '<reject: do { my @c = sort keys %{$::COLLISIONS{$item[1]}}; '
-           . '$@ = "\"$item[1]\" could be any of: @c" }>';
-
-        debug "adding production: $production";
-
-        $parser->Extend($production);
-        %::COLLISIONS = %collision_strings;
-    }
-
-    die "unable to parse command grammar in parser generator\n" unless $parser;
-    # XXX: should have a better error handler later
-
-    $this->parser($parser);
+    $this->tokenizer($prd);
 }
 
 sub command_names {
@@ -212,12 +103,7 @@ sub reload_commands {
                 if( $obj ) {
                     if( $obj->isa("Term::ReadLine::CLISH::Command") ) {
                         debug "    loaded $ppackage as $package";
-                        if( $obj->unusual_invocation ) {
-                            debug "    [intended for unusual invocation, skipping command list]";
-
-                        } else {
-                            push @cmds, $obj;
-                        }
+                        push @cmds, $obj;
 
                     } else {
                         debug "    loaded $ppackage as $package — but it didn't appear to be a Term::ReadLine::CLISH::Command";

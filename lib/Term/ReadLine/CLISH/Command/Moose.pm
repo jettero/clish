@@ -3,12 +3,9 @@ package Term::ReadLine::CLISH::Command::Moose;
 
 use Moose ();
 use Moose::Exporter;
-use common::sense;
 use Term::ReadLine::CLISH::Command::Option;
-use Moose::Util::TypeConstraints;
+use common::sense;
 use Carp;
-
-subtype 'Option', as 'Term::ReadLine::CLISH::Command::Option';
 
 Moose::Exporter->setup_import_methods(
     with_meta => [ qw(command) ],
@@ -28,10 +25,11 @@ sub command {
     croak "command name must not contain any characters that don't belong in function names (\\w\\_\\d)"
         if $options{name} =~ m/[^\w\_\d]/;
 
-    $meta->add_attribute( qw(name is ro isa Str default) => $options{name} );
-    $meta->add_attribute( qw(help is ro isa Str default) => $options{help} || "??" );
-    $meta->add_attribute( qw(arguments is ro isa ArrayRef[Option] default), sub { [@def_arg] } );
     $meta->superclasses("Term::ReadLine::CLISH::Command");
+
+    $meta->add_attribute( qw(+name      default) => $options{name} )   if exists $options{name};
+    $meta->add_attribute( qw(+help      default) => $options{help} )   if exists $options{help};
+    $meta->add_attribute( qw(+arguments default), sub { [@def_arg] } ) if exists $options{arguments};
 }
 
 sub argument {
