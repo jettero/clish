@@ -100,10 +100,10 @@ sub run {
         last INPUT unless defined;
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
-        if( my $result = $this->parser->parse($_) ) {
-            my ($cmd, $args) = @$result;
+        if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
 
             $cmd->exec( $args );
+
         }
 
         # else { the parser prints the relevant errors for us }

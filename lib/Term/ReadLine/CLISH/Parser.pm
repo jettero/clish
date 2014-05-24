@@ -28,23 +28,52 @@ has qw(output_prefix is rw isa Str default) => "% ";
 
 __PACKAGE__->meta->make_immutable;
 
+sub parse_for_execution {
+    my $this = shift;
+    my $line = shift;
+    my ($tokens, $cmds, $argss) = $this->parse($line);
+
+    return unless @$tokens;
+
+    if( @$cmds == 1 ) {
+        debug "selected $cmds->[0] for execution";
+        return ($cmds->[0], $argss->[0]);
+    }
+
+    elsif( @$cmds > 1 ) {
+        error "ambiguous command, \"$tokens->[0]\" could be any of these", join(", ", map { $_->name } @$cmds);
+
+    } else {
+        error "command not understood";
+    }
+
+    return;
+}
+
 sub parse {
     my $this = shift;
     my $line = shift;
 
-    my $prefix    = $this->output_prefix;
-    my $tokenizer = $this->tokenizer;
-    my @tokens    = @{$tokenizer->tokens( $line ) || []};
+    my @return = ([],[],[]);
 
-    return unless @tokens;
+    if( $line =~ m/\S/ ) {
+        my $prefix    = $this->output_prefix;
+        my $tokenizer = $this->tokenizer;
+        my $tokens    = $tokenizer->tokens( $line );
 
-    my @matching_commands = grep {substr($_->name, 0, length $tokens[0]) eq $tokens[0]} @{ $this->cmds };
+        debug do { local $" = "> <"; "tokens: <@$tokens>" };
 
-    use Data::Dump qw(dump);
-    debug "tokens: " . dump(\@tokens);
-    debug "matching commands: @matching_commands";
+        if( @$tokens ) {
+            my $cmd_token = $tokens->[0];
 
-    return;
+            $return[0] = $tokens;
+            $return[1] = [my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds }];
+
+            debug "XXX: process args for @cmds";
+        }
+    }
+
+    return @return;
 }
 
 sub BUILD {
