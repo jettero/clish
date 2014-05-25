@@ -53,7 +53,7 @@ sub parse_for_execution {
             debug "selected $cmds->[0] for execution";
             return ($cmds->[0], $argss->[0]);
 
-        } else {
+        } elsif ($statuss->[0]) {
             error "parse error for $cmds->[0]", $statuss->[0];
             return;
         }
@@ -98,7 +98,7 @@ sub parse {
     my $line = shift;
     my %options;
 
-    my @return = ([],[],[],[]);
+    my @return = ([], [], [], []);
 
     if( $line =~ m/\S/ ) {
         my $prefix    = $this->output_prefix;
@@ -115,6 +115,22 @@ sub parse {
             $return[0] = $tokens;
             my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
 
+            my $validate; {
+                my %memoize;
+                $validate = sub {
+                    my ($cmd, $arg) = @_;
+                    return $memoize{$cmd,$arg} if exists $memoize{$cmd,$arg};
+                    my $v = $cmd->validators;
+
+                    for(@$v) {
+                        no strict 'refs';
+                        return $memoize{$cmd,$arg} = 1 if $_->($arg);
+                    }
+
+                    return $memoize{$cmd,$arg} = 0;
+                };
+            };
+
             CMD_LOOP:
             for my $idx ( 0 .. $#cmds ) {
                 my $cmd = $cmds[$idx];
@@ -124,6 +140,15 @@ sub parse {
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
+
+                my @cr = 0 .. $#cmd_args;
+
+                my @req  = grep { $cmd_args[$_]->required     } @cr;
+                my @tago = grep { $cmd_args[$_]->tag_optional } @cr;
+
+                my $tok = $arg_tokens[0];
+                my @matches_tag = grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok } @cr;
+                my @fills_tago  = grep { $validate->($cmd_args[$_], $tok) } @tago;
 
                 # if there are remaining arguments, reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
@@ -141,6 +166,7 @@ sub parse {
 
                 push @{ $return[1] }, $cmd;
                 push @{ $return[2] }, $opt;
+                $return[ PARSE_RETURN_STATUSS ][ $idx ] = PARSE_COMPLETE;
             }
         }
     }
