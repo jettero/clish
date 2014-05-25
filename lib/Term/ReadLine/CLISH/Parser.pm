@@ -33,6 +33,11 @@ sub parse_for_execution {
     my $line = shift;
     my ($tokens, $cmds, $argss) = $this->parse($line);
 
+    if( not $tokens ) {
+        error "error parsing line", $tokens;
+        return;
+    }
+
     return unless @$tokens;
 
     if( @$cmds == 1 ) {
@@ -53,6 +58,7 @@ sub parse_for_execution {
 sub parse {
     my $this = shift;
     my $line = shift;
+    my %options;
 
     my @return = ([],[],[]);
 
@@ -61,15 +67,42 @@ sub parse {
         my $tokenizer = $this->tokenizer;
         my $tokens    = $tokenizer->tokens( $line );
 
+        return unless $tokens; # careful to not disrupt $@ on the way up XXX document this type of error (including $@)
+
         debug do { local $" = "> <"; "tokens: <@$tokens>" };
 
         if( @$tokens ) {
-            my $cmd_token = $tokens->[0];
+            my ($cmd_token, @arg_tokens) = @$tokens;
 
             $return[0] = $tokens;
-            $return[1] = [my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds }];
+            my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
 
-            debug "XXX: process args for @cmds";
+            CMD_LOOP:
+            for my $cmd ( @cmds ) {
+                my $opt = {};
+                my @cmd_args = @{ $cmd->arguments };
+
+                # NOTE: it's really not clear what the best *generalized* arg
+                # processing strategy is best.  For now, I'm just doing it
+                # really dim wittedly.
+                #
+                # If it can fill the arg, then fill it, otherwise move on.  If
+                # anything's left, we failed.  More precisely, 1. we have to
+                # fill all required args, and 2. we can't have any tokens left.
+                #
+                # If (1) or (2) fail, we go to the next command without pushing
+                # to @return[x].
+
+                while( @cmd_args and @arg_tokens ) {
+                    die "need a plan of some kind though... XXX";
+                }
+
+                next CMD_LOOP if @arg_tokens;
+                next CMD_LOOP if grep { $_->required } @cmd_args;
+
+                push @{ $return[1] }, $cmd;
+                push @{ $return[2] }, $opt;
+            }
         }
     }
 
