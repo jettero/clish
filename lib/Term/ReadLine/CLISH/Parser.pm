@@ -8,6 +8,14 @@ use Term::ReadLine::CLISH::MessageSystem;
 use Parse::RecDescent;
 use File::Find::Object;
 use common::sense;
+use constant {
+    PARSE_COMPLETE => 1,
+
+    PARSE_RETURN_TOKENS  => 0,
+    PARSE_RETURN_CMDS    => 1,
+    PARSE_RETURN_ARGSS   => 2,
+    PARSE_RETURN_STATUSS => 3,
+};
 
 subtype 'pathArray', as 'ArrayRef[Str]';
 coerce 'pathArray', from 'Str', via { [ split m/[:; ]+/ ] };
@@ -31,36 +39,66 @@ __PACKAGE__->meta->make_immutable;
 sub parse_for_execution {
     my $this = shift;
     my $line = shift;
-    my ($tokens, $cmds, $argss) = $this->parse($line);
+    my ($tokens, $cmds, $argss, $statuss) = $this->parse($line);
 
     if( not $tokens ) {
-        error "error parsing line", $tokens;
+        error "error parsing line"; # the tokenizer will have left an argument in $@
         return;
     }
 
     return unless @$tokens;
 
     if( @$cmds == 1 ) {
-        debug "selected $cmds->[0] for execution";
-        return ($cmds->[0], $argss->[0]);
+        if( $statuss->[0] == PARSE_COMPLETE ) {
+            debug "selected $cmds->[0] for execution";
+            return ($cmds->[0], $argss->[0]);
+
+        } else {
+            error "parse error for $cmds->[0]", $statuss->[0];
+            return;
+        }
     }
 
-    elsif( @$cmds > 1 ) {
+    elsif( @$cmds ) {
         error "ambiguous command, \"$tokens->[0]\" could be any of these", join(", ", map { $_->name } @$cmds);
 
     } else {
-        error "command not understood";
+        error "parse error", "command not understood";
     }
 
     return;
 }
+
+=head1 C<parse()>
+
+    my ($tokens, $cmds, $args_star, $statuses) = $this->parse($line);
+
+The C<parse> method returns an arrayref of tokens from the line in C<$tokens>,
+an arrayref of possible commands in C<$cmds>, an arrayref of hashrefs (each
+hashref the parsed arguments for the commands as C<< tag=>value >> pairs), and
+an arrayref of C<$statuses>.
+
+The statuses are either the value C<PARSE_COMPLETE> or a string representing any
+errors with intepreting the line as an invocation of the command at the same
+index.
+
+Example:
+
+    if( @$cmds == 1 and $statuses->[0] == PARSE_COMPLETE ) {
+        info "we should execute $cmds->[0]";
+    }
+
+Exception: if the tokenizer (an actual parser) can't make sense of the line,
+C<parse> will return an empty list and leave the parse error in C<$@>.
+
+=cut
 
 sub parse {
     my $this = shift;
     my $line = shift;
     my %options;
 
-    my @return = ([],[],[]);
+    my @return = ([],[],[],[]);
 
     if( $line =~ m/\S/ ) {
         my $prefix    = $this->output_prefix;
@@ -78,27 +116,28 @@ sub parse {
             my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
 
             CMD_LOOP:
-            for my $cmd ( @cmds ) {
+            for my $idx ( 0 .. $#cmds ) {
+                my $cmd = $cmds[$idx];
                 my $opt = {};
                 my @cmd_args = @{ $cmd->arguments };
 
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
-                #
-                # If it can fill the arg, then fill it, otherwise move on.  If
-                # anything's left, we failed.  More precisely, 1. we have to
-                # fill all required args, and 2. we can't have any tokens left.
-                #
-                # If (1) or (2) fail, we go to the next command without pushing
-                # to @return[x].
 
-                while( @cmd_args and @arg_tokens ) {
-                    die "need a plan of some kind though... XXX";
+                # if there are remaining arguments, reject the command
+                if( my @extra = map {"\"$_\""} @arg_tokens ) {
+                    local $" = ", ";
+                    $return[ PARSE_RETURN_STATUSS ][ $idx ] = "extra tokens (@extra) on line";
                 }
 
-                next CMD_LOOP if @arg_tokens;
-                next CMD_LOOP if grep { $_->required } @cmd_args;
+                # if some of the arguments are missing, reject the command
+                if( my @req = grep { $_->required } @cmd_args ) {
+                    local $" = ", ";
+                    # XXX: make sure Options can stringify like commands, eg: Option[name]
+                    $return[ PARSE_RETURN_STATUSS ][ $idx ] = "required arguments (@req) omitted";
+                    next CMD_LOOP;
+                }
 
                 push @{ $return[1] }, $cmd;
                 push @{ $return[2] }, $opt;
