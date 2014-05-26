@@ -5,7 +5,7 @@ use Term::ReadLine::CLISH::Command::Moose;
 use namespace::autoclean;
 use common::sense;
 
-command( name => 'test1',
+command(
     help => "just a silly parser test command",
     arguments => [
         optional_argument( msg => undef, help => "echo this text (default is some test text)", tag_optional => 1 ),
