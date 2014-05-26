@@ -160,6 +160,7 @@ sub parse {
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
                     local $" = ", ";
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "extra tokens on line (@extra)";
+                    next CMD_LOOP;
                 }
 
                 # if some of the arguments are missing, reject the command
