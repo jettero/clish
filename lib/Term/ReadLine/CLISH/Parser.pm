@@ -119,20 +119,20 @@ sub parse {
             for my $idx ( 0 .. $#cmds ) {
                 my $cmd = $cmds[$idx];
                 my $opt = {};
-                my @cmd_opts = @{ $cmd->arguments };
+                my @cmd_args = @{ $cmd->arguments };
 
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
 
-                my @cr = 0 .. $#cmd_opts;
+                my @cr = 0 .. $#cmd_args;
 
-                my @req  = grep { $cmd_opts[$_]->required     } @cr;
-                my @tago = grep { $cmd_opts[$_]->tag_optional } @cr;
+                my @req  = grep { $cmd_args[$_]->required     } @cr;
+                my @tago = grep { $cmd_args[$_]->tag_optional } @cr;
 
                 my $tok = $arg_tokens[0];
-                my @matches_tag = grep { substr($cmd_opts[$_]->name, 0, length $tok) eq $tok } @cr;
-                my @fills_tago  = grep { $cmd_opts[$_]->validate( $tok ) } @tago;
+                my @matches_tag = grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok } @cr;
+                my @fills_tago  = grep { $cmd_args[$_]->validate( $tok ) } @tago;
 
                 warn "XXX: do the args";
 
@@ -143,9 +143,8 @@ sub parse {
                 }
 
                 # if some of the arguments are missing, reject the command
-                if( my @req = grep { $_->required } @cmd_opts ) {
+                if( my @req = grep { $_->required } @cmd_args ) {
                     local $" = ", ";
-                    # XXX: make sure Options can stringify like commands, eg: Option[name]
                     $return[ PARSE_RETURN_STATUSS ][ $idx ] = "required arguments (@req) omitted";
                     next CMD_LOOP;
                 }
