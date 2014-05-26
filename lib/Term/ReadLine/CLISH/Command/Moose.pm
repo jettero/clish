@@ -25,7 +25,8 @@ sub command {
     croak "command name must not contain any characters that don't belong in function names (\\w\\_\\d)"
         if $options{name} =~ m/[^\w\_\d]/;
 
-    $meta->superclasses("Term::ReadLine::CLISH::Command");
+    my $class = $options{isa} || "Term::ReadLine::CLISH::Command";
+    $meta->superclasses( $class );
 
     $meta->add_attribute( qw(+name      default) => $options{name} )   if exists $options{name};
     $meta->add_attribute( qw(+help      default) => $options{help} )   if exists $options{help};

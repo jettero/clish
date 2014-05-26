@@ -5,10 +5,9 @@ use namespace::autoclean;
 
 use Net::IP;
 use IPC::System::Simple 'systemx';
-use Scalar::Util qw(looks_like_number);
 use common::sense;
 
-command( name => 'mtr',
+command( name => 'mtr', isa => "example::cmds::ping",
     help => "trace route and ping combined into a neat ncurses display",
     arguments => [
         required_argument(
@@ -37,28 +36,6 @@ sub exec {
     push @args, '--psize'         => $opts->{size}     if defined $opts->{size};
 
     return eval { systemx( mtr => @args ); 1};
-}
-
-sub validate_ipv6 {
-    my $this = shift;
-    my $arg  = shift;
-
-    return eval { Net::IP->new($arg) };
-}
-
-sub validate_ipv4 {
-    my $this = shift;
-    my $arg  = shift;
-
-    # Don't let people ping local NAT things
-    return if $arg =~ m/^10\./;
-    return if $arg =~ m/^192\./;
-    return if $arg =~ m/^172\./;
-
-    # or this host
-    return if $arg eq "1.2.3.4"; # also naughty
-
-    return eval { Net::IP->new($arg) };
 }
 
 1;
