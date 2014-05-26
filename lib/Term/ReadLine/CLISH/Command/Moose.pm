@@ -28,7 +28,10 @@ sub command {
     my $class = $options{isa} || "Term::ReadLine::CLISH::Command";
     $meta->superclasses( $class );
 
-    $meta->add_attribute( qw(+name      default) => $options{name} )   if exists $options{name};
+    my ($package) = caller;
+    my $name = $options{name} || lc( (split "::", $package)[-1] );
+
+    $meta->add_attribute( qw(+name      default) => $name );
     $meta->add_attribute( qw(+help      default) => $options{help} )   if exists $options{help};
     $meta->add_attribute( qw(+arguments default), sub { [@def_arg] } ) if exists $options{arguments};
 }
