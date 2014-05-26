@@ -31,6 +31,24 @@ sub stringify {
     return "ARG[" . $this->name . "]";
 }
 
+sub with_default {
+    my $this  = shift;
+    my $obj   = bless { %$this }, ref $this;
+    my $value = shift;
+
+    $obj->value( $value );
+
+    return $obj;
+}
+
+sub add_to_hashref_with_value {
+    my $this = shift;
+    my $ref  = shift; croak unless ref $ref eq "HASH";
+    my $obj  = $this->with_value( @_ );
+
+    return $ref->{ $obj->name } = $obj;
+}
+
 sub with_context {
     my $this = shift;
     my $obj  = bless { %$this }, ref $this;
