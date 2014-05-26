@@ -28,7 +28,12 @@ sub command {
     my $class = $options{isa} || "Term::ReadLine::CLISH::Command";
     $meta->superclasses( $class );
 
-    my ($package) = caller;
+    my $i = 0;
+    my ($package) = caller($i);
+    while( $package =~ m/^Moose::/ ) {
+        ($package) = caller(++$i);
+    }
+
     my $name = $options{name} || lc( (split "::", $package)[-1] );
 
     $meta->add_attribute( qw(+name      default) => $name );
