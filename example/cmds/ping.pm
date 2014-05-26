@@ -6,17 +6,16 @@ use namespace::autoclean;
 use Net::DNS;
 use Net::IP;
 use IPC::System::Simple 'systemx';
-use Scalar::Util qw(looks_like_number);
 use Term::ReadLine::CLISH::MessageSystem;
 use common::sense;
 
 command(
     help => "send icmp echo requests to a host",
     arguments => [
-        optional_argument( count => 'Scalar::Util::looks_like_number',
+        optional_argument( count => 'validate_positive_nonzero_number',
             help => "number of packets to send" ),
 
-        optional_argument( size  => 'Scalar::Util::looks_like_number',
+        optional_argument( size  => 'validate_positive_nonzero_number',
             help => "size of the packets in bytes" ),
 
         optional_argument( df => undef, help => "set the don't fragment bit" ),
@@ -35,12 +34,13 @@ sub exec {
     my $this = shift;
     my $opts = shift;
 
-    my @args = ($opts->{target});
+    my @args = ($opts->{target}->ip);
 
     push @args, -c => $opts->{count} if defined $opts->{count};
     push @args, -s => $opts->{size}  if defined $opts->{size};
     push @args, -M => "dont"         if defined $opts->{df};
 
+    debug "trying to systemx( ping => @args )";
     return eval { systemx( ping => @args ); 1};
 }
 
@@ -53,6 +53,9 @@ sub validate_ipv6 {
     return eval { Net::IP->new($arg) };
 }
 
+sub _err { $@ = shift; return }
+sub _pd  { _err("permission denied for argument $_[0]") }
+
 sub validate_ipv4 {
     my $this = shift;
     my $arg = shift;
@@ -60,12 +63,12 @@ sub validate_ipv4 {
     debug "validating ipv4 $arg";
 
     # Don't let people ping local NAT things
-    return if $arg =~ m/^10\./;
-    return if $arg =~ m/^192\./;
-    return if $arg =~ m/^172\./;
+    return _pd("$arg") if $arg =~ m/^10\./;
+    return _pd("$arg") if $arg =~ m/^192\./;
+    return _pd("$arg") if $arg =~ m/^172\./;
 
     # or this host
-    return if $arg eq "1.2.3.4"; # also naughty
+    return _pd("$arg") if $arg eq "1.2.3.4"; # also naughty
 
     return eval { Net::IP->new($arg) };
 }
@@ -99,13 +102,19 @@ sub validate_hostname {
         }
 
     } else {
-        $@ = "host '$arg' lookup faliure: " . $res->errorstring;
-        debug "set \$@ = \"$@\"";
+        _err( "host '$arg' lookup faliure: " . $res->errorstring );
     }
 
-    $@ = "host '$arg' not found";
-    debug "set \$@ = \"$@\"";
+    _err( "host '$arg' not found" );
 
+    return;
+}
+
+sub validate_positive_nonzero_number {
+    my $this = shift;
+    my $arg = 0 + shift;
+
+    return $arg if $arg > 0;
     return;
 }
 

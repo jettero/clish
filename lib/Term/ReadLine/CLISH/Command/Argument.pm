@@ -41,25 +41,17 @@ sub with_context {
 
 sub validate {
     my ($this, $that) = @_;
-    my $validators = $this->validators; return $that if @$validators == 0;
-    my $context    = $this->context or die "my context is missing";
+    my $validators = $this->validators;
+
+    # If there are no validators, then we can't accept arguments for this tag
+    return if @$validators == 0;
+
+    my $context = $this->context or die "my context is missing";
 
     for my $v (@$validators) {
-        if( $v =~ m/::/ ) {
-            debug "execute $v($that)";
+        my $r = $context->$v( $that );
 
-            no strict 'refs';
-            my $r = $v->( $that );
-
-            return $r if $r;
-
-        } else {
-            debug "execute $context \-\> $v($that)";
-
-            my $r = $context->$v( $that );
-
-            return $r if $r;
-        }
+        return $r if $r;
     }
 
     return;

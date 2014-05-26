@@ -153,14 +153,12 @@ sub parse {
 
                                 if( @matched_cmd_args_idx == 1 ) {
                                     my $midx = $matched_cmd_args_idx[0];
+
                                     # consume the items
                                     my ($arg) = splice @cmd_args, $midx, 1;
                                     my @nom   = splice @arg_tokens, 0, 2;
 
-                                    {
-                                        local $" = "> <";
-                                        debug "ate $arg with <@nom>";
-                                    }
+                                    { local $" = "> <"; debug "ate $arg with <@nom>"; } 
 
                                     # populate the option
                                     $args->{ $arg->name } = $lv[$midx];
