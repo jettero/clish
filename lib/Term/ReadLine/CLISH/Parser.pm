@@ -116,11 +116,14 @@ sub parse {
             $return[0] = $tokens;
             my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
 
+            $return[ PARSE_RETURN_CMDS ] = \@cmds;
+
             CMD_LOOP:
             for my $cidx ( 0 .. $#cmds ) {
                 my $cmd = $cmds[$cidx];
-                my $args = {};
                 my @cmd_args = @{ $cmd->arguments };
+
+                $return[ PARSE_RETURN_ARGSS ][ $cidx ] = my $args = { _ => \@cmd_args };
 
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
@@ -174,8 +177,6 @@ sub parse {
                     next CMD_LOOP;
                 }
 
-                push @{ $return[1] }, $cmd;
-                push @{ $return[2] }, $args;
                 $return[ PARSE_RETURN_STATUSS ][ $cidx ] = PARSE_COMPLETE;
             }
         }
