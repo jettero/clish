@@ -5,6 +5,7 @@ use Moose;
 use Memoize;
 use namespace::sweep; # like autoclean, but doesn't murder overloads
 use Moose::Util::TypeConstraints;
+use Term::ReadLine::CLISH::MessageSystem;
 use common::sense;
 use overload '""' => \&stringify, fallback => 1;
 
@@ -29,7 +30,13 @@ sub stringify {
 }
 
 sub with_context {
-    return shift->new(context=>shift);
+    my $this = shift;
+    my $obj  = bless { %$this }, ref $this;
+    my $ctx  = shift;
+
+    $obj->context( $ctx );
+
+    return $obj;
 }
 
 sub validate {
@@ -38,9 +45,21 @@ sub validate {
     my $context    = $this->context or die "my context is missing";
 
     for my $v (@$validators) {
-        my $r = $context->$v( $that );
+        if( $v =~ m/::/ ) {
+            debug "execute $v($that)";
 
-        return $r if $r;
+            no strict 'refs';
+            my $r = $v->( $that );
+
+            return $r if $r;
+
+        } else {
+            debug "execute $context \-\> $v($that)";
+
+            my $r = $context->$v( $that );
+
+            return $r if $r;
+        }
     }
 
     return;
