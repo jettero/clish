@@ -141,17 +141,19 @@ sub parse {
                         MATCH_TAGGED_OPTIONS: {
                             if( $tidx < $#arg_tokens ) {
                                 my $ntok = $arg_tokens[$tidx+1];
-                                my $last_value;
-                                my @mt =
-                                    grep { $last_value = $cmd_args[$cidx]->validate($ntok) }
-                                    grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok }
-                                    @cai;
+                                my @lv;
 
                                 debug "ntok: $ntok";
 
-                                if( @mt == 1 ) {
+                                my @matched_cmd_args_idx =
+                                    grep { my $v = $cmd_args[$_]->validate($ntok); $lv[$_] = $v if $v; $v } 
+                                    grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok }
+                                    @cai;
+
+                                if( @matched_cmd_args_idx == 1 ) {
+                                    my $midx = $matched_cmd_args_idx[0];
                                     # consume the items
-                                    my ($arg) = splice @cmd_args, $mt[0], 1;
+                                    my ($arg) = splice @cmd_args, $midx, 1;
                                     my @nom   = splice @arg_tokens, 0, 2;
 
                                     {
@@ -160,13 +162,22 @@ sub parse {
                                     }
 
                                     # populate the option
-                                    $args->{ $arg->name } = $last_value;
+                                    $args->{ $arg->name } = $lv[$midx];
 
                                     # look for more things to consume
                                     redo TRY_TO_EAT_TOK;
                                 }
 
-                                # else { warn "we matched more than one tagged optoin" }
+                                else {
+                                    # XXX: it's not clear what to do here should we explain for every (un)matching command?
+                                    if( @matched_cmd_args_idx) {
+                                        my @matched = map { $cmd_args[$_] } @matched_cmd_args_idx;
+                                        debug "$tok failed to resolve to a single validated tagged option, but initially matched: @matched";
+                                    }
+
+                                    # bug I think we don't want to show anything in this case
+                                    # else { debug "$tok failed to resolve to anything" }
+                                }
                             }
 
                             # else { untagged }

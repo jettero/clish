@@ -100,11 +100,11 @@ sub validate_hostname {
 
     } else {
         $@ = "host '$arg' lookup faliure: " . $res->errorstring;
-        debug "set \$@ = \"$@\", return nothing";
+        debug "set \$@ = \"$@\"";
     }
 
     $@ = "host '$arg' not found";
-    debug "set \$@ = \"$@\", return nothing";
+    debug "set \$@ = \"$@\"";
 
     return;
 }
