@@ -28,6 +28,10 @@ sub stringify {
     return "ARG[" . $this->name . "]";
 }
 
+sub with_context {
+    return shift->new(context=>shift);
+}
+
 sub validate {
     my ($this, $that) = @_;
     my $validators = $this->validators; return $that if @$validators == 0;
@@ -35,6 +39,7 @@ sub validate {
 
     for my $v (@$validators) {
         my $r = $context->$v( $that );
+
         return $r if $r;
     }
 
