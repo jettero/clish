@@ -85,7 +85,8 @@ index.
 Example:
 
     if( @$cmds == 1 and $statuses->[0] == PARSE_COMPLETE ) {
-        info "we should execute $cmds->[0]";
+        info "executing $cmds->[0]";
+        $cmds->[0]->exec( $args_star->[0] );
     }
 
 Exception: if the tokenizer (an actual parser) can't make sense of the line,
@@ -116,42 +117,61 @@ sub parse {
             my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
 
             CMD_LOOP:
-            for my $idx ( 0 .. $#cmds ) {
-                my $cmd = $cmds[$idx];
-                my $opt = {};
+            for my $cidx ( 0 .. $#cmds ) {
+                my $cmd = $cmds[$cidx];
+                my $args = {};
                 my @cmd_args = @{ $cmd->arguments };
 
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
 
-                my @cr = 0 .. $#cmd_args;
+                TRY_TO_EAT_TOK: {
+                    my @cai = 0 .. $#cmd_args;
+                    for my $tidx ( 0 .. $#$tokens ) {
+                        my $tok = $tokens->[$tidx];
 
-                my @req  = grep { $cmd_args[$_]->required     } @cr;
-                my @tago = grep { $cmd_args[$_]->tag_optional } @cr;
+                        MATCH_TAGGED_OPTIONS: {
+                            if( $tidx < $#$tokens ) {
+                                my $ntok = $tokens->[$tidx+1];
+                                my $last_value;
+                                my @mt =
+                                    grep { $last_value = $cmd_args[$cidx]->validate($ntok) }
+                                    grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok }
+                                    @cai;
 
-                my $tok = $arg_tokens[0];
-                my @matches_tag = grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok } @cr;
-                my @fills_tago  = grep { $cmd_args[$_]->validate( $tok ) } @tago;
+                                if( @mt == 1 ) {
+                                    # consume the items
+                                    splice @$tokens, 0, 2;
+                                    my ($arg) = splice @cmd_args, $mt[0], 1;
 
-                warn "XXX: do the args";
+                                    # populate the option
+                                    $args->{ $arg->name } = $last_value;
+
+                                    # look for more things to consume
+                                    redo TRY_TO_EAT_TOK;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 # if there are remaining arguments, reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
                     local $" = ", ";
-                    $return[ PARSE_RETURN_STATUSS ][ $idx ] = "extra tokens (@extra) on line";
+                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "extra tokens on line (@extra)";
                 }
 
                 # if some of the arguments are missing, reject the command
                 if( my @req = grep { $_->required } @cmd_args ) {
                     local $" = ", ";
-                    $return[ PARSE_RETURN_STATUSS ][ $idx ] = "required arguments (@req) omitted";
+                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "required arguments omitted (@req)";
                     next CMD_LOOP;
                 }
 
                 push @{ $return[1] }, $cmd;
-                push @{ $return[2] }, $opt;
-                $return[ PARSE_RETURN_STATUSS ][ $idx ] = PARSE_COMPLETE;
+                push @{ $return[2] }, $args;
+                $return[ PARSE_RETURN_STATUSS ][ $cidx ] = PARSE_COMPLETE;
             }
         }
     }
