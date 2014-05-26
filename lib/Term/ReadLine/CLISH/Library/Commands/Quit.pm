@@ -6,9 +6,7 @@ use common::sense;
 
 extends 'Term::ReadLine::CLISH::Command';
 
-command( name => 'quit',
-    help => "exit the shell",
-);
+command( help => "exit this shell" );
 
 __PACKAGE__->meta->make_immutable;
 
