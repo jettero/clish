@@ -125,7 +125,7 @@ sub parse {
 
                 debug "cmd_args: @cmd_args";
 
-                $return[ PARSE_RETURN_ARGSS ][ $cidx ] = my $args = { _ => +{ map {($_->name,$_)} @cmd_args } };
+                $return[ PARSE_RETURN_ARGSS ][ $cidx ] = my $args = +{ _ => +{ map {($_->name,$_)} @cmd_args } };
 
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
@@ -160,8 +160,8 @@ sub parse {
 
                                     { local $" = "> <"; debug "ate $arg with <@nom>"; } 
 
-                                    # populate the option
-                                    $args->{ $arg->name } = $lv[$midx];
+                                    # populate the option in argss
+                                    $arg->add_copy_with_value_to_hashref( $args => $lv[$midx] );
 
                                     # look for more things to consume
                                     redo TRY_TO_EAT_TOK;

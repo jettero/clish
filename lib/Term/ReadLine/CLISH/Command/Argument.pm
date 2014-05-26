@@ -8,6 +8,7 @@ use Moose::Util::TypeConstraints;
 use Term::ReadLine::CLISH::MessageSystem;
 use common::sense;
 use overload '""' => \&stringify, fallback => 1;
+use Carp;
 
 subtype 'FunctionName', as 'Str', where { m/^(?:::|[\w\d_]+)*\z/ };
 subtype 'ChoiceOfFunctions', as 'ArrayRef[FunctionName]';
@@ -22,6 +23,7 @@ has qw(tag_optional is ro isa Bool default 0);
 has qw(help is ro isa Str default ??);
 
 has qw(default is ro isa Str default ??);
+has qw(value is rw predicate has_value clearer no_value);
 
 __PACKAGE__->meta->make_immutable;
 
@@ -31,7 +33,14 @@ sub stringify {
     return "ARG[" . $this->name . "]";
 }
 
-sub with_default {
+sub value_or_default {
+    my $this = shift;
+    my $that = $this->value // $this->default;
+
+    return $that;
+}
+
+sub copy_with_value {
     my $this  = shift;
     my $obj   = bless { %$this }, ref $this;
     my $value = shift;
@@ -41,15 +50,15 @@ sub with_default {
     return $obj;
 }
 
-sub add_to_hashref_with_value {
+sub add_copy_with_value_to_hashref {
     my $this = shift;
     my $ref  = shift; croak unless ref $ref eq "HASH";
-    my $obj  = $this->with_value( @_ );
+    my $obj  = $this->copy_with_value( @_ );
 
     return $ref->{ $obj->name } = $obj;
 }
 
-sub with_context {
+sub copy_with_context {
     my $this = shift;
     my $obj  = bless { %$this }, ref $this;
     my $ctx  = shift;

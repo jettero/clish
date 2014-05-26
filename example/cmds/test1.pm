@@ -20,9 +20,7 @@ sub exec {
     my $this = shift;
     my $opts = shift;
 
-    $opts->{msg} || $opts->{_}{msg}->default;
-
-    say exists $opts->{msg} ? $opts->{msg} : "$this";
+    say $opts->{msg}->value_or_default;
 }
 
 __PACKAGE__->meta->make_immutable;

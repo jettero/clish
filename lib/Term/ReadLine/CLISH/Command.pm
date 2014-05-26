@@ -29,13 +29,14 @@ sub arguments {
 
     # XXX: this should be an after() modifier on the reader only, but I can't get it to work
 
-    return [ map { $_->with_context($this) } @{$this->_arguments} ];
+    return [ map { $_->copy_with_context($this) } @{$this->_arguments} ];
 };
 
 # boring built-in validators
 
-sub validate_nonempty_string { $_[1] || undef }
-sub validate_nonzero_number  { 0 + $_[1] || undef }
-sub validate_positive_number { my $x = 0 + $_[1]; $x >= 0 ? $x : undef }
+sub validate_nonempty_string  { $_[1] || undef }
+sub validate_positive_nonzero { 0 + $_[1] || undef }
+sub validate_positive         { my $x = 0 + $_[1]; $x >= 0 ? $x : undef }
+sub validate_integer          { $_[1] =~ m/[\D-]/ ? undef : $_[1] }
 
 1;

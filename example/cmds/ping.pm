@@ -12,10 +12,10 @@ use common::sense;
 command(
     help => "send icmp echo requests to a host",
     arguments => [
-        optional_argument( count => 'validate_positive_nonzero_number',
+        optional_argument( count => 'validate_positive_nonzero',
             help => "number of packets to send" ),
 
-        optional_argument( size  => 'validate_positive_nonzero_number',
+        optional_argument( size  => 'validate_positive_nonzero',
             help => "size of the packets in bytes" ),
 
         optional_argument( df => undef, help => "set the don't fragment bit" ),
@@ -34,11 +34,11 @@ sub exec {
     my $this = shift;
     my $opts = shift;
 
-    my @args = ($opts->{target}->ip);
+    my @args = ($opts->{target}->value->ip);
 
-    push @args, -c => $opts->{count} if defined $opts->{count};
-    push @args, -s => $opts->{size}  if defined $opts->{size};
-    push @args, -M => "dont"         if defined $opts->{df};
+    push @args, -c => $opts->{count}->value if $opts->{count}->has_value;
+    push @args, -s => $opts->{size}->value  if $opts->{size}->has_value;
+    push @args, -M => "dont"                if $opts->{df}->has_value and $opts->{df}->value;
 
     debug "trying to systemx( ping => @args )";
     return eval { systemx( ping => @args ); 1};
