@@ -128,22 +128,26 @@ sub parse {
 
                 TRY_TO_EAT_TOK: {
                     my @cai = 0 .. $#cmd_args;
-                    for my $tidx ( 0 .. $#$tokens ) {
-                        my $tok = $tokens->[$tidx];
+                    for my $tidx ( 0 .. $#arg_tokens ) {
+                        my $tok = $arg_tokens[$tidx];
+
+                        warn "tok: $tok";
 
                         MATCH_TAGGED_OPTIONS: {
-                            if( $tidx < $#$tokens ) {
-                                my $ntok = $tokens->[$tidx+1];
+                            if( $tidx < $#arg_tokens ) {
+                                my $ntok = $arg_tokens[$tidx+1];
                                 my $last_value;
                                 my @mt =
                                     grep { $last_value = $cmd_args[$cidx]->validate($ntok) }
                                     grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok }
                                     @cai;
 
+                                warn "ntok: $ntok";
+
                                 if( @mt == 1 ) {
                                     # consume the items
-                                    splice @$tokens, 0, 2;
                                     my ($arg) = splice @cmd_args, $mt[0], 1;
+                                    splice @arg_tokens, 0, 2;
 
                                     # populate the option
                                     $args->{ $arg->name } = $last_value;
