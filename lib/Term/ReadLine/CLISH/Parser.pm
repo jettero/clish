@@ -123,6 +123,8 @@ sub parse {
                 my $cmd = $cmds[$cidx];
                 my @cmd_args = @{ $cmd->arguments };
 
+                debug "cmd_args: @cmd_args";
+
                 $return[ PARSE_RETURN_ARGSS ][ $cidx ] = my $args = { _ => \@cmd_args };
 
                 # NOTE: it's really not clear what the best *generalized* arg
@@ -134,7 +136,7 @@ sub parse {
                     for my $tidx ( 0 .. $#arg_tokens ) {
                         my $tok = $arg_tokens[$tidx];
 
-                        warn "tok: $tok";
+                        debug "tok: $tok";
 
                         MATCH_TAGGED_OPTIONS: {
                             if( $tidx < $#arg_tokens ) {
@@ -145,12 +147,17 @@ sub parse {
                                     grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok }
                                     @cai;
 
-                                warn "ntok: $ntok";
+                                debug "ntok: $ntok";
 
                                 if( @mt == 1 ) {
                                     # consume the items
                                     my ($arg) = splice @cmd_args, $mt[0], 1;
-                                    splice @arg_tokens, 0, 2;
+                                    my @nom   = splice @arg_tokens, 0, 2;
+
+                                    {
+                                        local $" = "> <";
+                                        debug "ate $arg with <@nom>";
+                                    }
 
                                     # populate the option
                                     $args->{ $arg->name } = $last_value;
@@ -158,7 +165,11 @@ sub parse {
                                     # look for more things to consume
                                     redo TRY_TO_EAT_TOK;
                                 }
+
+                                # else { warn "we matched more than one tagged optoin" }
                             }
+
+                            # else { untagged }
                         }
                     }
                 }
