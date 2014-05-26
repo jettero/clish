@@ -15,7 +15,7 @@ coerce 'ChoiceOfFunctions', from 'Undef', via { [] };
 
 has qw(name is ro isa Str default) => "??";
 has qw(validators is ro isa ChoiceOfFunctions coerce 1 default), sub { [] };
-has qw(context is rw isa Term::ReadLine::CLISH::Command);
+has qw(context is rw required 1 isa Term::ReadLine::CLISH::Command);
 has qw(required is ro isa Bool default 0);
 has qw(tag_optional is ro isa Bool default 0);
 has qw(help is ro isa Str default ??);
