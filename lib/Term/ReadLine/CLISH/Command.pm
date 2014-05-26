@@ -14,6 +14,12 @@ has qw'name is ro isa Str default' => "unfinished command";
 has qw'help is ro isa Str default' => "unfinished command";
 has qw'arguments is ro isa ArrayRef[Argument] default' => sub {[]};
 
+after arguments => sub {
+    my $this = shift;
+
+    return [ map { my $o = $_->clone_object; $o->context($this); $o } @{$this->{arguments}} ];
+};
+
 __PACKAGE__->meta->make_immutable;
 
 sub stringify {
