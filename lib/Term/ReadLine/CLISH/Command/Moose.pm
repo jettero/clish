@@ -49,10 +49,11 @@ sub argument {
     croak "argument name must not contain any characters that don't belong in function names (\\w\\_\\d)"
         if $name =~ m/[^\w\_\d]/;
 
-    croak "please provide at least one validator or require a tag (which can then represent a switch true value)"
-        if not defined $validators and $options{tag_optional};
+    my $arg = Term::ReadLine::CLISH::Command::Argument->new(name=>$name, validators=>$validators, %options);
+        croak "please provide at least one validator for '$name' or require a tag (which can then represent a switch true value)"
+        if $arg->tag_optional and not @{ $arg->validators };
 
-    return Term::ReadLine::CLISH::Command::Argument->new(name=>$name, validators=>$validators, %options);
+    return $arg;
 }
 
 sub required_argument {

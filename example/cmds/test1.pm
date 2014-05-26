@@ -8,13 +8,19 @@ use common::sense;
 command(
     help => "just a silly parser test command",
     arguments => [
-        optional_argument( msg => undef, help => "echo this text (default is some test text)", tag_optional => 1 ),
+        optional_argument(
+            msg => 'Str',
+            help => "echo this text",
+            default => "executing " . __PACKAGE__,
+            tag_optional => 1 ),
     ],
 );
 
 sub exec {
     my $this = shift;
     my $opts = shift;
+
+    $opts->{msg} || $opts->{_}{msg}->default;
 
     say exists $opts->{msg} ? $opts->{msg} : "$this";
 }
