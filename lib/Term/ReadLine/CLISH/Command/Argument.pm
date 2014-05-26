@@ -1,5 +1,5 @@
 
-package Term::ReadLine::CLISH::Command::Option;
+package Term::ReadLine::CLISH::Command::Argument;
 
 use Moose;
 use Memoize;
@@ -25,7 +25,7 @@ __PACKAGE__->meta->make_immutable;
 sub stringify {
     my $this = shift;
 
-    return "Argument[" . $this->name . "]";
+    return "ARG[" . $this->name . "]";
 }
 
 sub validate {

@@ -3,7 +3,7 @@ package Term::ReadLine::CLISH::Command::Moose;
 
 use Moose ();
 use Moose::Exporter;
-use Term::ReadLine::CLISH::Command::Option;
+use Term::ReadLine::CLISH::Command::Argument;
 use common::sense;
 use Carp;
 
@@ -44,7 +44,7 @@ sub argument {
     croak "argument name must not contain any characters that don't belong in function names (\\w\\_\\d)"
         if $name =~ m/[^\w\_\d]/;
 
-    return Term::ReadLine::CLISH::Command::Option->new(name=>$name, validators=>$validators, %options);
+    return Term::ReadLine::CLISH::Command::Argument->new(name=>$name, validators=>$validators, %options);
 }
 
 sub required_argument {

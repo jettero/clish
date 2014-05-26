@@ -6,20 +6,20 @@ use namespace::sweep; # like autoclean, but doesn't murder overloads
 use common::sense;
 use overload '""' => \&stringify, fallback => 1;
 
-subtype 'Option', as 'Term::ReadLine::CLISH::Command::Option';
+subtype 'Argument', as 'Term::ReadLine::CLISH::Command::Argument';
 
 # NOTE: use Term::ReadLine::CLISH::Command::Moose  for the command()  sugar
 
 has qw'name is ro isa Str default' => "unfinished command";
 has qw'help is ro isa Str default' => "unfinished command";
-has qw'arguments is ro isa ArrayRef[Option] default' => sub {[]};
+has qw'arguments is ro isa ArrayRef[Argument] default' => sub {[]};
 
 __PACKAGE__->meta->make_immutable;
 
 sub stringify {
     my $this = shift;
 
-    return "Command[" . $this->name . "]";
+    return "CMD[" . $this->name . "]";
 }
 
 1;
