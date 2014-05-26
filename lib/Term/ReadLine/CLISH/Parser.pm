@@ -115,21 +115,6 @@ sub parse {
             $return[0] = $tokens;
             my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
 
-            my $validate; {
-                my %memoize;
-                $validate = sub {
-                    my ($cmd, $opt, $arg) = @_;
-                    return $memoize{$cmd,$opt,$arg} if exists $memoize{$cmd,$opt,$arg};
-                    my $v = $opt->validators;
-
-                    for(@$v) {
-                        return $memoize{$cmd,$opt,$arg} = $cmd->$_($arg);
-                    }
-
-                    return $memoize{$cmd,$opt,$arg} = undef;
-                };
-            };
-
             CMD_LOOP:
             for my $idx ( 0 .. $#cmds ) {
                 my $cmd = $cmds[$idx];
@@ -147,7 +132,7 @@ sub parse {
 
                 my $tok = $arg_tokens[0];
                 my @matches_tag = grep { substr($cmd_opts[$_]->name, 0, length $tok) eq $tok } @cr;
-                my @fills_tago  = grep { $validate->($cmd, $cmd_opts[$_], $tok) } @tago;
+                my @fills_tago  = grep { $cmd_opts[$_]->validate( $tok ) } @tago;
 
                 warn "XXX: do the args";
 

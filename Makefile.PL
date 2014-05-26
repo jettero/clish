@@ -14,6 +14,7 @@ WriteMakefile(
             common::sense
             File::Find::Object
             IPC::System::Simple
+            Memoize
             Moose
             namespace::sweep
             Net::IP
