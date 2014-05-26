@@ -142,11 +142,12 @@ sub parse {
                             if( $tidx < $#arg_tokens ) {
                                 my $ntok = $arg_tokens[$tidx+1];
                                 my @lv;
+                                my @ev;
 
                                 debug "ntok: $ntok";
 
                                 my @matched_cmd_args_idx =
-                                    grep { my $v = $cmd_args[$_]->validate($ntok); $lv[$_] = $v if $v; $v } 
+                                    grep { undef $@; my $v = $cmd_args[$_]->validate($ntok); $ev[$_] = $@; $lv[$_] = $v if $v; $v } 
                                     grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok }
                                     @cai;
 
@@ -166,6 +167,11 @@ sub parse {
 
                                     # look for more things to consume
                                     redo TRY_TO_EAT_TOK;
+                                }
+
+                                elsif( my @dev = grep {defined $ev[$_]} 0 .. $#ev ) {
+                                    warning "trying to use '$tok' => '$ntok' to fill $cmd\'s $cmd_args[$_]", $ev[$_]
+                                        for @dev;
                                 }
 
                                 else {
