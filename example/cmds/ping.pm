@@ -75,26 +75,36 @@ sub validate_hostname {
     my $res  = $this->resolver || $this->resolver( Net::DNS::Resolver->new );
     my $arg  = shift;
 
-    debug "host lookup $arg";
+    debug "validating hostname $arg";
 
     if ( my $query = $res->search($arg) ) {
         for my $rr ($query->answer) {
             my $type = $rr->type;
 
             given($type) {
-                when( "A" )    { return $this->validate_ipv4($rr->address) }
-                when( "AAAA" ) { return $this->validate_ipv6($rr->address) }
+                when( "A" )    {
+                    my $addr = $rr->address;
+                    debug "found A, return validate_ipv4($addr)";
+                    return $this->validate_ipv4($rr->address);
+                }
+
+                when( "AAAA" ) {
+                    my $addr = $rr->address;
+                    debug "found AAAA, return validate_ipv6($addr)";
+                    return $this->validate_ipv6($rr->address);
+                }
+
                 default { next }
             }
         }
 
     } else {
         $@ = "host '$arg' lookup faliure: " . $res->errorstring;
-        debug "set \$@ = \"$@\"";
+        debug "set \$@ = \"$@\", return nothing";
     }
 
     $@ = "host '$arg' not found";
-    debug "set \$@ = \"$@\"";
+    debug "set \$@ = \"$@\", return nothing";
 
     return;
 }
