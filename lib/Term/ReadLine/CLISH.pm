@@ -101,9 +101,7 @@ sub run {
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
         if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
-
             $cmd->exec( $args );
-
         }
 
         # else { the parser prints the relevant errors for us }
