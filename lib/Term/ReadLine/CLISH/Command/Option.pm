@@ -2,9 +2,10 @@
 package Term::ReadLine::CLISH::Command::Option;
 
 use Moose;
-use common::sense;
-use namespace::autoclean;
+use namespace::sweep; # like autoclean, but doesn't murder overloads
 use Moose::Util::TypeConstraints;
+use common::sense;
+use overload '""' => \&stringify, fallback => 1;
 
 subtype 'FunctionName', as 'Str', where { m/^(?:::|[\w\d_]+)*\z/ };
 subtype 'ChoiceOfFunctions', as 'ArrayRef[FunctionName]';
@@ -19,6 +20,10 @@ has qw(help is ro isa Str default ??);
 
 __PACKAGE__->meta->make_immutable;
 
-sub ACCEPT { 1 }
+sub stringify {
+    my $this = shift;
+
+    return "Argument[" . $this->name . "]";
+}
 
 1;
