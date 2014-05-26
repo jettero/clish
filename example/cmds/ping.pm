@@ -10,7 +10,7 @@ use Scalar::Util qw(looks_like_number);
 use Term::ReadLine::CLISH::MessageSystem;
 use common::sense;
 
-command( name => 'ping',
+command(
     help => "send icmp echo requests to a host",
     arguments => [
         optional_argument( count => 'Scalar::Util::looks_like_number',

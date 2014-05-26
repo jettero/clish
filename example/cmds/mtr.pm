@@ -7,7 +7,7 @@ use Net::IP;
 use IPC::System::Simple 'systemx';
 use common::sense;
 
-command( name => 'mtr', isa => "example::cmds::ping",
+command( isa => "example::cmds::ping",
     help => "trace route and ping combined into a neat ncurses display",
     arguments => [
         required_argument(
