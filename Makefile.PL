@@ -13,11 +13,9 @@ WriteMakefile(
         map {($_=>0)} qw( 
             common::sense
             File::Find::Object
-            IPC::System::Simple
             Memoize
             Moose
             namespace::sweep
-            Net::IP
             Parse::RecDescent
             Term::ReadLine
         )

@@ -9,7 +9,7 @@ command(
     help => "just a silly parser test command",
     arguments => [
         optional_argument(
-            msg => 'Str',
+            msg => "validate_nonempty_string",
             help => "echo this text",
             default => "executing " . __PACKAGE__,
             tag_optional => 1 ),

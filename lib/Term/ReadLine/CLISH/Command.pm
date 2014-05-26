@@ -32,5 +32,10 @@ sub arguments {
     return [ map { $_->with_context($this) } @{$this->_arguments} ];
 };
 
+# boring built-in validators
+
+sub validate_nonempty_string { $_[1] || undef }
+sub validate_nonzero_number  { 0 + $_[1] || undef }
+sub validate_positive_number { my $x = 0 + $_[1]; $x >= 0 ? $x : undef }
 
 1;

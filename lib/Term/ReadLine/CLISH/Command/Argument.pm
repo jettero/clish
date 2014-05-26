@@ -21,6 +21,8 @@ has qw(required is ro isa Bool default 0);
 has qw(tag_optional is ro isa Bool default 0);
 has qw(help is ro isa Str default ??);
 
+has qw(default is ro isa Str default ??);
+
 __PACKAGE__->meta->make_immutable;
 
 sub stringify {
