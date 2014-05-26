@@ -118,16 +118,15 @@ sub parse {
             my $validate; {
                 my %memoize;
                 $validate = sub {
-                    my ($cmd, $arg) = @_;
-                    return $memoize{$cmd,$arg} if exists $memoize{$cmd,$arg};
-                    my $v = $cmd->validators;
+                    my ($cmd, $opt, $arg) = @_;
+                    return $memoize{$cmd,$opt,$arg} if exists $memoize{$cmd,$opt,$arg};
+                    my $v = $opt->validators;
 
                     for(@$v) {
-                        no strict 'refs';
-                        return $memoize{$cmd,$arg} = 1 if $_->($arg);
+                        return $memoize{$cmd,$opt,$arg} = $cmd->$_($arg);
                     }
 
-                    return $memoize{$cmd,$arg} = 0;
+                    return $memoize{$cmd,$opt,$arg} = undef;
                 };
             };
 
@@ -135,20 +134,22 @@ sub parse {
             for my $idx ( 0 .. $#cmds ) {
                 my $cmd = $cmds[$idx];
                 my $opt = {};
-                my @cmd_args = @{ $cmd->arguments };
+                my @cmd_opts = @{ $cmd->arguments };
 
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
 
-                my @cr = 0 .. $#cmd_args;
+                my @cr = 0 .. $#cmd_opts;
 
-                my @req  = grep { $cmd_args[$_]->required     } @cr;
-                my @tago = grep { $cmd_args[$_]->tag_optional } @cr;
+                my @req  = grep { $cmd_opts[$_]->required     } @cr;
+                my @tago = grep { $cmd_opts[$_]->tag_optional } @cr;
 
                 my $tok = $arg_tokens[0];
-                my @matches_tag = grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok } @cr;
-                my @fills_tago  = grep { $validate->($cmd_args[$_], $tok) } @tago;
+                my @matches_tag = grep { substr($cmd_opts[$_]->name, 0, length $tok) eq $tok } @cr;
+                my @fills_tago  = grep { $validate->($cmd, $cmd_opts[$_], $tok) } @tago;
+
+                warn "XXX: do the args";
 
                 # if there are remaining arguments, reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
@@ -157,7 +158,7 @@ sub parse {
                 }
 
                 # if some of the arguments are missing, reject the command
-                if( my @req = grep { $_->required } @cmd_args ) {
+                if( my @req = grep { $_->required } @cmd_opts ) {
                     local $" = ", ";
                     # XXX: make sure Options can stringify like commands, eg: Option[name]
                     $return[ PARSE_RETURN_STATUSS ][ $idx ] = "required arguments (@req) omitted";

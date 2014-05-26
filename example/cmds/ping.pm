@@ -28,8 +28,9 @@ command( name => 'ping',
 __PACKAGE__->meta->make_immutable;
 
 sub exec {
-    my $target = shift; # this is validated already
+    my $this = shift;
     my $opts = shift;
+
     my @args = ($opts->{target});
 
     push @args, -c => $opts->{count} if defined $opts->{count};
@@ -40,12 +41,14 @@ sub exec {
 }
 
 sub validate_ipv6 {
+    my $this = shift;
     my $arg = shift;
 
     return eval { Net::IP->new($arg) };
 }
 
 sub validate_ipv4 {
+    my $this = shift;
     my $arg = shift;
 
     # Don't let people ping local NAT things
