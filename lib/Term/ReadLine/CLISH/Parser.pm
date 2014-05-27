@@ -50,7 +50,7 @@ sub parse_for_execution {
 
     if( @$cmds == 1 ) {
         if( $statuss->[0] == PARSE_COMPLETE ) {
-            debug "selected $cmds->[0] for execution";
+            debug "selected $cmds->[0] for execution" if $ENV{CLISH_DEBUG};
             return ($cmds->[0], $argss->[0]);
 
         } elsif ($statuss->[0]) {
@@ -108,7 +108,7 @@ sub parse {
 
         return unless $tokens; # careful to not disrupt $@ on the way up XXX document this type of error (including $@)
 
-        debug do { local $" = "> <"; "tokens: <@$tokens>" };
+        debug do { local $" = "> <"; "tokens: <@$tokens>" } if $ENV{CLISH_DEBUG};
 
         if( @$tokens ) {
             my ($cmd_token, @arg_tokens) = @$tokens;
@@ -123,7 +123,7 @@ sub parse {
                 my $cmd = $cmds[$cidx];
                 my @cmd_args = @{ $cmd->arguments };
 
-                debug "cmd_args: @cmd_args";
+                debug "cmd_args: @cmd_args" if $ENV{CLISH_DEBUG};
 
                 $return[ PARSE_RETURN_ARGSS ][ $cidx ] = my $args = +{ map {($_->name,$_)} @cmd_args };
 
@@ -137,19 +137,15 @@ sub parse {
                     for my $tidx ( 0 .. $#arg_tokens ) {
                         my $tok = $arg_tokens[$tidx];
 
-                        debug "tok: $tok";
-
                         MATCH_TAGGED_OPTIONS: {
                             if( $tidx < $#arg_tokens ) {
                                 my $ntok = $arg_tokens[$tidx+1];
                                 my @lv; # validated values for the array matching arrays
                                 my @ev; # errors from the validation
 
-                                debug "ntok: $ntok";
-
                                 my @matched_cmd_args_idx = # the indexes of matching Args
                                     grep { undef $@; my $v = $cmd_args[$_]->validate($ntok);
-                                           $ev[$_] = $@; $lv[$_] = $v if $v; $v } 
+                                           $ev[$_] = $@; $lv[$_] = $v if $v; $v }
                                     grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok }
                                     @cai;
 
@@ -160,7 +156,7 @@ sub parse {
                                     my ($arg) = splice @cmd_args, $midx, 1;
                                     my @nom   = splice @arg_tokens, 0, 2;
 
-                                    { local $" = "> <"; debug "ate $arg with <@nom>"; } 
+                                    { local $" = "> <"; debug "ate $arg with <@nom>" if $ENV{CLISH_DEBUG}; }
 
                                     # populate the option in argss
                                     $arg->add_copy_with_value_to_hashref( $args => $lv[$midx] );
@@ -182,7 +178,7 @@ sub parse {
                                     if( @matched_cmd_args_idx) {
                                         my @matched = map { $cmd_args[$_] } @matched_cmd_args_idx;
                                         debug "$tok failed to resolve to a single validated tagged option,"
-                                            . " but initially matched: @matched";
+                                            . " but initially matched: @matched" if $ENV{CLISH_DEBUG};
                                     }
 
                                     # I think we don't want to show anything in this case
@@ -197,7 +193,7 @@ sub parse {
 
                             my @matched_cmd_args_idx = # the idexes of matching Args
                                 grep { undef $@; my $v = $cmd_args[$_]->validate($tok);
-                                       $ev[$_] = $@; $lv[$_] = $v if defined $v; defined $v } 
+                                       $ev[$_] = $@; $lv[$_] = $v if defined $v; defined $v }
                                 grep { $cmd_args[$_]->tag_optional }
                                 @cai;
 
@@ -208,7 +204,7 @@ sub parse {
                                 my ($arg) = splice @cmd_args, $midx, 1;
                                 my ($nom) = splice @arg_tokens, 0, 1;
 
-                                { local $" = "> <"; debug "ate $arg with <$nom>"; } 
+                                { local $" = "> <"; debug "ate $arg with <$nom>" if $ENV{CLISH_DEBUG}; }
 
                                 # populate the option in argss
                                 $arg->add_copy_with_value_to_hashref( $args => $lv[$midx] );
@@ -229,7 +225,7 @@ sub parse {
                                 if( @matched_cmd_args_idx) {
                                     my @matched = map { $cmd_args[$_] } @matched_cmd_args_idx;
                                     debug "$tok failed to resolve to a single validated tagged option,"
-                                        . " but initially matched: @matched";
+                                        . " but initially matched: @matched" if $ENV{CLISH_DEBUG};
                                 }
 
                                 # I think we don't want to show anything in this case
@@ -311,10 +307,10 @@ sub reload_commands {
     for my $path (@$PATH) {
         my $ffo = File::Find::Object->new({}, $path);
 
-        debug "trying to load commands from $path using $prreg";
+        debug "trying to load commands from $path using $prreg" if $ENV{CLISH_DEBUG};
 
         while( my $f = $ffo->next ) {
-            debug "    considering $f";
+            debug "    considering $f" if $ENV{CLISH_DEBUG};
 
             if( -f $f and my ($ppackage) = $f =~ m{($prreg.*?)\.pm} ) {
                 my $package = $ppackage; $package =~ s{/}{::}g;
@@ -323,11 +319,11 @@ sub reload_commands {
 
                 if( $obj ) {
                     if( $obj->isa("Term::ReadLine::CLISH::Command") ) {
-                        debug "    loaded $ppackage as $package";
+                        debug "    loaded $ppackage as $package" if $ENV{CLISH_DEBUG};
                         push @cmds, $obj;
 
                     } else {
-                        debug "    loaded $ppackage as $package — but it didn't appear to be a Term::ReadLine::CLISH::Command";
+                        debug "    loaded $ppackage as $package — but it didn't appear to be a Term::ReadLine::CLISH::Command" if $ENV{CLISH_DEBUG};
                     }
 
                 } else {

@@ -12,6 +12,8 @@ use Carp;
 our @EXPORT = qw(debug info warning error install_generic_message_handlers);
 
 sub debug($;$) {
+    croak "debug called without debug ENV set" unless $ENV{CLISH_DEBUG};
+
     my @args = _possibly_captioned_message(@_);
 
     Term::ReadLine::CLISH::Debug->new(@args)->spew;

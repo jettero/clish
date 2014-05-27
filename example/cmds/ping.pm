@@ -40,7 +40,7 @@ sub exec {
     push @args, -s => $opts->{size}->value  if $opts->{size}->has_value;
     push @args, -M => "dont"                if $opts->{df}->has_value and $opts->{df}->value;
 
-    debug "trying to systemx( ping => @args )";
+    debug "trying to systemx( ping => @args )" if $ENV{CLISH_DEBUG};
     return eval { systemx( ping => @args ); 1};
 }
 
@@ -48,7 +48,7 @@ sub validate_ipv6 {
     my $this = shift;
     my $arg = shift;
 
-    debug "validating ipv6 $arg";
+    debug "validating ipv6 $arg" if $ENV{CLISH_DEBUG};
 
     return eval { Net::IP->new($arg) };
 }
@@ -60,7 +60,7 @@ sub validate_ipv4 {
     my $this = shift;
     my $arg = shift;
 
-    debug "validating ipv4 $arg";
+    debug "validating ipv4 $arg" if $ENV{CLISH_DEBUG};
 
     # Don't let people ping local NAT things
     return _pd("$arg") if $arg =~ m/^10\./;
@@ -78,7 +78,7 @@ sub validate_hostname {
     my $res  = $this->resolver || $this->resolver( Net::DNS::Resolver->new );
     my $arg  = shift;
 
-    debug "validating hostname $arg";
+    info "resolving hostname '$arg'";
 
     if ( my $query = $res->search($arg) ) {
         for my $rr ($query->answer) {
@@ -87,13 +87,13 @@ sub validate_hostname {
             given($type) {
                 when( "A" )    {
                     my $addr = $rr->address;
-                    debug "found A, return validate_ipv4($addr)";
+                    debug "found A, return validate_ipv4($addr)" if $ENV{CLISH_DEBUG};
                     return $this->validate_ipv4($rr->address);
                 }
 
                 when( "AAAA" ) {
                     my $addr = $rr->address;
-                    debug "found AAAA, return validate_ipv6($addr)";
+                    debug "found AAAA, return validate_ipv6($addr)" if $ENV{CLISH_DEBUG};
                     return $this->validate_ipv6($rr->address);
                 }
 

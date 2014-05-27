@@ -83,7 +83,7 @@ sub rebuild_parser {
 
     my $parser = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
     $this->parser( $parser );
-    debug "path: " . $this->path_string;
+    debug "path: " . $this->path_string if $ENV{CLISH_DEBUG};
 }
 
 sub run {
