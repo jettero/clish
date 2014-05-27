@@ -6,7 +6,7 @@ use common::sense;
 
 extends 'Term::ReadLine::CLISH::Message';
 
-has qw(+format default) => "%% Warning %s";
+has qw(+format default) => "%% WARNING %s";
 has qw(+msg default) => sub {
     my $e = $@;
     $e =~ s/\s+at\s+\(eval\s+\d+\)\s+line \d+\.//;
