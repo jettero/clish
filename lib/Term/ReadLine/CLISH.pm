@@ -94,6 +94,32 @@ sub run {
 
     info "Welcome to " . $this->name . " v" . $this->version;
 
+    SIGNALS: {
+        my $last;
+        my $count;
+        $SIG{INT} = sub {
+            my $now = time;
+
+            if( $now - $last < 2 ) {
+                if( $count-- <= 0 ) {
+                    info("ok! see ya …");
+                    eval {
+                        ($this->parser->parse_for_execution("quit"))[0]->exec();
+                    1;}
+
+                } else {
+                    info("$count more times");
+                }
+            }
+
+            else {
+                info("got ^C (hit two more times to exit)");
+                $count = 3;
+                $last = $now;
+            }
+        };
+    }
+
     INPUT: while( not $this->done ) {
         my $prompt = $this->prompt;
         $_ = $this->term->readline($prompt);
