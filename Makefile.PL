@@ -5,11 +5,13 @@ use ExtUtils::MakeMaker;
 my $value = prompt("include modules required for the examples? [N/y] ");
 
 WriteMakefile(
+
     NAME         => 'Term::ReadLine::CLISH',
     DISTNAME     => 'term-readline-clish',
     VERSION_FROM => 'lib/Term/ReadLine/CLISH.pm',
 
     PREREQ_PM => {
+
         map {($_=>0)} qw( 
             common::sense
             File::Find::Object
@@ -19,9 +21,11 @@ WriteMakefile(
             Parse::RecDescent
             Term::ReadLine
         )
+
     },
 
     ($ExtUtils::MakeMaker::VERSION ge '6.48'?
+
         (MIN_PERL_VERSION => 5.006001,
             META_MERGE => {
                 keywords => [qw(ios cli shell)],
@@ -31,5 +35,7 @@ WriteMakefile(
             },
 
         LICENSE	=> 'gpl3-artistic',
+
     ) : ()),
+
 );
