@@ -101,7 +101,8 @@ sub run {
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
         if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
-            $cmd->exec( $args );
+            my $rv = $cmd->exec( $args );
+            #rint "\n"; # XXX: blank line after cmd execution?  hrm.... can't decide ....
         }
 
         # else { the parser prints the relevant errors for us }
