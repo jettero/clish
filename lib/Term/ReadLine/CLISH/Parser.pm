@@ -133,6 +133,7 @@ sub parse {
 
                 TRY_TO_EAT_TOK: {
                     my @cai = 0 .. $#cmd_args;
+
                     for my $tidx ( 0 .. $#arg_tokens ) {
                         my $tok = $arg_tokens[$tidx];
 
@@ -141,13 +142,14 @@ sub parse {
                         MATCH_TAGGED_OPTIONS: {
                             if( $tidx < $#arg_tokens ) {
                                 my $ntok = $arg_tokens[$tidx+1];
-                                my @lv;
-                                my @ev;
+                                my @lv; # validated values for the array matching arrays
+                                my @ev; # errors from the validation
 
                                 debug "ntok: $ntok";
 
-                                my @matched_cmd_args_idx =
-                                    grep { undef $@; my $v = $cmd_args[$_]->validate($ntok); $ev[$_] = $@; $lv[$_] = $v if $v; $v } 
+                                my @matched_cmd_args_idx = # the indexes of matching Args
+                                    grep { undef $@; my $v = $cmd_args[$_]->validate($ntok);
+                                           $ev[$_] = $@; $lv[$_] = $v if $v; $v } 
                                     grep { substr($cmd_args[$_]->name, 0, length $tok) eq $tok }
                                     @cai;
 
@@ -168,26 +170,76 @@ sub parse {
                                 }
 
                                 elsif( my @dev = grep {defined $ev[$_]} 0 .. $#ev ) {
-                                    warning "trying to use '$tok' => '$ntok' to fill $cmd\'s $cmd_args[$_]", $ev[$_]
-                                        for @dev;
+                                    warning "trying to use '$tok' => '$ntok' to fill $cmd\'s $cmd_args[$_]",
+                                        $ev[$_] for @dev;
                                 }
 
                                 else {
-                                    # XXX: it's not clear what to do here should we explain for every (un)matching command?
+                                    # XXX: it's not clear what to do here
+                                    # should we explain for every (un)matching
+                                    # command?
+
                                     if( @matched_cmd_args_idx) {
                                         my @matched = map { $cmd_args[$_] } @matched_cmd_args_idx;
-                                        debug "$tok failed to resolve to a single validated tagged option, but initially matched: @matched";
+                                        debug "$tok failed to resolve to a single validated tagged option,"
+                                            . " but initially matched: @matched";
                                     }
 
-                                    # bug I think we don't want to show anything in this case
+                                    # I think we don't want to show anything in this case
                                     # else { debug "$tok failed to resolve to anything" }
                                 }
                             }
-
-                            # else { untagged }
                         }
-                    }
-                }
+
+                        MATCH_OTHER_ITEMS: {
+                            my @lv; # validated values for the array matching arrays
+                            my @ev; # errors from the validation
+
+                            my @matched_cmd_args_idx = # the idexes of matching Args
+                                grep { undef $@; my $v = $cmd_args[$_]->validate($tok);
+                                       $ev[$_] = $@; $lv[$_] = $v if defined $v; defined $v } 
+                                grep { $cmd_args[$_]->tag_optional }
+                                @cai;
+
+                            if( @matched_cmd_args_idx == 1 ) {
+                                my $midx = $matched_cmd_args_idx[0];
+
+                                # consume the items
+                                my ($arg) = splice @cmd_args, $midx, 1;
+                                my ($nom) = splice @arg_tokens, 0, 1;
+
+                                { local $" = "> <"; debug "ate $arg with <$nom>"; } 
+
+                                # populate the option in argss
+                                $arg->add_copy_with_value_to_hashref( $args => $lv[$midx] );
+
+                                # look for more things to consume
+                                redo TRY_TO_EAT_TOK;
+                            }
+
+                            elsif( my @dev = grep {defined $ev[$_]} 0 .. $#ev ) {
+                                warning "trying to use '$tok' to fill $cmd\'s $cmd_args[$_]",
+                                    $ev[$_] for @dev;
+                            }
+
+                            else {
+                                # XXX: it's not clear what to do here should we
+                                # explain for every (un)matching command?
+
+                                if( @matched_cmd_args_idx) {
+                                    my @matched = map { $cmd_args[$_] } @matched_cmd_args_idx;
+                                    debug "$tok failed to resolve to a single validated tagged option,"
+                                        . " but initially matched: @matched";
+                                }
+
+                                # I think we don't want to show anything in this case
+                                # else { debug "$tok failed to resolve to anything" }
+                            }
+                        }
+
+                    } # end for my $tidx ( 0 .. $#arg_tokens )
+
+                } # end TRY_TO_EAT_TOK
 
                 # if there are remaining arguments, reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
