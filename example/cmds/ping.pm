@@ -41,7 +41,8 @@ sub exec {
     push @args, -M => "dont"                if $opts->{df}->has_value and $opts->{df}->value;
 
     debug "trying to systemx( ping => @args )" if $ENV{CLISH_DEBUG};
-    return eval { systemx( ping => @args ); 1};
+    eval { systemx( pingb => @args ); 1} or error "executing ping";
+    return;
 }
 
 sub validate_ipv6 {
