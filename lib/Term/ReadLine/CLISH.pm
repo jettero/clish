@@ -102,18 +102,18 @@ sub run {
 
             if( $now - $last < 2 ) {
                 if( $count-- <= 0 ) {
-                    info("ok! see ya …");
-                    eval {
-                        ($this->parser->parse_for_execution("quit"))[0]->exec();
-                    1;}
+                    info "ok! see ya …";
+
+                    eval { ($this->parser->parse_for_execution("quit"))[0]->exec(); 1}
+                        or die "problem executing quit command, dying instead";
 
                 } else {
-                    info("$count more times");
+                    info "$count more times";
                 }
             }
 
             else {
-                info("got ^C (hit two more times to exit)");
+                info "got ^C (hit two more times to exit)";
                 $count = 3;
                 $last = $now;
             }
