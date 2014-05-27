@@ -92,7 +92,7 @@ sub run {
     $this->init_history;
     $this->rebuild_parser;
 
-    print "Welcome to " . $this->name . " v" . $this->version . ".\n\n";
+    info "Welcome to " . $this->name . " v" . $this->version;
 
     INPUT: while( not $this->done ) {
         my $prompt = $this->prompt;
@@ -121,7 +121,8 @@ sub init_history {
         $this->history_location( $hl = "$ENV{HOME}/.$n\_history" );
     }
     $term->read_history($hl);
-    print "[loaded ", int ($term->GetHistory), " command(s) from history file]\n";
+
+    info "[loaded " . int($term->GetHistory) . " command(s) from history file]";
 }
 
 sub save_history {
