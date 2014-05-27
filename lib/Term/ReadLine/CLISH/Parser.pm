@@ -42,7 +42,7 @@ sub parse_for_execution {
     my ($tokens, $cmds, $argss, $statuss) = $this->parse($line);
 
     if( not $tokens ) {
-        error "error parsing line"; # the tokenizer will have left an argument in $@
+        error "tokenizing input"; # the tokenizer will have left an argument in $@
         return;
     }
 
@@ -54,16 +54,16 @@ sub parse_for_execution {
             return ($cmds->[0], $argss->[0]);
 
         } elsif ($statuss->[0]) {
-            error "parse error for $cmds->[0]", $statuss->[0];
+            error "parsing $cmds->[0] arguments", $statuss->[0];
             return;
         }
     }
 
     elsif( @$cmds ) {
-        error "ambiguous command, \"$tokens->[0]\" could be any of these", join(", ", map { $_->name } @$cmds);
+        error "\"$tokens->[0]\" could be any of these", join(", ", map { $_->name } @$cmds);
 
     } else {
-        error "parse error", "command not understood";
+        error "parsing input", "command not understood";
     }
 
     return;
@@ -327,7 +327,7 @@ sub reload_commands {
                     }
 
                 } else {
-                    error "    while trying to load '$ppackage as $package'";
+                    error "trying to load '$ppackage' as '$package'";
                 }
             }
         }
