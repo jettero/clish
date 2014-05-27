@@ -63,7 +63,7 @@ sub parse_for_execution {
         error "\"$tokens->[0]\" could be any of these", join(", ", map { $_->name } @$cmds);
 
     } else {
-        error "parsing input", "command not understood";
+        error "parsing input", "unknown command '$tokens->[0]'";
     }
 
     return;
