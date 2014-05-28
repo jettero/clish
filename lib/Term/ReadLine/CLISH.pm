@@ -36,10 +36,12 @@ has qw(prefix is rw isa prefixArray coerce 1 default) => sub {['Term::ReadLine::
 has qw(name is rw isa Str default) => "CLISH";
 has qw(version is rw isa Str default) => $VERSION;
 has qw(history_location is rw);
-has qw(term is rw isa Term::ReadLine);
+has qw(term is rw isa Term::ReadLine::Stub);
 has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
 has qw(done is rw isa Bool);
 has qw(cleanup is rw isa ArrayRef[CodeRef] default) => sub { [sub { say "\r\e[2Kbye" }] };
+
+__PACKAGE__->meta->make_immutable;
 
 sub add_namespace {
     my $this = shift;
@@ -92,15 +94,64 @@ sub run {
 
     $this->init_history;
     $this->rebuild_parser;
+    $this->attach_sigint;
 
     info "Welcome to " . $this->name . " v" . $this->version;
 
-    SIGNALS: {
-        my $term = $this->term;
-        my $attribs = $term->Attribs;
+    INPUT: while( not $this->done ) {
+        my $prompt = $this->prompt;
+        $_ = $this->term->readline($prompt);
+        last INPUT unless defined;
+        s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
-        my ($last, $count);
+        if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
 
+            $cmd->exec( $args );
+            #rint "\n"; # XXX: blank line after cmd execution?  hrm.... can't decide ....
+
+        }
+
+        # else { the parser prints the relevant errors for us }
+    }
+}
+
+sub init_history {
+    my $this = shift;
+    my $term = $this->term;
+
+    if( $term->can("read_history") ) {
+        my $hl = $this->history_location;
+        if( !$hl ) {
+            my $n = lc $this->name;
+            $this->history_location( $hl = "$ENV{HOME}/.$n\_history" );
+        }
+        $term->read_history($hl);
+
+        info "[loaded " . int($term->GetHistory) . " command(s) from history file]";
+    }
+}
+
+sub save_history {
+    my $this = shift;
+    my $term = $this->term;
+
+    if( $term->can("write_history") ) {
+        my $hl = $this->history_location;
+
+        return unless $hl;
+        $term->write_history($hl);
+        $term->history_truncate_file($hl, 100);
+    }
+}
+
+sub attach_sigint {
+    my $this = shift;
+    my $term = $this->term;
+    my $attribs = $term->Attribs;
+
+    my ($last, $count);
+
+    if( $term->isa("Term::ReadLine::Gnu") ) {
         sigaction SIGINT, new POSIX::SigAction sub {
             my $prompt = $attribs->{prompt};
 
@@ -140,48 +191,6 @@ sub run {
 
         } or die "Error setting SIGINT handler: $!\n";
     }
-
-    INPUT: while( not $this->done ) {
-        my $prompt = $this->prompt;
-        $_ = $this->term->readline($prompt);
-        last INPUT unless defined;
-        s/^\s*//; s/\s*$//; s/[\r\n]//g;
-
-        if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
-
-            $cmd->exec( $args );
-            #rint "\n"; # XXX: blank line after cmd execution?  hrm.... can't decide ....
-
-        }
-
-        # else { the parser prints the relevant errors for us }
-    }
 }
-
-sub init_history {
-    my $this = shift;
-    my $term = $this->term;
-
-    my $hl = $this->history_location;
-    if( !$hl ) {
-        my $n = lc $this->name;
-        $this->history_location( $hl = "$ENV{HOME}/.$n\_history" );
-    }
-    $term->read_history($hl);
-
-    info "[loaded " . int($term->GetHistory) . " command(s) from history file]";
-}
-
-sub save_history {
-    my $this = shift;
-    my $term = $this->term;
-    my $hl = $this->history_location;
-
-    return unless $hl;
-    $term->write_history($hl);
-    $term->history_truncate_file($hl, 100);
-}
-
-__PACKAGE__->meta->make_immutable;
 
 1;
