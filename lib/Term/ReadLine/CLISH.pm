@@ -144,52 +144,63 @@ sub save_history {
     }
 }
 
-sub attach_sigint {
+sub safe_talk {
     my $this = shift;
+    my $code = shift;
     my $term = $this->term;
     my $attribs = $term->Attribs;
+    my $prompt = $attribs->{prompt};
 
-    my ($last, $count);
+    # NOTE: mostly from Term::ReadLine::Gnu's eg/perlsh; but to be
+    # fair, tried to copy AnyEvent::ReadLine::Gnu first — I just
+    # couldn't get that to work without warnings that dorked it all up.
+    # I think he needs to add {end} to his hide() / show().
 
-    if( $term->isa("Term::ReadLine::Gnu") ) {
+    $term->modifying;
+    $term->delete_text;
+    $attribs->{point} = $attribs->{end} = 0;
+    $term->set_prompt("");
+    $term->redisplay;
+
+    $code->();
+
+    $term->set_prompt($prompt);
+    $term->redisplay;
+}
+
+sub attach_sigint {
+    my $this = shift;
+
+    if( $this->term->isa("Term::ReadLine::Gnu") ) {
+        my ($last, $count);
+
         sigaction SIGINT, new POSIX::SigAction sub {
-            my $prompt = $attribs->{prompt};
+            $this->safe_talk(sub{
 
-            # NOTE: mostly from Term::ReadLine::Gnu's eg/perlsh; but to be
-            # fair, tried to copy AnyEvent::ReadLine::Gnu first — I just
-            # couldn't get that to work without warnings that dorked it all up.
-            # I think he needs to add {end} to his hide() / show().  
+                my $now = time;
+                if( $now - $last < 2 ) {
+                    if( (--$count) <= 0 ) {
+                        info "ok! see ya …";
 
-            $term->modifying;
-            $term->delete_text;
-            $attribs->{point} = $attribs->{end} = 0;
-            $term->set_prompt("");
-            $term->redisplay;
+                        eval { ($this->parser->parse_for_execution("quit"))[0]->exec(); 1}
+                            or die "problem executing quit command, dying instead";
 
-            my $now = time;
-            if( $now - $last < 2 ) {
-                if( (--$count) <= 0 ) {
-                    info "ok! see ya …";
-            
-                    eval { ($this->parser->parse_for_execution("quit"))[0]->exec(); 1}
-                        or die "problem executing quit command, dying instead";
-            
-                } else {
-                    info( $count == 1 ? "got ^C (hit again to exit)" : 
-                        "got ^C (hit $count more times to exit)" );
+                    } else {
+                        info( $count == 1 ? "got ^C (hit again to exit)" :
+                            "got ^C (hit $count more times to exit)" );
+                    }
                 }
-            }
-            
-            else {
-                $count = 2;
-                info "got ^C (hit $count more times to exit)";
-                $last = $now;
-            }
 
-            $term->set_prompt($prompt);
-            $term->redisplay;
+                else {
+                    $count = 2;
+                    info "got ^C (hit $count more times to exit)";
+                    $last = $now;
+                }
+
+            });
 
         } or die "Error setting SIGINT handler: $!\n";
+
     }
 }
 
