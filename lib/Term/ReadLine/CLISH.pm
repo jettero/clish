@@ -51,7 +51,7 @@ sub add_namespace {
     push @{ $this->path }, $nsp;
     push @{ $this->prefix }, $ns;
 
-    $this;
+    return $this;
 }
 
 sub path_string {
@@ -66,6 +66,8 @@ sub DEMOLISH {
     for my $cr (@{ $this->cleanup }) {
         eval { $cr->($this); 1} or warning "during cleanup";
     }
+
+    return;
 }
 
 sub BUILD {
@@ -79,6 +81,8 @@ sub BUILD {
     install_generic_message_handlers();
 
     push @{ $this->cleanup }, sub { shift->save_history };
+
+    return;
 }
 
 sub rebuild_parser {
@@ -87,6 +91,8 @@ sub rebuild_parser {
     my $parser = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
     $this->parser( $parser );
     debug "path: " . $this->path_string if $ENV{CLISH_DEBUG};
+
+    return $this;
 }
 
 sub run {
@@ -133,6 +139,8 @@ sub init_history {
 
         info "[loaded " . int($term->GetHistory) . " command(s) from history file]";
     }
+
+    return $this;
 }
 
 sub save_history {
@@ -146,6 +154,8 @@ sub save_history {
         $term->write_history($hl);
         $term->history_truncate_file($hl, 100);
     }
+
+    return $this;
 }
 
 sub safe_talk {
@@ -171,6 +181,8 @@ sub safe_talk {
     $term->set_prompt(shift @save);
     @{ $attribs }{qw(line_buffer point end)} = @save;
     $term->redisplay;
+
+    return $this;
 }
 
 sub attach_sigint {
@@ -207,6 +219,8 @@ sub attach_sigint {
         } or die "Error setting SIGINT handler: $!\n";
 
     }
+
+    return $this;
 }
 
 THE_WHIRLYGIGS: {
@@ -258,6 +272,8 @@ sub attach_completion_whirlygigs {
         $term->display_match_list($matches);
         $term->forced_update_display;
     };
+
+    return $this;
 }
 
 1;
