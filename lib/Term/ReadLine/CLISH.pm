@@ -92,6 +92,9 @@ sub rebuild_parser {
 sub run {
     my $this = shift;
 
+    binmode STDIN,  ":utf8"; # if we're not using utf8 … we’re … on a comadore64? Slowlaris?
+    binmode STDOUT, ":utf8"; # … it'd be just odd
+
     $this->init_history;
     $this->rebuild_parser;
     $this->attach_sigint;
@@ -150,7 +153,7 @@ sub safe_talk {
     my $code = shift;
     my $term = $this->term;
     my $attribs = $term->Attribs;
-    my $prompt = $attribs->{prompt};
+    my @save = @{ $attribs }{qw(prompt line_buffer point end)};
 
     # NOTE: mostly from Term::ReadLine::Gnu's eg/perlsh; but to be
     # fair, tried to copy AnyEvent::ReadLine::Gnu first — I just
@@ -158,14 +161,15 @@ sub safe_talk {
     # I think he needs to add {end} to his hide() / show().
 
     $term->modifying;
-    $term->delete_text;
-    $attribs->{point} = $attribs->{end} = 0;
+    @{ $attribs }{qw(line_buffer point end)} = ("", 0,0,0);
     $term->set_prompt("");
     $term->redisplay;
 
     $code->();
 
-    $term->set_prompt($prompt);
+    $term->modifying;
+    $term->set_prompt(shift @save);
+    @{ $attribs }{qw(line_buffer point end)} = @save;
     $term->redisplay;
 }
 
@@ -208,25 +212,34 @@ sub attach_sigint {
 THE_WHIRLYGIGS: {
     my ($i, @m);
     my $_matches = sub {
-        my ($text, $state) = @_;
+        my ($this, $attribs, $text, $state) = @_;
+        my $return;
 
-        return $m[$i++] while $i < $#m;
-        return undef;
+        if( $state ) {
+            $i ++;
+
+        } else {
+            $i = 0;
+            @m = map { $_->name } map {($_, @{$_->arguments})} @{ $this->parser->cmds };
+            $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
+            $this->safe_talk(sub{ one_off_debug("\$#m = ($#m); \$attribs{cac}=«$attribs->{completion_append_character}»") });
+        }
+
+        for(; $i < $#m ; $i++ ) {
+            if( $m[$i] =~ m/^(['"]*)\Q$text/ ) {
+                $return = $m[$i];
+                last;
+            }
+        }
+
+        $this->safe_talk(sub{ one_off_debug("  \$i=$i; \$m[$i] = \$return = $return") });
+        return $return;
     };
 
     sub _try_to_complete {
         my ($this, $term, $attribs, $text, $line, $start, $end) = @_;
 
-        $i = 0;
-        @m = # grep { m/^\Q["']*$text/ }
-            map { $_->name }
-            map {($_, @{$_->arguments})}
-            @{ $this->parser->cmds };
-
-        $this->safe_talk(sub{ one_off_debug("\@m = ( @m )"); });
-
-        $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
-        return $term->completion_matches($text, $_matches);
+        return $term->completion_matches($text, sub { $_matches->($this, $attribs, @_) });
     }
 }
 
