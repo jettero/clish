@@ -6,3 +6,4 @@
 - compound commands? blarg ; blarg?
 - command continuations? blarg \r blarg
 - variables? set blarg 7 ; ping $blarg
+- clean up this tragedy a little and get some DRY in there
