@@ -9,7 +9,7 @@ Term::ReadLine::CLISH — command line interface shell
 
 =head1 SYNOPSIS
 
-XXX: Cut from example/MyShell.pm
+    XXX: Cut from example/*
 
 =cut
 
