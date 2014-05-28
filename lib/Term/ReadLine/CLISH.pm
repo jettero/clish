@@ -19,6 +19,7 @@ use Term::ReadLine;
 use Term::ReadLine::CLISH::Parser;
 use Term::ReadLine::CLISH::MessageSystem;
 use File::Spec;
+use POSIX qw(sigaction SIGINT);
 use common::sense;
 
 our $VERSION = '0.0000'; # string for the CPAN
@@ -95,47 +96,49 @@ sub run {
     info "Welcome to " . $this->name . " v" . $this->version;
 
     SIGNALS: {
-        my $last;
-        my $count;
         my $term = $this->term;
+        my $attribs = $term->Attribs;
 
-        $term->{signal_event_hook} = sub {};
-        $SIG{INT} = sub {
+        my ($last, $count);
+
+        sigaction SIGINT, new POSIX::SigAction sub {
+            my $prompt = $attribs->{prompt};
+
+            # NOTE: mostly from Term::ReadLine::Gnu's eg/perlsh; but to be
+            # fair, tried to copy AnyEvent::ReadLine::Gnu first — I just
+            # couldn't get that to work without warnings that dorked it all up.
+            # I think he needs to add {end} to his hide() / show().  
+
+            $term->modifying;
+            $term->delete_text;
+            $attribs->{point} = $attribs->{end} = 0;
+            $term->set_prompt("");
+            $term->redisplay;
+
             my $now = time;
-
-            my $point  = $term->{point};
-            my $lb     = $term->{line_buffer};
-            my $prompt = $term->{prompt};
-
-            $term->{line_buffer} = "";
-            $term->rl_set_prompt("");
-            $term->rl_redisplay;
-
             if( $now - $last < 2 ) {
-                if( $count-- <= 0 ) {
+                if( (--$count) <= 0 ) {
                     info "ok! see ya …";
-
+            
                     eval { ($this->parser->parse_for_execution("quit"))[0]->exec(); 1}
                         or die "problem executing quit command, dying instead";
-
+            
                 } else {
-                    info "$count more times";
+                    info( $count == 1 ? "got ^C (hit again to exit)" : 
+                        "got ^C (hit $count more times to exit)" );
                 }
             }
-
+            
             else {
-                info "got ^C (hit two more times to exit)";
-                $count = 3;
+                $count = 2;
+                info "got ^C (hit $count more times to exit)";
                 $last = $now;
             }
 
-            local $SIG{__WARN__} = sub {};
+            $term->set_prompt($prompt);
+            $term->redisplay;
 
-            $term->{point} = $point;
-            $term->{line_buffer} = $lb;
-            $term->rl_set_prompt($prompt);
-            $term->rl_redisplay;
-        };
+        } or die "Error setting SIGINT handler: $!\n";
     }
 
     INPUT: while( not $this->done ) {
