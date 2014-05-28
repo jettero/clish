@@ -1,8 +1,17 @@
 
-- tab completion
-- '?' help key binding
-- command nicknames exit ⇒ quit
-- command aliases? alias blarg ⇒ quit
-- compound commands? blarg ; blarg?
-- command continuations? blarg \r blarg
-- variables? set blarg 7 ; ping $blarg
+- planned for this release
+  - tab completion
+  - '?' help key binding
+
+- command objects should be definable in files other than their path names!!
+  - more than one class per file seems minimum necessary for sanity
+  - more than one command() per classname would allow
+  - command nicknames exit ⇒ quit
+  - binding to a textfile format or a script to build commands
+
+- shell-like features
+    - command aliases? alias blarg ⇒ quit
+    - user macros?  Probably aliases and macros are doable in boring "userspace" commands
+    - compound commands? blarg ; blarg?
+    - command continuations? blarg \r blarg
+    - variables? set blarg 7 ; ping $blarg
