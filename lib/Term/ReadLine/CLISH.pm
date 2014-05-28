@@ -97,8 +97,19 @@ sub run {
     SIGNALS: {
         my $last;
         my $count;
+        my $term = $this->term;
+
+        $term->{signal_event_hook} = sub {};
         $SIG{INT} = sub {
             my $now = time;
+
+            my $point  = $term->{point};
+            my $lb     = $term->{line_buffer};
+            my $prompt = $term->{prompt};
+
+            $term->{line_buffer} = "";
+            $term->rl_set_prompt("");
+            $term->rl_redisplay;
 
             if( $now - $last < 2 ) {
                 if( $count-- <= 0 ) {
@@ -117,6 +128,13 @@ sub run {
                 $count = 3;
                 $last = $now;
             }
+
+            local $SIG{__WARN__} = sub {};
+
+            $term->{point} = $point;
+            $term->{line_buffer} = $lb;
+            $term->rl_set_prompt($prompt);
+            $term->rl_redisplay;
         };
     }
 
