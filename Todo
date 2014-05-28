@@ -1,0 +1,8 @@
+
+- tab completion
+- '?' help key binding
+- command nicknames exit ⇒ quit
+- command aliases? alias blarg ⇒ quit
+- compound commands? blarg ; blarg?
+- command continuations? blarg \r blarg
+- variables? set blarg 7 ; ping $blarg
