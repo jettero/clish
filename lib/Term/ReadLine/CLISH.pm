@@ -95,6 +95,7 @@ sub run {
     $this->init_history;
     $this->rebuild_parser;
     $this->attach_sigint;
+    $this->attach_completion_whirlygigs;
 
     info "Welcome to " . $this->name . " v" . $this->version;
 
@@ -202,6 +203,48 @@ sub attach_sigint {
         } or die "Error setting SIGINT handler: $!\n";
 
     }
+}
+
+THE_WHIRLYGIGS: {
+    my ($i, @m);
+    my $_matches = sub {
+        my ($text, $state) = @_;
+
+        return $m[$i++] while $i < $#m;
+        return undef;
+    };
+
+    sub _try_to_complete {
+        my ($this, $term, $attribs, $text, $line, $start, $end) = @_;
+
+        $i = 0;
+        @m = # grep { m/^\Q["']*$text/ }
+            map { $_->name }
+            map {($_, @{$_->arguments})}
+            @{ $this->parser->cmds };
+
+        $this->safe_talk(sub{ one_off_debug("\@m = ( @m )"); });
+
+        $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
+        return $term->completion_matches($text, $_matches);
+    }
+}
+
+sub attach_completion_whirlygigs {
+    my $this = shift;
+    my $term = $this->term;
+    my $attribs = $term->Attribs;
+
+    # curry in the bind variables so we don't have to look them up again
+    $attribs->{attempted_completion_function} = sub { $this->_try_to_complete($term, $attribs, @_) };
+    $attribs->{completion_display_matches_hook} = sub {
+        my($matches, $num_matches, $max_length) = @_;
+
+        # XXX: reformatting is done here I guess
+
+        $term->display_match_list($matches);
+        $term->forced_update_display;
+    };
 }
 
 1;
