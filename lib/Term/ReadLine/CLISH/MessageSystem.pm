@@ -9,7 +9,18 @@ use Term::ReadLine::CLISH::Warning;
 use Term::ReadLine::CLISH::Debug;
 use Carp;
 
-our @EXPORT = qw(debug info warning error install_generic_message_handlers);
+our @EXPORT = qw(one_off_debug debug info warning error install_generic_message_handlers);
+
+ONE_OFF_CONTEXT: {
+    my %only_one;
+    sub one_off_debug($;$) {
+        my @c = caller;
+        $only_one{@c} ++;
+        croak "one_off_debug() must be called from only one place" unless 1 == keys %only_one;
+        local $ENV{CLISH_DEBUG} = 1;
+        debug(@_);
+    }
+}
 
 sub debug($;$) {
     croak "debug called without debug ENV set" unless $ENV{CLISH_DEBUG};
@@ -74,3 +85,5 @@ sub _possibly_captioned_message {
 
     return @args;
 }
+
+1;
