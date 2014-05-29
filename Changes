@@ -1,4 +1,7 @@
 
+0.0000: Thu May 29 2014
+   - started adding real tests to the package … better place to test new parser things anyway
+
 0.0000: Wed May 28 2014
    - got a SIGINT handler working reliably and correctly (by copying an example
      in the Term::ReadLine::Gnu distribution — actually started with
