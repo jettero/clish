@@ -21,5 +21,6 @@ LICENSE
 Makefile.PL
 MANIFEST
 README.pod
-t/10_basic_parser_tests.t
+t/10_parse_for_execution.t
+t/15_parse_for_tab_completion.t
 Todo
