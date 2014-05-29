@@ -36,6 +36,15 @@ has qw(output_prefix is rw isa Str default) => "% ";
 
 __PACKAGE__->meta->make_immutable;
 
+sub parse_for_tab_completion {
+    my $this = shift;
+    my $line = shift;
+
+    my ($tokens, $cmds, $argss, $statuss) = $this->parse($line);
+
+    return wantarray ? @$cmds : $cmds;
+}
+
 sub parse_for_execution {
     my $this = shift;
     my $line = shift;

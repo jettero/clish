@@ -82,8 +82,6 @@ sub BUILD {
     eval { $term->ornaments('', '', '', '') };
     $this->term( $term );
 
-    install_generic_message_handlers();
-
     push @{ $this->cleanup }, sub { shift->save_history };
 
     return;
@@ -102,8 +100,7 @@ sub rebuild_parser {
 sub run {
     my $this = shift;
 
-    binmode STDIN,  ":utf8"; # if we're not using utf8 … we’re … on a comadore64? Slowlaris?
-    binmode STDOUT, ":utf8"; # … it'd be just odd
+    install_generic_message_handlers();
 
     $this->init_history;
     $this->rebuild_parser;

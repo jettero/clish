@@ -46,6 +46,10 @@ sub error($;$) {
 
 sub install_generic_message_handlers {
     $SIG{__WARN__} = sub { warning "uncaught warning", "$_[0]" };
+    $SIG{__DIE__} = sub { warning "uncaught error", "$_[0]" };
+
+    binmode STDIN,  ":utf8"; # if we're not using utf8 … we’re … on a comadore64? Slowlaris?
+    binmode STDOUT, ":utf8"; # … it'd be just odd
 }
 
 sub _probably_just_a_caption {
