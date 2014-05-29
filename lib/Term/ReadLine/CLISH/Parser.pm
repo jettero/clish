@@ -135,7 +135,7 @@ sub parse {
                 # if there are remaining arguments, reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
                     local $" = ", ";
-                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "extra tokens on line (@extra)";
+                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "unrecognized tokens on line (@extra)";
                     next;
                 }
 

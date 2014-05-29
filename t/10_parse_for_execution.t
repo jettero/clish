@@ -18,13 +18,14 @@ my %CMD = (
     "  ping  192.168.1.1" => [ "ping", {target=>"192.168.1.1"} ],
     "p t     192.168.1.1" => [ "ping", {target=>"192.168.1.1"} ],
     "p c 7 t 192.168.1.1" => [ "ping", {target=>"192.168.1.1", count=>7} ],
-
-    "no workie" => [ ''=>{} ],
 );
 
 my %EXPECT = (
-    "no workie" => qr(unknown command)
+    "no workie" => qr(unknown command),
+    "p t 192.168.1.1 c blah" => qr(unrecognized tokens),
 );
+
+$CMD{$_} //= [ ''=>{} ] for keys %EXPECT;
 
 plan tests => 4*(keys %CMD);
 
