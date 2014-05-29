@@ -39,7 +39,7 @@ has qw(history_location is rw);
 has qw(term is rw isa Term::ReadLine::Stub);
 has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
 has qw(done is rw isa Bool);
-has qw(cleanup is rw isa ArrayRef[CodeRef] default) => sub { [sub { say "\r\e[2Kbye" }] };
+has qw(cleanup is rw isa ArrayRef[CodeRef] default) => sub { [sub { info "bye" }] };
 
 __PACKAGE__->meta->make_immutable;
 
@@ -63,9 +63,13 @@ sub path_string {
 sub DEMOLISH {
     my $this = shift;
 
-    for my $cr (@{ $this->cleanup }) {
-        eval { $cr->($this); 1} or warning "during cleanup";
-    }
+    $this->safe_talk(sub {
+
+        for my $cr (@{ $this->cleanup }) {
+            eval { $cr->($this); 1} or warning "during cleanup";
+        }
+
+    }, no_restore => 1 );
 
     return;
 }
@@ -161,6 +165,7 @@ sub save_history {
 sub safe_talk {
     my $this = shift;
     my $code = shift;
+    my %opt  = @_;
     my $term = $this->term;
     my $attribs = $term->Attribs;
     my @save = @{ $attribs }{qw(prompt line_buffer point end)};
@@ -176,6 +181,8 @@ sub safe_talk {
     $term->redisplay;
 
     $code->();
+
+    return $this if $opt{no_restore};
 
     $term->modifying;
     $term->set_prompt(shift @save);
