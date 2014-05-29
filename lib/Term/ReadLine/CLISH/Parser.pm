@@ -329,6 +329,11 @@ sub reload_commands {
     my $PATH = $this->path;
     my $prreg = $this->prefix_regex;
 
+    my $orig_warn = $SIG{__WARN__};
+    $SIG{__WARN__} = sub {
+        debug("reload_commands hid this warning: $_[0]") if $ENV{CLISH_DEBUG};
+    };
+
     my @cmds;
 
     for my $path (@$PATH) {
@@ -364,6 +369,8 @@ sub reload_commands {
     my $p = $c == 1 ? "" : "s";
 
     info "[loaded $c command$p from PATH]";
+
+    $SIG{__WARN__} = $orig_warn;
 
     $this->cmds(\@cmds);
 }
