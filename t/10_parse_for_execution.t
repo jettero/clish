@@ -23,6 +23,7 @@ my %CMD = (
 );
 
 my %EXPECT = (
+    "no workie" => qr(unknown command)
 );
 
 plan tests => 4*(keys %CMD);
@@ -42,14 +43,5 @@ for my $str (keys %CMD) {
     my @v1 = map {eval{$_->isa("Net::IP")} ? $_->ip : "$_"} map {$_->value} @{$parg}{@k1};
     ok("@v1", "@{$oarg}{@k2}");
 
-    ok( "@output", exists $EXPECT{$str} ? "$EXPECT{$str}" : "" );
-}
-
-if( @output ) {
-    ok(0);
-    select STDERR;
-    say "$_->[1] during \"$_->[0]\"" for @output;
-
-} else {
-    ok(1);
+    ok( "@output", $EXPECT{$str} // "" );
 }

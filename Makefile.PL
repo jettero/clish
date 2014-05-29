@@ -26,7 +26,7 @@ WriteMakefile(
 
     ($ExtUtils::MakeMaker::VERSION ge '6.48'?
 
-        (MIN_PERL_VERSION => 5.006001,
+        (MIN_PERL_VERSION => 5.010000,
             META_MERGE => {
                 keywords => [qw(ios cli shell)],
                 resources=> {
