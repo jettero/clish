@@ -4,6 +4,9 @@ use Test;
 use lib 'example';
 use Term::ReadLine::CLISH;
 
+my @output;
+*Term::ReadLine::CLISH::Message::spew = sub { push @output, "@_" };
+
 my $parser = Term::ReadLine::CLISH->new->add_namespace("example::cmds")->rebuild_parser->parser;
 
 my %CMD = (
@@ -15,16 +18,18 @@ my %CMD = (
     "  ping  192.168.1.1" => [ "ping", {target=>"192.168.1.1"} ],
     "p t     192.168.1.1" => [ "ping", {target=>"192.168.1.1"} ],
     "p c 7 t 192.168.1.1" => [ "ping", {target=>"192.168.1.1", count=>7} ],
+
+    "no workie" => [ ''=>{} ],
 );
 
-plan tests => 3*(keys %CMD) + 1;
+my %EXPECT = (
+);
 
-my @errors;
-my $str;
-*Term::ReadLine::CLISH::Parser::error = sub { push @errors, [$str, $@] };
-delete $SIG{__WARN__};
+plan tests => 4*(keys %CMD);
 
-for $str (keys %CMD) {
+for my $str (keys %CMD) {
+    @output = ();
+
     my ($pcmd, $parg) = $parser->parse_for_execution($str);
     my ($ocmd, $oarg) = @{ $CMD{$str} };
 
@@ -36,12 +41,14 @@ for $str (keys %CMD) {
 
     my @v1 = map {eval{$_->isa("Net::IP")} ? $_->ip : "$_"} map {$_->value} @{$parg}{@k1};
     ok("@v1", "@{$oarg}{@k2}");
+
+    ok( "@output", exists $EXPECT{$str} ? "$EXPECT{$str}" : "" );
 }
 
-if( @errors ) {
+if( @output ) {
     ok(0);
     select STDERR;
-    say "$_->[1] during \"$_->[0]\"" for @errors;
+    say "$_->[1] during \"$_->[0]\"" for @output;
 
 } else {
     ok(1);
