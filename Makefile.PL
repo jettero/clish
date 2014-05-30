@@ -17,6 +17,7 @@ WriteMakefile(
             File::Find::Object
             Memoize
             Moose
+            namespace::autoclean
             namespace::sweep
             Parse::RecDescent
             Term::ReadLine
