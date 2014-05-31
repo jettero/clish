@@ -111,12 +111,4 @@ sub validate_hostname {
     return;
 }
 
-sub validate_positive_nonzero_number {
-    my $this = shift;
-    my $arg = 0 + shift;
-
-    return $arg if $arg > 0;
-    return;
-}
-
 1;
