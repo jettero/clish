@@ -45,39 +45,52 @@ sub exec {
     return;
 }
 
+sub _err { $@ = shift; return }
+sub _pd  { _err("permission denied for argument $_[0]") }
+sub _ip  {
+    my $ip = Net::IP->new($_[0]);
+    _err(Net::IP::Error()) unless $ip;
+    return $ip;
+}
+
 sub validate_ipv6 {
     my $this = shift;
     my $arg = shift;
 
     debug "validating ipv6 $arg" if $ENV{CLISH_DEBUG};
 
-    return eval { Net::IP->new($arg) };
+    return _ip($arg);
 }
-
-sub _err { $@ = shift; return }
-sub _pd  { _err("permission denied for argument $_[0]") }
 
 sub validate_ipv4 {
     my $this = shift;
     my $arg = shift;
+    my %opt = @_;
 
     debug "validating ipv4 $arg" if $ENV{CLISH_DEBUG};
 
-    # Don't let people ping local NAT things
-    return _pd("$arg") if $arg =~ m/^10\./;
-    return _pd("$arg") if $arg =~ m/^192\./;
-    return _pd("$arg") if $arg =~ m/^172\./;
+    unless( $opt{heuristic_validation} ) {
+        # Don't let people ping local NAT things
+        return _pd("$arg") if $arg =~ m/^10\./;
+        return _pd("$arg") if $arg =~ m/^192\./;
+        return _pd("$arg") if $arg =~ m/^172\./;
 
-    # or this host
-    return _pd("$arg") if $arg eq "1.2.3.4"; # also naughty
+        # or this host
+        return _pd("$arg") if $arg eq "1.2.3.4"; # also naughty
+    }
 
-    return eval { Net::IP->new($arg) };
+    return _ip($arg);
 }
 
 sub validate_hostname {
     my $this = shift;
     my $res  = $this->resolver || $this->resolver( Net::DNS::Resolver->new );
     my $arg  = shift;
+    my %opt = @_;
+
+    debug "validating ipv4 $arg" if $ENV{CLISH_DEBUG};
+
+    return $arg if $opt{heuristic_validation}; # eg, during tab completion
 
     info "resolving hostname '$arg'";
 
