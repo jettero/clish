@@ -36,6 +36,12 @@ has qw(output_prefix is rw isa Str default) => "% ";
 
 __PACKAGE__->meta->make_immutable;
 
+=head1 C<parse_for_tab_completion>
+
+  # XXX: I AM A STUB AND YOU ARE READING ME
+
+=cut
+
 sub parse_for_tab_completion {
     my $this = shift;
     my $line = shift;
