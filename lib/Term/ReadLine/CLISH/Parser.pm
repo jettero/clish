@@ -62,7 +62,7 @@ sub parse_for_tab_completion {
         } else {
             # XXX: we're matching commands in the 0 or the 1 case, so populate like this
             my $m = $TOK[0];
-            @things_we_could_pick = grep { m/^\Q$m/ } @cmds;
+            @things_we_could_pick = grep { m/^\Q$m/ } @$cmds;
         }
     }
 
@@ -188,6 +188,9 @@ sub parse {
     my $line = shift;
     my %options = @_;
 
+    $options{final_validation} = $options{full_validation} = !($options{heuristic_validation} or $options{initial_validation});
+    $options{heuristic_validation} = $options{initial_validation} = !($options{full_validation} or $options{final_validation});
+
     my @return = ([], [], [], []);
 
     if( $line =~ m/\S/ ) {
@@ -221,7 +224,7 @@ sub parse {
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
 
-                $this->_try_to_eat_tok( $cmd,$out_args => \@cmd_args,\@arg_tokens );
+                $this->_try_to_eat_tok( $cmd,$out_args => \@cmd_args,\@arg_tokens, %options );
 
                 # if there are remaining arguments, reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
@@ -248,7 +251,7 @@ sub parse {
 
 sub _try_to_eat_tok {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens ) = @_;
+    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %options ) = @_;
 
     # $cmd is the command object we're with which we're currently working
     # $out_args is the hashref of return arguments (populated by add_copy_with_value_to_hashref)
@@ -270,7 +273,7 @@ sub _try_to_eat_tok {
 
 sub _try_to_eat_tagged_arguments {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens ) = @_;
+    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %options ) = @_;
 
     my $tok  = $arg_tokens->[0];
     my $ntok = $arg_tokens->[1];
@@ -279,7 +282,7 @@ sub _try_to_eat_tagged_arguments {
     my @ev; # errors from the validation
 
     my @matched_cmd_args_idx = # the indexes of matching Args
-        grep { undef $@; my $v = $cmd_args->[$_]->validate('XXX: we need %options here somehow' $ntok);
+        grep { undef $@; my $v = $cmd_args->[$_]->validate($ntok, %options);
                $ev[$_] = $@; $lv[$_] = $v if $v; $v }
         grep { substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
         0 .. $#$cmd_args;
@@ -324,14 +327,14 @@ sub _try_to_eat_tagged_arguments {
 
 sub _try_to_eat_untagged_arguments {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens ) = @_;
+    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %options ) = @_;
     my $tok = $arg_tokens->[0];
 
     my @lv; # validated values for the array matching arrays
     my @ev; # errors from the validation
 
     my @matched_cmd_args_idx = # the idexes of matching Args
-        grep { undef $@; my $v = $cmd_args->[$_]->validate('XXX: we need %options here somehow'$tok);
+        grep { undef $@; my $v = $cmd_args->[$_]->validate($tok, %options);
                $ev[$_] = $@; $lv[$_] = $v if defined $v; defined $v }
         grep { $cmd_args->[$_]->tag_optional }
         0 .. $#$cmd_args;
