@@ -45,6 +45,26 @@ sub parse_for_tab_completion {
     return wantarray ? @$cmds : $cmds;
 }
 
+=head1 C<parse_for_execution()>
+
+This method is usually invoked as follows
+
+        if( my ($cmd, $args) = $this->parser->parse_for_execution($line) ) {
+            eval {
+
+                $cmd->exec( $args );
+
+            } or die error "while executing $cmd"; # read from $@ for us
+        }
+
+        # else { no need to do anything here, just read the next line }
+
+If the text in C<$line> cannot be parsed unambiguously to a C<$cmd> object with
+appropriate arguments, then it will generate and print appropriate errors for
+the line.
+
+=cut
+
 sub parse_for_execution {
     my $this = shift;
     my $line = shift;
