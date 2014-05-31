@@ -40,7 +40,7 @@ sub parse_for_tab_completion {
     my $this = shift;
     my $line = shift;
 
-    my ($tokens, $cmds, $argss, $statuss) = $this->parse($line);
+    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line);
 
     return wantarray ? @$cmds : $cmds;
 }
@@ -48,19 +48,19 @@ sub parse_for_tab_completion {
 sub parse_for_execution {
     my $this = shift;
     my $line = shift;
-    my ($tokens, $cmds, $argss, $statuss) = $this->parse($line);
+    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line);
 
-    if( not $tokens or not $tokens->{tokens} ) {
+    if( not $tokout or not $tokout->{tokens} ) {
         error "tokenizing input"; # the tokenizer will have left an argument in $@
         return;
     }
 
-    if( $tokens->{cruft} ) {
-        error "miscellaneous cruft on end of line", $tokens->{cruft};
+    if( $tokout->{cruft} ) {
+        error "miscellaneous cruft on end of line", $tokout->{cruft};
         return;
     }
 
-    return unless @{$tokens->{tokens}};
+    return unless @{$tokout->{tokens}};
 
     if( @$cmds == 1 ) {
         if( $statuss->[0] == PARSE_COMPLETE ) {
@@ -74,10 +74,10 @@ sub parse_for_execution {
     }
 
     elsif( @$cmds ) {
-        error "\"$tokens->[0]\" could be any of these", join(", ", map { $_->name } @$cmds);
+        error "\"$tokout->{tokens}[0]\" could be any of these", join(", ", map { $_->name } @$cmds);
 
     } else {
-        error "parsing input", "unknown command '$tokens->[0]'";
+        error "parsing input", "unknown command '$tokout->{tokens}[0]'";
     }
 
     return;
@@ -87,10 +87,10 @@ sub parse_for_execution {
 
 This is a support function, normally invoked as follows.
 
-    my ($tokens, $cmds, $args_star, $statuses) = $this->parse($line);
+    my ($tokout, $cmds, $args_star, $statuses) = $this->parse($line);
 
 The C<parse> method returns an hashref with keys C<tokens> and C<cruft> from
-the line in C<$tokens>.  C<tokens> is an arrayref of tokens that parsed
+the line in C<$tokout>.  C<tokens> is an arrayref of tokens that parsed
 correctly, and C<cruft> is left-over unparsable things from the line (which is
 hopefully useful for tab completion and context help).
 
@@ -114,7 +114,7 @@ C<parse> will return an empty list and leave the parse error in C<$@>.  Note
 that C<error()> is an alias for L<Term::ReadLine::CLISH::Error>'s (new/spew)
 that consumes C<$@> if invoked with a single argument.
 
-    if( not $tokens ) {
+    if( not $tokout ) {
         error "parse error"; 
         return;
     }
@@ -134,18 +134,18 @@ sub parse {
     if( $line =~ m/\S/ ) {
         my $prefix    = $this->output_prefix;
         my $tokenizer = $this->tokenizer;
-        my $tokens    = $tokenizer->tokens( $line );
+        my $tokout    = $tokenizer->tokens( $line );
 
-        return unless $tokens and $tokens->{tokens};
+        return unless $tokout and $tokout->{tokens};
             # careful to not disrupt $@ on the way up XXX document this type of error (including $@)
 
-        debug do { local $" = "> <"; "cruft: \"$tokens->{cruft}\" tokens: <@{$tokens->{tokens}}>" }
+        debug do { local $" = "> <"; "cruft: \"$tokout->{cruft}\" tokens: <@{$tokout->{tokens}}>" }
             if $ENV{CLISH_DEBUG};
 
-        if( my @TOK = @{$tokens->{tokens}} ) {
+        if( my @TOK = @{$tokout->{tokens}} ) {
             my ($cmd_token, @arg_tokens) = @TOK;
 
-            $return[0] = $tokens;
+            $return[0] = $tokout;
             my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
 
             $return[ PARSE_RETURN_CMDS ] = \@cmds;
