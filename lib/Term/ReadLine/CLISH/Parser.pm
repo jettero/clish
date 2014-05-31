@@ -150,7 +150,7 @@ that C<error()> is an alias for L<Term::ReadLine::CLISH::Error>'s (new/spew)
 that consumes C<$@> if invoked with a single argument.
 
     if( not $tokout ) {
-        error "parse error"; 
+        error "parse error";
         return;
     }
 
@@ -246,63 +246,68 @@ sub _try_to_eat_tok {
     # $cmd_args are the command args not yet consumed by the parse
     # $arg_tokens are the tokens representing args not yet consumed by the parse
 
-    for my $tidx ( 0 .. $#$arg_tokens ) {
-        $this->_try_to_eat_tagged_arguments(   $tidx, @_ ) and redo;
-        $this->_try_to_eat_untagged_arguments( $tidx, @_ ) and redo;
+    EATER: {
+        if( @$arg_tokens ) {
+            if( @$arg_tokens > 1 ) {
+                redo EATER if
+                $this->_try_to_eat_tagged_arguments( @_ )
+            }
+
+            redo EATER if
+            $this->_try_to_eat_untagged_arguments( @_ )
+        }
     }
 }
 
 sub _try_to_eat_tagged_arguments {
     my $this = shift;
-    my ( $tidx, $cmd,$out_args => $cmd_args,$arg_tokens ) = @_;
+    my ( $cmd,$out_args => $cmd_args,$arg_tokens ) = @_;
 
-    if( $tidx < $#$arg_tokens ) {
-        my $tok  = $arg_tokens->[0];
-        my $ntok = $arg_tokens->[$tidx+1];
+    my $tok  = $arg_tokens->[0];
+    my $ntok = $arg_tokens->[1];
 
-        my @lv; # validated values for the array matching arrays
-        my @ev; # errors from the validation
+    my @lv; # validated values for the array matching arrays
+    my @ev; # errors from the validation
 
-        my @matched_cmd_args_idx = # the indexes of matching Args
-            grep { undef $@; my $v = $cmd_args->[$_]->validate($ntok);
-                   $ev[$_] = $@; $lv[$_] = $v if $v; $v }
-            grep { substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
-            0 .. $#$cmd_args;
+    my @matched_cmd_args_idx = # the indexes of matching Args
+        grep { undef $@; my $v = $cmd_args->[$_]->validate($ntok);
+               $ev[$_] = $@; $lv[$_] = $v if $v; $v }
+        grep { substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
+        0 .. $#$cmd_args;
 
-        if( @matched_cmd_args_idx == 1 ) {
-            my $midx = $matched_cmd_args_idx[0];
+    if( @matched_cmd_args_idx == 1 ) {
+        my $midx = $matched_cmd_args_idx[0];
 
-            # consume the items
-            my ($arg) = splice @$cmd_args, $midx, 1;
-            my @nom   = splice @$arg_tokens, 0, 2;
+        # consume the items
+        my ($arg) = splice @$cmd_args, $midx, 1;
+        my @nom   = splice @$arg_tokens, 0, 2;
 
-            { local $" = "> <"; debug "ate $arg with <@nom>" if $ENV{CLISH_DEBUG}; }
+        { local $" = "> <"; debug "ate $arg with <@nom>" if $ENV{CLISH_DEBUG}; }
 
-            # populate the option in argss
-            $arg->add_copy_with_value_to_hashref( $out_args => $lv[$midx] );
+        # populate the option in argss
+        $arg->add_copy_with_value_to_hashref( $out_args => $lv[$midx] );
 
-            return 1; # returning true reboots the _try*
+        return 1; # returning true reboots the _try*
+    }
+
+    elsif( my @dev = grep {defined $ev[$_]} 0 .. $#ev ) {
+        warning "trying to use '$tok' => '$ntok' to fill $cmd\'s $cmd_args->[$_]",
+            $ev[$_] for @dev;
+    }
+
+    else {
+        # XXX: it's not clear what to do here
+        # should we explain for every (un)matching
+        # command?
+
+        if( @matched_cmd_args_idx) {
+            my @matched = map { $cmd_args->[$_] } @matched_cmd_args_idx;
+            debug "$tok failed to resolve to a single validated tagged option,"
+                . " but initially matched: @matched" if $ENV{CLISH_DEBUG};
         }
 
-        elsif( my @dev = grep {defined $ev[$_]} 0 .. $#ev ) {
-            warning "trying to use '$tok' => '$ntok' to fill $cmd\'s $cmd_args->[$_]",
-                $ev[$_] for @dev;
-        }
-
-        else {
-            # XXX: it's not clear what to do here
-            # should we explain for every (un)matching
-            # command?
-
-            if( @matched_cmd_args_idx) {
-                my @matched = map { $cmd_args->[$_] } @matched_cmd_args_idx;
-                debug "$tok failed to resolve to a single validated tagged option,"
-                    . " but initially matched: @matched" if $ENV{CLISH_DEBUG};
-            }
-
-            # I think we don't want to show anything in this case
-            # else { debug "$tok failed to resolve to anything" }
-        }
+        # I think we don't want to show anything in this case
+        # else { debug "$tok failed to resolve to anything" }
     }
 
     return;
@@ -310,7 +315,7 @@ sub _try_to_eat_tagged_arguments {
 
 sub _try_to_eat_untagged_arguments {
     my $this = shift;
-    my ( $tidx, $cmd,$out_args => $cmd_args,$arg_tokens ) = @_;
+    my ( $cmd,$out_args => $cmd_args,$arg_tokens ) = @_;
     my $tok = $arg_tokens->[0];
 
     my @lv; # validated values for the array matching arrays
