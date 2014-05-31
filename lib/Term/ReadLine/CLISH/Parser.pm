@@ -53,8 +53,17 @@ sub parse_for_tab_completion {
         @things_we_could_pick = (); # we'll never figure this out, it's a string or something
 
     } else {
-        my @args_with_values;
-        my @args_without_values;
+        my @TOK = @{$tokout->{tokens}};
+
+        if( @TOK > 1 ) {
+            my @args_with_values;  # XXX: apply filters here, find applicable args
+            my @args_without_values;
+
+        } else {
+            # XXX: we're matching commands in the 0 or the 1 case, so populate like this
+            my $m = $TOK[0];
+            @things_we_could_pick = grep { m/^\Q$m/ } @cmds;
+        }
     }
 
     return wantarray ? @things_we_could_pick : \@things_we_could_pick;
@@ -270,7 +279,7 @@ sub _try_to_eat_tagged_arguments {
     my @ev; # errors from the validation
 
     my @matched_cmd_args_idx = # the indexes of matching Args
-        grep { undef $@; my $v = $cmd_args->[$_]->validate($ntok);
+        grep { undef $@; my $v = $cmd_args->[$_]->validate('XXX: we need %options here somehow' $ntok);
                $ev[$_] = $@; $lv[$_] = $v if $v; $v }
         grep { substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
         0 .. $#$cmd_args;
@@ -322,7 +331,7 @@ sub _try_to_eat_untagged_arguments {
     my @ev; # errors from the validation
 
     my @matched_cmd_args_idx = # the idexes of matching Args
-        grep { undef $@; my $v = $cmd_args->[$_]->validate($tok);
+        grep { undef $@; my $v = $cmd_args->[$_]->validate('XXX: we need %options here somehow'$tok);
                $ev[$_] = $@; $lv[$_] = $v if defined $v; defined $v }
         grep { $cmd_args->[$_]->tag_optional }
         0 .. $#$cmd_args;
