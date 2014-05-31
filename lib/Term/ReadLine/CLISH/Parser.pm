@@ -319,8 +319,8 @@ sub build_parser {
     my $this = shift;
 
     my $prd = Parse::RecDescent->new(q
-        tokens: token(s?) { $return = { tokens => $item[1] } } cruft(?) { $return->{cruft} = $item[3] } /$/
-        cruft: /\s*/ /.+/ { $return = $item[2] }
+        tokens: token(s?) { $return = { tokens => $item[1] } } cruft { $return->{cruft} = $item[3] } /$/
+        cruft: /\s*/ /.*/ { $return = $item[2] }
         token: word | string
         word: /[\w\d_.-]+/ { $return = $item[1] }
 
