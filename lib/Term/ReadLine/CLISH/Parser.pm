@@ -50,12 +50,17 @@ sub parse_for_execution {
     my $line = shift;
     my ($tokens, $cmds, $argss, $statuss) = $this->parse($line);
 
-    if( not $tokens ) {
+    if( not $tokens or not $tokens->{tokens} ) {
         error "tokenizing input"; # the tokenizer will have left an argument in $@
         return;
     }
 
-    return unless @$tokens;
+    if( $tokens->{cruft} ) {
+        error "miscellaneous cruft on end of line", $tokens->{cruft};
+        return;
+    }
+
+    return unless @{$tokens->{tokens}};
 
     if( @$cmds == 1 ) {
         if( $statuss->[0] == PARSE_COMPLETE ) {
@@ -82,14 +87,18 @@ sub parse_for_execution {
 
     my ($tokens, $cmds, $args_star, $statuses) = $this->parse($line);
 
-The C<parse> method returns an arrayref of tokens from the line in C<$tokens>,
-an arrayref of possible commands in C<$cmds>, an arrayref of hashrefs (each
-hashref the parsed arguments for the commands as C<< tag=>value >> pairs), and
-an arrayref of C<$statuses>.
+The C<parse> method returns an hashref with keys C<tokens> and C<cruft> from
+the line in C<$tokens>.  C<tokens> is an arrayref of tokens that parsed
+correctly, and C<cruft> is left-over unparsable things from the line (which is
+hopefully useful for tab completion and context help).
 
-The statuses are either the value C<PARSE_COMPLETE> or a string representing any
-errors with intepreting the line as an invocation of the command at the same
-index.
+It also returns an arrayref of possible commands in C<$cmds>, an arrayref of
+hashrefs (each hashref the parsed arguments for the commands as
+C<< tag=>value >> pairs), and an arrayref of C<$statuses>.
+
+The statuses are either the value C<PARSE_COMPLETE> or a string representing
+any errors with intepreting the line as an invocation of the command at the
+same index.
 
 Example:
 
@@ -99,7 +108,14 @@ Example:
     }
 
 Exception: if the tokenizer (an actual parser) can't make sense of the line,
-C<parse> will return an empty list and leave the parse error in C<$@>.
+C<parse> will return an empty list and leave the parse error in C<$@>.  Note
+that C<error()> is an alias for L<Term::ReadLine::CLISH::Error>'s (new/spew)
+that consumes C<$@> if invoked with a single argument.
+
+    if( not $tokens ) {
+        error "parse error"; 
+        return;
+    }
 
 =cut
 
@@ -115,12 +131,14 @@ sub parse {
         my $tokenizer = $this->tokenizer;
         my $tokens    = $tokenizer->tokens( $line );
 
-        return unless $tokens; # careful to not disrupt $@ on the way up XXX document this type of error (including $@)
+        return unless $tokens and $tokens->{tokens};
+            # careful to not disrupt $@ on the way up XXX document this type of error (including $@)
 
-        debug do { local $" = "> <"; "tokens: <@$tokens>" } if $ENV{CLISH_DEBUG};
+        debug do { local $" = "> <"; "cruft: \"$tokens->{cruft}\" tokens: <@{$tokens->{tokens}}>" }
+            if $ENV{CLISH_DEBUG};
 
-        if( @$tokens ) {
-            my ($cmd_token, @arg_tokens) = @$tokens;
+        if( my @TOK = @{$tokens->{tokens}} ) {
+            my ($cmd_token, @arg_tokens) = @TOK;
 
             $return[0] = $tokens;
             my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
