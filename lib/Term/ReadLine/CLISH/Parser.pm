@@ -46,9 +46,18 @@ sub parse_for_tab_completion {
     my $this = shift;
     my $line = shift;
 
-    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line);
+    my @things_we_could_pick;
+    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1);
 
-    return wantarray ? @$cmds : $cmds;
+    if( $tokout->{cruft} ) {
+        @things_we_could_pick = (); # we'll never figure this out, it's a string or something
+
+    } else {
+        my @args_with_values;
+        my @args_without_values;
+    }
+
+    return wantarray ? @things_we_could_pick : \@things_we_could_pick;
 }
 
 =head1 C<parse_for_execution()>
@@ -113,7 +122,7 @@ sub parse_for_execution {
 
 This is a support function, normally invoked as follows.
 
-    my ($tokout, $cmds, $args_star, $statuses) = $this->parse($line);
+    my ($tokout, $cmds, $args_star, $statuses) = $this->parse($line, opt1=>optval, opt2=>optval2);
 
 The C<parse> method returns an hashref with keys C<tokens> and C<cruft> from
 the line in C<$tokout>.  C<tokens> is an arrayref of tokens that parsed
@@ -148,12 +157,27 @@ that consumes C<$@> if invoked with a single argument.
     if( @$cmds ... PARSE_COMPLETE )
         ...
 
+You can pass options to C<parse()> that get passed to the validator subs.
+Commands can use these args to alter their validation strategies.  For now, the
+only CLISH-known option is C<heuristic_validation> (used by
+L<parse_for_tab_completion()>).
+
+=over
+
+=item C<heuristic_validation>
+
+Tell validation functions to avoid long operations and error generation, to
+just assume arguments are acceptable if they more or less contain the right
+characters.
+
+=back
+
 =cut
 
 sub parse {
     my $this = shift;
     my $line = shift;
-    my %options;
+    my %options = @_;
 
     my @return = ([], [], [], []);
 
