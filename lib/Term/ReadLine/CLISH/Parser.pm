@@ -85,6 +85,8 @@ sub parse_for_execution {
 
 =head1 C<parse()>
 
+This is a support function, normally invoked as follows.
+
     my ($tokens, $cmds, $args_star, $statuses) = $this->parse($line);
 
 The C<parse> method returns an hashref with keys C<tokens> and C<cruft> from
@@ -116,6 +118,9 @@ that consumes C<$@> if invoked with a single argument.
         error "parse error"; 
         return;
     }
+
+    if( @$cmds ... PARSE_COMPLETE )
+        ...
 
 =cut
 
