@@ -166,30 +166,16 @@ that consumes C<$@> if invoked with a single argument.
     if( @$cmds ... PARSE_COMPLETE )
         ...
 
-You can pass options to C<parse()> that get passed to the validator subs.
-Commands can use these args to alter their validation strategies.  For now, the
-only CLISH-known option is C<heuristic_validation> (used by
-L<parse_for_tab_completion()>).
-
-=over
-
-=item C<heuristic_validation>
-
-Tell validation functions to avoid long operations and error generation, to
-just assume arguments are acceptable if they more or less contain the right
-characters.
-
-=back
-
 =cut
 
 sub parse {
     my $this = shift;
     my $line = shift;
-    my %options = @_;
+    my %popt = @_;
 
-    $options{final_validation} = $options{full_validation} = !($options{heuristic_validation} or $options{initial_validation});
-    $options{heuristic_validation} = $options{initial_validation} = !($options{full_validation} or $options{final_validation});
+    my %vopt;
+    $vopt{final_validation}   = $vopt{full_validation}      = 0;
+    $vopt{initial_validation} = $vopt{heuristic_validation} = 1;
 
     my @return = ([], [], [], []);
 
@@ -224,7 +210,7 @@ sub parse {
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
 
-                $this->_try_to_eat_tok( $cmd,$out_args => \@cmd_args,\@arg_tokens, %options );
+                $this->_try_to_eat_tok( $cmd,$out_args => \@cmd_args,\@arg_tokens, %vopt );
 
                 # if there are remaining arguments, reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
@@ -251,7 +237,7 @@ sub parse {
 
 sub _try_to_eat_tok {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %options ) = @_;
+    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %vopt ) = @_;
 
     # $cmd is the command object we're with which we're currently working
     # $out_args is the hashref of return arguments (populated by add_copy_with_value_to_hashref)
@@ -273,7 +259,7 @@ sub _try_to_eat_tok {
 
 sub _try_to_eat_tagged_arguments {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %options ) = @_;
+    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %vopt ) = @_;
 
     my $tok  = $arg_tokens->[0];
     my $ntok = $arg_tokens->[1];
@@ -282,7 +268,7 @@ sub _try_to_eat_tagged_arguments {
     my @ev; # errors from the validation
 
     my @matched_cmd_args_idx = # the indexes of matching Args
-        grep { undef $@; my $v = $cmd_args->[$_]->validate($ntok, %options);
+        grep { undef $@; my $v = $cmd_args->[$_]->validate($ntok, %vopt);
                $ev[$_] = $@; $lv[$_] = $v if $v; $v }
         grep { substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
         0 .. $#$cmd_args;
@@ -327,14 +313,14 @@ sub _try_to_eat_tagged_arguments {
 
 sub _try_to_eat_untagged_arguments {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %options ) = @_;
+    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %vopt ) = @_;
     my $tok = $arg_tokens->[0];
 
     my @lv; # validated values for the array matching arrays
     my @ev; # errors from the validation
 
     my @matched_cmd_args_idx = # the idexes of matching Args
-        grep { undef $@; my $v = $cmd_args->[$_]->validate($tok, %options);
+        grep { undef $@; my $v = $cmd_args->[$_]->validate($tok, %vopt);
                $ev[$_] = $@; $lv[$_] = $v if defined $v; defined $v }
         grep { $cmd_args->[$_]->tag_optional }
         0 .. $#$cmd_args;

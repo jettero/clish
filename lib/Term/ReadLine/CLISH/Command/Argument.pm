@@ -69,8 +69,12 @@ sub copy_with_context {
 }
 
 sub validate {
-    my ($this, $that) = @_;
+    my ($this, $that, %vopt) = @_;
     my $validators = $this->validators;
+
+    # default to final validation: require explicit argument to use heuristics
+    $vopt{final_validation}   = $vopt{full_validation}      = !($vopt{initial_validation} || $vopt{heuristic_validation});
+    $vopt{initial_validation} = $vopt{heuristic_validation} = !($vopt{final_validation} || $vopt{full_validation});
 
     # If there are no validators, then we can't accept arguments for this tag
     return if @$validators == 0;

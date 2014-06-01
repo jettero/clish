@@ -32,7 +32,7 @@ sub arguments {
     return [ map { $_->copy_with_context($this) } @{$this->_arguments} ];
 };
 
-# boring built-in validators
+# boring built-in argument validators
 
 sub validate_nonempty_string  { $_[1] || undef }
 sub validate_positive_nonzero { 0 + $_[1] || undef }
