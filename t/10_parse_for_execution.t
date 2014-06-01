@@ -4,6 +4,8 @@ use Test;
 use lib 'example';
 use Term::ReadLine::CLISH;
 
+$ENV{CLISH_DEBUG} = 0; # this messages up the message capture if it's set
+
 my @output;
 *Term::ReadLine::CLISH::Message::spew = sub { push @output, "@_" };
 
