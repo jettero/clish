@@ -2,7 +2,6 @@
 package Term::ReadLine::CLISH::Command::Argument;
 
 use Moose;
-use Memoize;
 use namespace::sweep; # like autoclean, but doesn't murder overloads
 use Moose::Util::TypeConstraints;
 use Term::ReadLine::CLISH::MessageSystem;
@@ -131,14 +130,5 @@ sub validate {
 
     return;
 }
-
-sub _normalize_validate {
-    my ($this, $that, %vopt) = @_;
-    my $k = "$that $vopt{final_validation}";
-    debug "memo normalizer(@_ => $k)" if $ENV{CLISH_DEBUG};
-    return $k;
-}
-
-memoize( qw(validate NORMALIZER _normalize_validate) );
 
 1;

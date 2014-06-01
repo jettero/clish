@@ -15,7 +15,6 @@ WriteMakefile(
         map {($_=>0)} qw( 
             common::sense
             File::Find::Object
-            Memoize
             Moose
             namespace::autoclean
             namespace::sweep
