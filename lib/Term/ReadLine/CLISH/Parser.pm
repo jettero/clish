@@ -114,6 +114,7 @@ sub parse_for_execution {
     if( @$cmds == 1 ) {
         if( $statuss->[0] == PARSE_COMPLETE ) {
             debug "selected $cmds->[0] for execution, executing final validation" if $ENV{CLISH_DEBUG};
+
             $cmds->[0]->validate($argss->[0]) or return;
             return ($cmds->[0], $argss->[0]);
 

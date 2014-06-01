@@ -113,7 +113,7 @@ sub validate {
         unless( eval { $r = $context->$v( $that, %vopt ); 1} ) {
             my $class = ref $this;
             my @vopt = %vopt;
-            warning "in $class \-> $v($that, @vopt) method";
+            warning "in $class —> $v($that, @vopt)";
             next;
         }
 
