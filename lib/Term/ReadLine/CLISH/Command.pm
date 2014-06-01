@@ -35,6 +35,8 @@ sub arguments {
 sub validate {
     my $this = shift;
 
+    debug "$this final validation" if $ENV{CLISH_DEBUG};
+
     my $error_count = 0;
     for( @{ $this->arguments } ) {
         if( $_->has_token ) {

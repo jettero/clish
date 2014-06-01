@@ -163,6 +163,10 @@ sub safe_talk {
     my $code = shift;
     my %opt  = @_;
     my $term = $this->term;
+    
+    # sometimes, during global destruction, $term will be undefined
+    return unless defined $term;
+
     my $attribs = $term->Attribs;
     my @save = @{ $attribs }{qw(prompt line_buffer point end)};
 

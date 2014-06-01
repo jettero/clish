@@ -30,8 +30,12 @@ __PACKAGE__->meta->make_immutable;
 
 sub stringify {
     my $this = shift;
+    my $arg = "ARG[" . $this->name . "]";
 
-    return "ARG[" . $this->name . "]";
+    $arg .= "T<" . $this->token . ">" if $this->has_token;
+    $arg .= "{HV}" if $this->has_value; # not all values are stringy, just mention that we have one
+
+    return $arg;
 }
 
 sub value_or_default {
@@ -78,15 +82,18 @@ sub validate {
     $vopt{initial_validation} = $vopt{heuristic_validation} = !($vopt{final_validation} || $vopt{full_validation});
 
     # If there are no validators, then we can't accept arguments for this tag
-    return if @$validators == 0;
+    die "incomplete argument specification (no validators)" if @$validators == 0;
 
     my $context = $this->context or die "my context is missing";
 
     $that //= $this->token;
     croak "precisely what are we validating here?" unless $that;
 
+    debug "validating $context $this" . ($vopt{final_validation} ? " (final validation)" : " (initial validation)") if $ENV{CLISH_DEBUG};
+
     for my $v (@$validators) {
         if( my $r = $context->$v( $that, %vopt ) ) {
+            debug "validated!" if $ENV{CLISH_DEBUG};
             $this->value( $r )    if $vopt{final_validation};
             $this->token( $that ) if $vopt{initial_validation};
             return 1;
