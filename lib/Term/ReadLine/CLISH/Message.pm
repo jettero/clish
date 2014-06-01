@@ -3,6 +3,8 @@ package Term::ReadLine::CLISH::Message;
 use Moose;
 use namespace::sweep; # like autoclean, but doesn't murder overloads
 use common::sense;
+use Term::ANSIColorx::ColorNicknames;
+use Term::ANSIColor ();
 use overload '""' => \&stringify, fallback => 1;
 
 has qw(generated is ro isa Int default) => sub { time };
@@ -21,12 +23,25 @@ sub stringify {
     $msg =~ s/[\x0d\x0a]+$//g;
     $msg = "$cap: $msg" if $cap;
 
-    return sprintf($this->format, $msg);
+    my $fmt = $this->format;
+
+    if( $ENV{CLISH_NOCOLOR} ) {
+        $fmt =~ s/\%C(?:\([^()]*\))?//g;
+
+    } else {
+        $fmt =~ s/\%C(?:\(([^()]*)\))?/"$1" ? Term::ANSIColor::color("$1") : Term::ANSIColor::color('reset')/eg;
+    }
+
+    return sprintf($fmt, $msg);
 }
 
 sub spew {
     my $this = shift;
     say $this;
+}
+
+sub colorize {
+    # overload this
 }
 
 1;
