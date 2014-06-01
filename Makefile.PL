@@ -20,6 +20,7 @@ WriteMakefile(
             namespace::autoclean
             namespace::sweep
             Parse::RecDescent
+            Term::ANSIColorx::ColorNicknames
             Term::ReadLine
         )
 
