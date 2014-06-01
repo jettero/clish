@@ -1,4 +1,8 @@
 
+0.0000: Sun Jun 01 2014
+   - slept on it.  parse-for-execution shall have a final validation pass *AFTER* parse
+   - parse shall always use heuristic validation
+
 0.0000: Sat May 31 2014
    - added more documentations and came up with some basic strategies for tab-completion parsing
    - the parser can now return extraneous cruft
