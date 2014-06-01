@@ -3,8 +3,9 @@ package Term::ReadLine::CLISH::Command;
 use Moose;
 use Moose::Util::TypeConstraints;
 use namespace::sweep; # like autoclean, but doesn't murder overloads
-use common::sense;
 use Carp;
+use Term::ReadLine::CLISH::MessageSystem;
+use common::sense;
 use overload '""' => \&stringify, fallback => 1;
 
 subtype 'Argument', as 'Term::ReadLine::CLISH::Command::Argument';
@@ -27,10 +28,23 @@ sub arguments {
     my $this = shift;
     croak "you can't change the arguments this way" if @_;
 
-    # XXX: this should be an after() modifier on the reader only, but I can't get it to work
-
+    # NOTE: this should be a Moose after() method-modifier on the reader only, but I can't get it to work
     return [ map { $_->copy_with_context($this) } @{$this->_arguments} ];
 };
+
+sub validate {
+    my $this = shift;
+    my @args = $this->arguments;
+
+    for( @args ) {
+        if( $_->has_value ) {
+            error "re $_" unless $_->validate;
+
+        } elsif( $_->required ) {
+            error "$_ is a required argument";
+        }
+    }
+}
 
 # boring built-in argument validators
 
