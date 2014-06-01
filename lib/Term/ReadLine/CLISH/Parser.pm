@@ -114,7 +114,7 @@ sub parse_for_execution {
     if( @$cmds == 1 ) {
         if( $statuss->[0] == PARSE_COMPLETE ) {
             debug "selected $cmds->[0] for execution, executing final validation" if $ENV{CLISH_DEBUG};
-            $cmds->[0]->validate or return;
+            $cmds->[0]->validate($argss->[0]) or return;
             return ($cmds->[0], $argss->[0]);
 
         } elsif ($statuss->[0]) {
@@ -273,12 +273,8 @@ sub _try_to_eat_tagged_arguments {
     my $tok  = $arg_tokens->[0];
     my $ntok = $arg_tokens->[1];
 
-    my @lv; # validated values for the array matching arrays
-    my @ev; # errors from the validation
-
     my @matched_cmd_args_idx = # the indexes of matching Args
-        grep { undef $@; my $v = $cmd_args->[$_]->validate($ntok, %vopt);
-               $ev[$_] = $@; $lv[$_] = $v if $v; $v }
+        grep { $cmd_args->[$_]->validate($ntok, %vopt) }
         grep { substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
         0 .. $#$cmd_args;
 
@@ -289,17 +285,12 @@ sub _try_to_eat_tagged_arguments {
         my ($arg) = splice @$cmd_args, $midx, 1;
         my @nom   = splice @$arg_tokens, 0, 2;
 
-        { local $" = "> <"; debug "ate arg=$arg and tok=<@nom>" if $ENV{CLISH_DEBUG}; }
+        { local $" = ", "; debug "ate arg=$arg and tok=<@nom>" if $ENV{CLISH_DEBUG}; }
 
         # populate the option in argss
-        $arg->add_copy_with_token_to_hashref( $out_args => $lv[$midx] );
+        $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
 
         return 1; # returning true reboots the _try*
-    }
-
-    elsif( my @dev = grep {defined $ev[$_]} 0 .. $#ev ) {
-        warning "trying to use '$tok' => '$ntok' to fill $cmd\'s $cmd_args->[$_]",
-            $ev[$_] for @dev;
     }
 
     else {
@@ -325,12 +316,8 @@ sub _try_to_eat_untagged_arguments {
     my ( $cmd,$out_args => $cmd_args,$arg_tokens, %vopt ) = @_;
     my $tok = $arg_tokens->[0];
 
-    my @lv; # validated values for the array matching arrays
-    my @ev; # errors from the validation
-
     my @matched_cmd_args_idx = # the idexes of matching Args
-        grep { undef $@; my $v = $cmd_args->[$_]->validate($tok, %vopt);
-               $ev[$_] = $@; $lv[$_] = $v if defined $v; defined $v }
+        grep { $cmd_args->[$_]->validate($tok, %vopt) }
         grep { $cmd_args->[$_]->tag_optional }
         0 .. $#$cmd_args;
 
@@ -341,17 +328,12 @@ sub _try_to_eat_untagged_arguments {
         my ($arg) = splice @$cmd_args, $midx, 1;
         my ($nom) = splice @$arg_tokens, 0, 1;
 
-        { local $" = "> <"; debug "ate arg=$arg and tok=<$nom>" if $ENV{CLISH_DEBUG}; }
+        debug "ate arg=$arg and tok=<$nom>" if $ENV{CLISH_DEBUG};
 
         # populate the option in argss
-        $arg->add_copy_with_token_to_hashref( $out_args => $lv[$midx] );
+        $arg->add_copy_with_token_to_hashref( $out_args => $tok );
 
         return 1; # returning true reboots the _try*
-    }
-
-    elsif( my @dev = grep {defined $ev[$_]} 0 .. $#ev ) {
-        warning "trying to use '$tok' to fill $cmd\'s $cmd_args->[$_]",
-            $ev[$_] for @dev;
     }
 
     else {
@@ -360,6 +342,7 @@ sub _try_to_eat_untagged_arguments {
 
         if( @matched_cmd_args_idx ) {
             my @matched = map { $cmd_args->[$_] } @matched_cmd_args_idx;
+
             debug "$tok failed to resolve to a single validated tagged option,"
                 . " but initially matched: @matched" if $ENV{CLISH_DEBUG};
         }

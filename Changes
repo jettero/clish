@@ -2,6 +2,10 @@
 0.0000: Sun Jun 01 2014
    - slept on it.  parse-for-execution shall have a final validation pass *AFTER* parse
    - parse shall always use heuristic validation
+   - OK: I think I finally built it with two phase parse (tokenizer, then hand-rolled parser)
+     AND: with a two-phase argument validator; go ahead and accept tokens/words
+     that seem to be superficially correct; after we completely accept the
+     parse, then check the arguments carefully and print all the errors.
 
 0.0000: Sat May 31 2014
    - added more documentations and came up with some basic strategies for tab-completion parsing

@@ -23,8 +23,8 @@ has qw(tag_optional is ro isa Bool default 0);
 has qw(help is ro isa Str default ??);
 
 has qw(default is ro isa Str default ??);
-has qw(value is rw predicate has_value clearer no_value);
-has qw(token is rw predicate has_token clearer no_token);
+has qw(value is rw predicate has_value clearer no_value reader value writer _wvalue);
+has qw(token is rw predicate has_token clearer no_token reader token writer _wtoken);
 
 __PACKAGE__->meta->make_immutable;
 
@@ -45,14 +45,33 @@ sub value_or_default {
     return $that;
 }
 
+sub copy_with_value {
+    my $this = shift;
+    my $obj  = bless { %$this }, ref $this;
+    my $val  = shift;
+
+    $obj->_wvalue( $val );
+
+    return $obj;
+}
+
 sub copy_with_token {
     my $this = shift;
     my $obj  = bless { %$this }, ref $this;
     my $tok  = shift;
 
-    $obj->token( $tok );
+    $obj->_wtoken( $tok );
 
     return $obj;
+}
+
+sub validate_copy_with_value_to_hashref {
+    my $this = shift;
+    my $ref  = shift; croak unless ref $ref eq "HASH";
+
+    my $final_value = $this->validate($this->token, final_validation=>1);
+    return $ref->{ $this->name } = undef unless $final_value;
+    return $ref->{ $this->name } = $this->copy_with_value( $final_value );
 }
 
 sub add_copy_with_token_to_hashref {
@@ -83,26 +102,43 @@ sub validate {
 
     # If there are no validators, then we can't accept arguments for this tag
     die "incomplete argument specification (no validators)" if @$validators == 0;
+    croak "precisely what are we validating here?" unless $that;
 
     my $context = $this->context or die "my context is missing";
 
-    $that //= $this->token;
-    croak "precisely what are we validating here?" unless $that;
-
-    debug "validating $context $this" . ($vopt{final_validation} ? " (final validation)" : " (initial validation)") if $ENV{CLISH_DEBUG};
+    debug "validating $context $this tok=$that" . ($vopt{final_validation} ? " (final validation)" : " (initial validation)") if $ENV{CLISH_DEBUG};
 
     for my $v (@$validators) {
         if( my $r = $context->$v( $that, %vopt ) ) {
-            debug "validated!" if $ENV{CLISH_DEBUG};
-            $this->value( $r )    if $vopt{final_validation};
-            $this->token( $that ) if $vopt{initial_validation};
+            if( $vopt{final_validation} ) {
+                debug "validated $context $this tok=$that (final validation)" if $ENV{CLISH_DEBUG};
+                return $r;
+            }
+
+            debug "validated $context $this tok=$that (initial validation)" if $ENV{CLISH_DEBUG};
             return 1;
+        }
+    }
+
+    if( $vopt{final_validation} ) {
+        if( $@ ) {
+            error "with $this";
+
+        } else {
+            error "with $this", "argument does not seem correct (condition uknown)";
         }
     }
 
     return;
 }
 
-memoize( 'validate' );
+sub _normalize_validate {
+    my ($this, $that, %vopt) = @_;
+    my $k = "$that $vopt{final_validation}";
+    debug "memo normalizer(@_ => $k)" if $ENV{CLISH_DEBUG};
+    return $k;
+}
+
+memoize( qw(validate NORMALIZER _normalize_validate) );
 
 1;

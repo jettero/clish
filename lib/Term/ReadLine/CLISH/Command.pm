@@ -34,17 +34,27 @@ sub arguments {
 
 sub validate {
     my $this = shift;
+    my $args = shift; # there isn't a great place to store the *POPULATED* args
+                      # in the command object... should there be?
 
     debug "$this final validation" if $ENV{CLISH_DEBUG};
 
     my $error_count = 0;
-    for( @{ $this->arguments } ) {
-        if( $_->has_token ) {
-            error "with $_" unless $_->validate(final_validation=>1);
-            $error_count ++;
+    for( values %$args ) {
+        if( $_->has_value ) {
+            debug "$_ already has a value (" . $_->value . "), no reason to validate";
+            next;
+
+        } elsif( $_->has_token ) {
+            debug "$_ (has_token: " . $_->token . "), issuing final validation" if $ENV{CLISH_DEBUG};
+            unless( $_->validate_copy_with_value_to_hashref($args) ) {
+                # validate prints its own errors, just count up
+                $error_count ++;
+            }
 
         } elsif( $_->required ) {
-            error "with $_", "required argument omitted";
+            debug "$_ seems to be missing, not validating, just complaining";
+            error "$error_count with $_", "required argument omitted";
             $error_count ++;
         }
     }
