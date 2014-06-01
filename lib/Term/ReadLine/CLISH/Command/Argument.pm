@@ -24,6 +24,7 @@ has qw(help is ro isa Str default ??);
 
 has qw(default is ro isa Str default ??);
 has qw(value is rw predicate has_value clearer no_value);
+has qw(token is rw predicate has_token clearer no_token);
 
 __PACKAGE__->meta->make_immutable;
 
@@ -40,20 +41,20 @@ sub value_or_default {
     return $that;
 }
 
-sub copy_with_value {
-    my $this  = shift;
-    my $obj   = bless { %$this }, ref $this;
-    my $value = shift;
+sub copy_with_token {
+    my $this = shift;
+    my $obj  = bless { %$this }, ref $this;
+    my $tok  = shift;
 
-    $obj->value( $value );
+    $obj->token( $tok );
 
     return $obj;
 }
 
-sub add_copy_with_value_to_hashref {
+sub add_copy_with_token_to_hashref {
     my $this = shift;
     my $ref  = shift; croak unless ref $ref eq "HASH";
-    my $obj  = $this->copy_with_value( @_ );
+    my $obj  = $this->copy_with_token( @_ );
 
     return $ref->{ $obj->name } = $obj;
 }
@@ -81,10 +82,15 @@ sub validate {
 
     my $context = $this->context or die "my context is missing";
 
-    for my $v (@$validators) {
-        my $r = $context->$v( $that );
+    $that //= $this->token;
+    croak "precisely what are we validating here?" unless $that;
 
-        return $r if $r;
+    for my $v (@$validators) {
+        if( my $r = $context->$v( $that, %vopt ) ) {
+            $this->value( $r )    if $vopt{final_validation};
+            $this->token( $that ) if $vopt{initial_validation};
+            return 1;
+        }
     }
 
     return;

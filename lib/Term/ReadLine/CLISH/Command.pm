@@ -34,16 +34,20 @@ sub arguments {
 
 sub validate {
     my $this = shift;
-    my @args = $this->arguments;
 
-    for( @args ) {
-        if( $_->has_value ) {
-            error "re $_" unless $_->validate;
+    my $error_count = 0;
+    for( @{ $this->arguments } ) {
+        if( $_->has_token ) {
+            error "with $_" unless $_->validate(final_validation=>1);
+            $error_count ++;
 
         } elsif( $_->required ) {
-            error "$_ is a required argument";
+            error "with $_", "required argument omitted";
+            $error_count ++;
         }
     }
+
+    return !$error_count;
 }
 
 # boring built-in argument validators

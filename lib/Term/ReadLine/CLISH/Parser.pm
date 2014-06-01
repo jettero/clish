@@ -94,6 +94,11 @@ sub parse_for_execution {
     my $line = shift;
     my ($tokout, $cmds, $argss, $statuss) = $this->parse($line);
 
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+
+    return unless $line;
+
     if( not $tokout or not $tokout->{tokens} ) {
         error "tokenizing input"; # the tokenizer will have left an argument in $@
         return;
@@ -108,7 +113,8 @@ sub parse_for_execution {
 
     if( @$cmds == 1 ) {
         if( $statuss->[0] == PARSE_COMPLETE ) {
-            debug "selected $cmds->[0] for execution" if $ENV{CLISH_DEBUG};
+            debug "selected $cmds->[0] for execution, executing final validation" if $ENV{CLISH_DEBUG};
+            $cmds->[0]->validate or return;
             return ($cmds->[0], $argss->[0]);
 
         } elsif ($statuss->[0]) {
@@ -177,12 +183,12 @@ sub parse {
     $vopt{final_validation}   = $vopt{full_validation}      = 0;
     $vopt{initial_validation} = $vopt{heuristic_validation} = 1;
 
-    my @return = ([], [], [], []);
+    my @return = ({}, [], [], []);
 
     if( $line =~ m/\S/ ) {
         my $prefix    = $this->output_prefix;
         my $tokenizer = $this->tokenizer;
-        my $tokout    = $tokenizer->tokens( $line );
+        my $tokout    = $return[0] = $tokenizer->tokens( $line );
 
         return unless $tokout and $tokout->{tokens};
             # careful to not disrupt $@ on the way up XXX document this type of error (including $@)
@@ -193,7 +199,6 @@ sub parse {
         if( my @TOK = @{$tokout->{tokens}} ) {
             my ($cmd_token, @arg_tokens) = @TOK;
 
-            $return[0] = $tokout;
             my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
 
             $return[ PARSE_RETURN_CMDS ] = \@cmds;
@@ -212,7 +217,7 @@ sub parse {
 
                 $this->_try_to_eat_tok( $cmd,$out_args => \@cmd_args,\@arg_tokens, %vopt );
 
-                # if there are remaining arguments, reject the command
+                # if there are remaining arguments (extra tokens), reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
                     local $" = ", ";
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "unrecognized tokens on line (@extra)";
@@ -220,6 +225,10 @@ sub parse {
                 }
 
                 # if some of the arguments are missing, reject the command
+                # (we check this again from cmd->validate in
+                # parse_for_execution, but we immediately print the error
+                # there; this is more of a hint, since we don't know if the
+                # final checks will even pass))
                 if( my @req = grep { $_->required } @cmd_args ) {
                     local $" = ", ";
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "required arguments omitted (@req)";
@@ -240,7 +249,7 @@ sub _try_to_eat_tok {
     my ( $cmd,$out_args => $cmd_args,$arg_tokens, %vopt ) = @_;
 
     # $cmd is the command object we're with which we're currently working
-    # $out_args is the hashref of return arguments (populated by add_copy_with_value_to_hashref)
+    # $out_args is the hashref of return arguments (populated by add_copy_with_token_to_hashref)
     # $cmd_args are the command args not yet consumed by the parse (spliced out)
     # $arg_tokens are the tokens representing args not yet consumed by the parse (spliced out)
 
@@ -283,7 +292,7 @@ sub _try_to_eat_tagged_arguments {
         { local $" = "> <"; debug "ate $arg with <@nom>" if $ENV{CLISH_DEBUG}; }
 
         # populate the option in argss
-        $arg->add_copy_with_value_to_hashref( $out_args => $lv[$midx] );
+        $arg->add_copy_with_token_to_hashref( $out_args => $lv[$midx] );
 
         return 1; # returning true reboots the _try*
     }
@@ -335,7 +344,7 @@ sub _try_to_eat_untagged_arguments {
         { local $" = "> <"; debug "ate $arg with <$nom>" if $ENV{CLISH_DEBUG}; }
 
         # populate the option in argss
-        $arg->add_copy_with_value_to_hashref( $out_args => $lv[$midx] );
+        $arg->add_copy_with_token_to_hashref( $out_args => $lv[$midx] );
 
         return 1; # returning true reboots the _try*
     }
