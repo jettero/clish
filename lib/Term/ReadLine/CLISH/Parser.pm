@@ -29,7 +29,7 @@ coerce 'cmdArray', from 'cmd', via { [ $_ ] };
 
 has qw(path is rw isa pathArray coerce 1);
 has qw(prefix is rw isa prefixArray);
-has qw(cmds is rw isa cmdArray coerce 1);
+has qw(commands is rw isa cmdArray coerce 1);
 has qw(tokenizer is rw isa Parse::RecDescent);
 
 has qw(output_prefix is rw isa Str default) => "% ";
@@ -174,6 +174,17 @@ that consumes C<$@> if invoked with a single argument.
 
 =cut
 
+sub find_command_by_name {
+    my $this = shift;
+    my $name = lc shift;
+
+    for(@{ $this->commands }) {
+        return $_ if $_->name eq $name;
+    }
+
+    return;
+}
+
 sub parse {
     my $this = shift;
     my $line = shift;
@@ -199,7 +210,7 @@ sub parse {
         if( my @TOK = @{$tokout->{tokens}} ) {
             my ($cmd_token, @arg_tokens) = @TOK;
 
-            my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->cmds };
+            my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->commands };
 
             $return[ PARSE_RETURN_CMDS ] = \@cmds;
 
@@ -252,6 +263,8 @@ sub _try_to_eat_tok {
     # $out_args is the hashref of return arguments (populated by add_copy_with_token_to_hashref)
     # $cmd_args are the command args not yet consumed by the parse (spliced out)
     # $arg_tokens are the tokens representing args not yet consumed by the parse (spliced out)
+
+    $::THIS_PARSER = $this;
 
     EATER: {
         if( @$arg_tokens ) {
@@ -378,7 +391,7 @@ sub build_parser {
 
 sub command_names {
     my $this = shift;
-    my @cmd  = @{ $this->cmds };
+    my @cmd  = @{ $this->commands };
 
     my %h;
     return sort map { $_->name } grep { !$h{$_}++ } @cmd;
@@ -441,7 +454,7 @@ sub reload_commands {
 
     $SIG{__WARN__} = $orig_warn;
 
-    $this->cmds(\@cmds);
+    $this->commands(\@cmds);
 }
 
 1;

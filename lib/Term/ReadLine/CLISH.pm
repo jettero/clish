@@ -110,6 +110,8 @@ sub run {
     info "Welcome to " . $this->name . " v" . $this->version;
 
     INPUT: while( not $this->done ) {
+        $::THIS_CLISH = $this;
+
         my $prompt = $this->prompt;
         $_ = $this->term->readline($prompt);
         last INPUT unless defined;

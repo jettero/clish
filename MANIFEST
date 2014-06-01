@@ -13,6 +13,7 @@ lib/Term/ReadLine/CLISH/Command/Moose.pm
 lib/Term/ReadLine/CLISH/Debug.pm
 lib/Term/ReadLine/CLISH/Error.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Debug.pm
+lib/Term/ReadLine/CLISH/Library/Commands/Help.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Quit.pm
 lib/Term/ReadLine/CLISH/Message.pm
 lib/Term/ReadLine/CLISH/MessageSystem.pm

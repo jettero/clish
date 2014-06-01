@@ -9,12 +9,11 @@ use Term::ReadLine::CLISH::Warning;
 use Term::ReadLine::CLISH::Debug;
 use Carp;
 
-our @EXPORT = qw(one_off_debug debug info warning error install_generic_message_handlers);
+our @EXPORT = qw(wtf debug info warning error install_generic_message_handlers);
 
-sub one_off_debug($;$) {
-    my ($package, $filename, $line) = caller;
+sub wtf($;$) {
     local $ENV{CLISH_DEBUG} = 1;
-    $_[0] = "[$package $line] $_[0]";
+    $_[0] = "WTF $_[0]";
     debug(@_);
 }
 
