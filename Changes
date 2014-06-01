@@ -6,6 +6,7 @@
      AND: with a two-phase argument validator; go ahead and accept tokens/words
      that seem to be superficially correct; after we completely accept the
      parse, then check the arguments carefully and print all the errors.
+   - added more error handlers in the validators
 
 0.0000: Sat May 31 2014
    - added more documentations and came up with some basic strategies for tab-completion parsing

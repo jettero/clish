@@ -108,7 +108,16 @@ sub validate {
     debug "validating $context $this tok=$that" . ($vopt{final_validation} ? " (final validation)" : " (initial validation)") if $ENV{CLISH_DEBUG};
 
     for my $v (@$validators) {
-        if( my $r = $context->$v( $that, %vopt ) ) {
+        my $r;
+
+        unless( eval { $r = $context->$v( $that, %vopt ); 1} ) {
+            my $class = ref $this;
+            my @vopt = %vopt;
+            warning "in $class \-> $v($that, @vopt) method";
+            next;
+        }
+
+        if( $r ) {
             if( $vopt{final_validation} ) {
                 debug "validated $context $this tok=$that (final validation)" if $ENV{CLISH_DEBUG};
                 return $r;
