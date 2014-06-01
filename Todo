@@ -10,8 +10,15 @@
   - binding to a textfile format or a script to build commands
 
 - shell-like features
-    - command aliases? alias blarg ⇒ quit
-    - user macros?  Probably aliases and macros are doable in boring "userspace" commands
-    - compound commands? blarg ; blarg?
-    - command continuations? blarg \r blarg
-    - variables? set blarg 7 ; ping $blarg
+  - command aliases? alias blarg ⇒ quit
+  - user macros?  Probably aliases and macros are doable in boring "userspace"
+    commands
+  - compound commands? blarg ; blarg?
+  - command continuations? blarg \r blarg
+  - variables? set blarg 7 ; ping $blarg
+
+- windows (etc)
+  - I'm pretty much a strictly linux guy, I plan to make this all
+    multiplatform, but for my needs, it just needs to work in linux.  But in
+    principle, there's no reason it shouldn't work in other platforms.  I'm
+    just not being very careful (e.g., File::Spec, File::Homedir, etc).
