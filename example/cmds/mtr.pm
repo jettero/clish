@@ -35,7 +35,7 @@ sub exec {
     push @args, '--interval'      => $opts->{interval}->value if $opts->{interval}->has_value;
     push @args, '--psize'         => $opts->{size}->value     if $opts->{size}->has_value;
 
-    return eval { systemx( mtr => @args ); 1};
+    systemx( mtr => @args );
 }
 
 1;
