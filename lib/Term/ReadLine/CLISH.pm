@@ -35,13 +35,50 @@ has qw(path   is rw isa pathArray coerce 1 default) => sub {
 has qw(prefix is rw isa prefixArray coerce 1 default) => sub {['Term::ReadLine::CLISH::Library::Commands']};
 has qw(name is rw isa Str default) => "CLISH";
 has qw(version is rw isa Str default) => $VERSION;
-has qw(history_location is rw);
+has qw(vdb is rw isa Tie::YAML);
 has qw(term is rw isa Term::ReadLine::Stub);
 has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
 has qw(done is rw isa Bool);
 has qw(cleanup is rw isa ArrayRef[CodeRef] default) => sub { [sub { info "bye" }] };
 
 __PACKAGE__->meta->make_immutable;
+
+sub var {
+    my $this = shift;
+    my ($var, $val) = @_;
+    my $vdb = $this->vdb;
+
+    if( @_ > 1 ) {
+        if( defined $val ) {
+            $vdb->{$var} = $val;
+
+        } else {
+            delete $vdb->{$var};
+        }
+
+        $vdb->save;
+    }
+
+    return $vdb->{$var};
+}
+
+sub var_defined_or_default {
+    my $this = shift;
+    my ($var, $default) = @_;
+    my $orig = $this->var($var);
+
+    return $orig if defined $orig;
+    return $this->var( $var, $default );
+}
+
+sub var_true_or_default {
+    my $this = shift;
+    my ($var, $default) = @_;
+    my $orig = $this->var($var);
+
+    return $orig if $orig;
+    return $this->var( $var, $default );
+}
 
 sub add_namespace {
     my $this = shift;
@@ -97,11 +134,21 @@ sub rebuild_parser {
     return $this;
 }
 
+sub config {
+    my $this = shift;
+    my $file = shift;
+    my $dir  = File::HomeDir->my_dist_config( $this->name, { create => 1 } );
+
+    return $dir unless $file;
+    return File::Spec->catfile($dir, $file);
+}
+
 sub run {
     my $this = shift;
 
     install_generic_message_handlers();
 
+    $this->init_vdb;
     $this->init_history;
     $this->rebuild_parser;
     $this->attach_sigint;
@@ -127,20 +174,67 @@ sub run {
     }
 }
 
+sub history_location {
+    my $this = shift;
+
+    return $this->var_true_or_default( history_location => $this->config("history.txt") );
+}
+
+sub init_vdb {
+    my $this = shift;
+    my $y = tie my %y, 'Tie::YAML' => $this->config("vdb.yaml");
+
+    $this->vdb( $y );
+
+    if( my $h = $y->{ENV} ) {
+        for my $k (keys %$h) {
+            $ENV{$k} = $h->{$k};
+        }
+    }
+
+    push @{ $this->cleanup }, sub {
+        my $this = shift;
+        my $h = $this->var('ENV') || {};
+        my $save_env = $this->var_or_default( save_env_re => "^CLISH_" );
+           $save_env = $this->varor_default( save_env_re => "^CLISH_" );
+           # XXX: make var_exists_or_default
+           # XXX: make var_true_or_default
+
+        unless( eval { qr($save_env); 1 } ) {
+            warning "with save_env_re=$save_env", scrub_last_error();
+            $save_env = qr(^CLISH_);
+        }
+
+        for my $k (grep { $_ =~ $save_env } keys %ENV) {
+            $h->{$k} = $ENV{$k};
+        }
+
+        $this->var(ENV=>$h);
+    };
+
+    return $this;
+}
+
 sub init_history {
     my $this = shift;
     my $term = $this->term;
 
-    if( $term->can("read_history") ) {
+    if( $term->can("ReadHistory") ) {
         my $hl = $this->history_location;
-        if( !$hl ) {
-            my $n = lc $this->name;
-            $this->history_location( $hl = "$ENV{HOME}/.$n\_history" );
-        }
-        $term->read_history($hl);
+        my $hl_desc = "history file";
 
-        info "[loaded " . int($term->GetHistory) . " command(s) from history file]";
+        if( $ENV{HOME} and $hl =~ m{/} ) {
+            # probably unix-y
+            $hl_desc = $hl;
+            $hl_desc =~ s/^$ENV{HOME}/~/;
+        }
+
+        $term->ReadHistory($hl);
+
+        info "[loaded " . int($term->GetHistory) . " command(s) from $hl_desc]";
     }
+
+    $term->StifleHistory(100) if $term->can("StifleHistory");
 
     return $this;
 }
@@ -149,12 +243,9 @@ sub save_history {
     my $this = shift;
     my $term = $this->term;
 
-    if( $term->can("write_history") ) {
+    if( $term->can("WriteHistory") ) {
         my $hl = $this->history_location;
-
-        return unless $hl;
-        $term->write_history($hl);
-        $term->history_truncate_file($hl, 100);
+        eval { $term->write_history($hl); 1 } or warning( scrub_last_error() );
     }
 
     return $this;
