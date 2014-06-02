@@ -19,6 +19,8 @@ use Term::ReadLine;
 use Term::ReadLine::CLISH::Parser;
 use Term::ReadLine::CLISH::MessageSystem;
 use File::Spec;
+use File::HomeDir;
+use Tie::YAML;
 use POSIX qw(sigaction SIGINT);
 use common::sense;
 
