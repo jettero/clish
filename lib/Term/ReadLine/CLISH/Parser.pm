@@ -265,7 +265,7 @@ sub _try_to_eat_tok {
     # $cmd_args are the command args not yet consumed by the parse (spliced out)
     # $arg_tokens are the tokens representing args not yet consumed by the parse (spliced out)
 
-    $::THIS_PARSER = $this;
+    $::THIS_CLISH_PARSER = $this;
 
     EATER: {
         if( @$arg_tokens ) {
