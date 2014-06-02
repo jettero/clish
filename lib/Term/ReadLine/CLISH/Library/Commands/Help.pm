@@ -85,7 +85,7 @@ sub validate_pod {
         if $opt{heuristic_validation};
 
     return ref $this if lc($that) eq "clish";
-    return ref $_ if $_ = $::THIS_PARSER->find_command_by_name($that);
+    return ref $_ if $_ = $::THIS_CLISH_PARSER->find_command_by_name($that);
 
     $@ = "couldn't find a help page for '$that'";
     return;
