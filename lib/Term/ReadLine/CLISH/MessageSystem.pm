@@ -9,7 +9,30 @@ use Term::ReadLine::CLISH::Warning;
 use Term::ReadLine::CLISH::Debug;
 use Carp;
 
-our @EXPORT = qw(wtf debug info warning error install_generic_message_handlers);
+our @EXPORT = qw(wtf debug info warning error install_generic_message_handlers scrub_last_error);
+
+our $FILE = __FILE__;
+our $BASE = $FILE;
+    $BASE =~ s/^.*?Term/Term/;
+    $BASE =~ s/CLISH.*\z/CLISH/;
+
+sub scrub_last_error(;$) {
+    ($@) = @_ if @_;
+
+    chomp $@;
+
+    # “ERROR executing CMD[help]: "perldoc" unexpectedly returned exit value 1 at
+    #     lib/Term/ReadLine/CLISH/Library/Commands/Help.pm line 74.”
+    #
+    # Don't reveal the location of this error.  The error is with the user, or
+    # with perldoc (at least when scrub_last_error is called, that's the idea).
+
+    wtf($@ . " —- " . $BASE);
+    $@ =~ s{\s+at\s+.+?\Q$BASE\E.+?\s+line\d+\.}{};
+    die "wtf"  if $@ =~ m{$BASE};
+
+    $@;
+}
 
 sub wtf($;$) {
     local $ENV{CLISH_DEBUG} = 1;

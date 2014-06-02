@@ -105,7 +105,7 @@ sub DEMOLISH {
     $this->safe_talk(sub {
 
         for my $cr (@{ $this->cleanup }) {
-            eval { $cr->($this); 1} or warning "during cleanup";
+            eval { $this->$cr; 1 } or warning "during cleanup";
         }
 
     }, no_restore => 1 );
@@ -121,7 +121,7 @@ sub BUILD {
     eval { $term->ornaments('', '', '', '') };
     $this->term( $term );
 
-    push @{ $this->cleanup }, sub { shift->save_history };
+    push @{ $this->cleanup }, sub { $_[0]->save_history };
 
     return;
 }
@@ -197,10 +197,7 @@ sub init_vdb {
     push @{ $this->cleanup }, sub {
         my $this = shift;
         my $h = $this->var('ENV') || {};
-        my $save_env = $this->var_or_default( save_env_re => "^CLISH_" );
-           $save_env = $this->varor_default( save_env_re => "^CLISH_" );
-           # XXX: make var_exists_or_default
-           # XXX: make var_true_or_default
+        my $save_env = $this->var_defined_or_default( save_env_re => "^CLISH_" );
 
         unless( eval { qr($save_env); 1 } ) {
             warning "with save_env_re=$save_env", scrub_last_error();
@@ -338,7 +335,7 @@ THE_WHIRLYGIGS: {
             $i = 0;
             @m = map { $_->name } map {($_, @{$_->arguments})} @{ $this->parser->cmds };
             $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
-            $this->safe_talk(sub{ one_off_debug("\$#m = ($#m); \$attribs{cac}=«$attribs->{completion_append_character}»") });
+            $this->safe_talk(sub{ wtf("\$#m = ($#m); \$attribs{cac}=«$attribs->{completion_append_character}»") });
         }
 
         for(; $i < $#m ; $i++ ) {
@@ -348,7 +345,7 @@ THE_WHIRLYGIGS: {
             }
         }
 
-        $this->safe_talk(sub{ one_off_debug("  \$i=$i; \$m[$i] = \$return = $return") });
+        $this->safe_talk(sub{ wtf("  \$i=$i; \$m[$i] = \$return = $return") });
         return $return;
     };
 

@@ -107,13 +107,14 @@ sub validate {
 
     debug "validating $context $this tok=$that" . ($vopt{final_validation} ? " (final validation)" : " (initial validation)") if $ENV{CLISH_DEBUG};
 
+    my $i_da; # inside [eval] dollar-sign-at
     for my $v (@$validators) {
         my $r;
 
-        unless( eval { $r = $context->$v( $that, %vopt ); 1} ) {
+        unless( eval { $r = $context->$v( $that, %vopt ); $i_da = $@; 1} ) {
             my $class = ref $this;
             my @vopt = %vopt;
-            warning "in $class —> $v($that, @vopt)";
+            warning "(internal) in $class —> $v($that, @vopt)";
             next;
         }
 
@@ -129,7 +130,7 @@ sub validate {
     }
 
     if( $vopt{final_validation} ) {
-        if( $@ ) {
+        if( scrub_last_error($i_da) ) {
             error "with $this";
 
         } else {
