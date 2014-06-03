@@ -379,9 +379,11 @@ sub build_parser {
 
     my $prd = Parse::RecDescent->new(q
         tokens: token(s?) { $return = { tokens => $item[1] } } cruft { $return->{cruft} = $item[3] } /$/
-        cruft: /\s*/ /.*/ { $return = $item[2] }
-        token: word | string
-        word: /[\w\d_.-]+/ { $return = $item[1] }
+        cruft:  /\s*/ /.*/ { $return = $item[2] }
+        token:  word | string
+
+        word: /[!+-]/ /[\w\d_.-]+/ { $::TF_MODS{$item[2]} = $item[1]; $return = $item[2] }
+        word:         /[\w\d_.-]+/ { delete $::TF_MODS{$item[1]};     $return = $item[1] }
 
         string: "'" /[^']*/ "'" { $return = $item[2] }
               | '"' /[^"]*/ '"' { $return = $item[2] }
