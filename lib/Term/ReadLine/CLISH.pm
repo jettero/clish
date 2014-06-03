@@ -199,10 +199,17 @@ sub init_vdb {
         my $h = $this->var('ENV') || {};
         my $save_env = $this->var_defined_or_default( save_env_re => "^CLISH_" );
 
+        unless ($save_env) {
+            debug "not saving any environment due to save_env_re setting";
+            return;
+        }
+
         unless( eval { qr($save_env); 1 } ) {
             warning "with save_env_re=$save_env", scrub_last_error();
             $save_env = qr(^CLISH_);
         }
+
+        debug("saving environment variables that match m/$save_env/");
 
         for my $k (grep { $_ =~ $save_env } keys %ENV) {
             $h->{$k} = $ENV{$k};
