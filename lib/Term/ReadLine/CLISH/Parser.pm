@@ -59,6 +59,8 @@ sub parse_for_tab_completion {
             my @args_with_values;  # XXX: apply filters here, find applicable args
             my @args_without_values;
 
+            wtf("XXX: not really done even forming this idea");
+
         } else {
             # XXX: we're matching commands in the 0 or the 1 case, so populate like this
             my $m = $TOK[0];
