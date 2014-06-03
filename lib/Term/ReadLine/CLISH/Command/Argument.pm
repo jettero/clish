@@ -11,6 +11,9 @@ use Carp;
 
 subtype 'FunctionName', as 'Str', where { m/^(?:::|[\w\d_]+)*\z/ };
 subtype 'ChoiceOfFunctions', as 'ArrayRef[FunctionName]';
+
+subtype "CommandMod", as "Str", where { m/^[!+-]*\z/ };
+
 coerce 'ChoiceOfFunctions', from 'FunctionName', via { [ $_ ] };
 coerce 'ChoiceOfFunctions', from 'Undef', via { [] };
 
@@ -24,8 +27,16 @@ has qw(help is ro isa Str default ??);
 has qw(default is ro isa Str default ??);
 has qw(value is rw predicate has_value clearer no_value reader value writer _wvalue);
 has qw(token is rw predicate has_token clearer no_token reader token writer _wtoken);
+has qw(cmd_mod is rw isa CommandMod predicate has_cmd_mod);
+has qw(is_flag is rw isa Bool);
 
 __PACKAGE__->meta->make_immutable;
+
+sub flag_present {
+    my $this = shift;
+    croak "$this isn't a flag" unless $this->is_flag;
+    return $this->has_value;
+}
 
 sub stringify {
     my $this = shift;
@@ -99,9 +110,20 @@ sub validate {
     $vopt{final_validation}   = $vopt{full_validation}      = !($vopt{initial_validation} || $vopt{heuristic_validation});
     $vopt{initial_validation} = $vopt{heuristic_validation} = !($vopt{final_validation} || $vopt{full_validation});
 
-    # If there are no validators, then we can't accept arguments for this tag
-    die "incomplete argument specification (no validators)" if @$validators == 0;
-    croak "precisely what are we validating here?" unless $that;
+    if( $this->is_flag ) {
+      # NOTE: this is really more of a parser thing to check… Here, we just
+      # assume this croak wouldn't ever come up.
+      #
+      # croak "the token should be roughly equivalent to the tag for a flag"
+      #     unless substr($this->name, 0, length $that) eq $that;
+
+      return 1; # anyway, the flag is present, so say so to anyone that asked
+
+    } else {
+        # If there are no validators, then we can't accept arguments for this tag
+        die "incomplete argument specification (no validators)" if @$validators == 0;
+        croak "precisely what are we validating here?" unless $that;
+    }
 
     my $context = $this->context or die "my context is missing";
 

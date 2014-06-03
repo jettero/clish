@@ -9,7 +9,7 @@ use Carp;
 
 Moose::Exporter->setup_import_methods(
     with_meta => [ qw(command) ],
-    as_is     => [ qw(required_argument optional_argument argument) ],
+    as_is     => [ qw(required_argument optional_argument argument flag) ],
     also      => 'Moose'
 );
 
@@ -49,6 +49,8 @@ sub argument {
     croak "argument name must not contain any characters that don't belong in function names (\\w\\_\\d)"
         if $name =~ m/[^\w\_\d]/;
 
+    $validators = [] if not defined $validators;
+
     my $arg = Term::ReadLine::CLISH::Command::Argument->new(name=>$name, validators=>$validators, %options);
         croak "please provide at least one validator for '$name' or require a tag (which can then represent a switch true value)"
         if $arg->tag_optional and not @{ $arg->validators };
@@ -62,6 +64,11 @@ sub required_argument {
 
 sub optional_argument {
     argument( @_, required => 0 );
+}
+
+sub flag {
+    my $flag = shift;
+    argument( $flag => undef, @_, required => 0, is_flag => 1 );
 }
 
 1;

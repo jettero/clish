@@ -225,6 +225,19 @@ sub parse {
 
                 $return[ PARSE_RETURN_ARGSS ][ $cidx ] = my $out_args = +{ map {($_->name,$_)} @cmd_args };
 
+                if( $tokout->{mods} ) {
+                    my @f = grep { $_->flag_matches_cmd_mods($tokout->{mods}) } @cmd_args;
+
+                    if( @f ) {
+                        $_->add_copy_with_token_to_hashref( $out_args => $_->name )
+                            for @f;
+
+                    } else {
+                        $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "command modifiers \"$tokout->{mods}\" not understood";
+                        next;
+                    }
+                }
+
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
@@ -310,14 +323,15 @@ sub _try_to_eat_tagged_arguments {
     }
 
     else {
-        # XXX: it's not clear what to do here
-        # should we explain for every (un)matching
-        # command?
+        # XXX: it's not clear what to do here should we explain for every
+        # (un)matching command?  how often will we really have the
+        # (non)ambiguity of options become the minimial liguistic difference
+        # between two or more commands?
 
         if( @matched_cmd_args_idx) {
             my @matched = map { $cmd_args->[$_] } @matched_cmd_args_idx;
-            debug "$tok failed to resolve to a single validated tagged option,"
-                . " but initially matched: @matched" if $ENV{CLISH_DEBUG};
+
+            warning "\"$tok $ntok\" could be any of", "@matched";
         }
 
         # I think we don't want to show anything in this case
@@ -334,7 +348,10 @@ sub _try_to_eat_untagged_arguments {
 
     my @matched_cmd_args_idx = # the idexes of matching Args
         grep { $cmd_args->[$_]->validate($tok, %vopt) }
-        grep { $cmd_args->[$_]->tag_optional }
+        grep { $cmd_args->[$_]->tag_optional or (
+            $cmd_args->[$_]->is_flag and
+            substr($cmd_args->[$_]->name, 0, length $tok) eq $tok
+        ) }
         0 .. $#$cmd_args;
 
     if( @matched_cmd_args_idx == 1 ) {
@@ -353,14 +370,12 @@ sub _try_to_eat_untagged_arguments {
     }
 
     else {
-        # XXX: it's not clear what to do here should we
-        # explain for every (un)matching command?
+        # XXX: (see "not clear" comment above)
 
         if( @matched_cmd_args_idx ) {
             my @matched = map { $cmd_args->[$_] } @matched_cmd_args_idx;
 
-            debug "$tok failed to resolve to a single validated tagged option,"
-                . " but initially matched: @matched" if $ENV{CLISH_DEBUG};
+            warning "\"$tok\" could be any of", "@matched";
         }
 
         # I think we don't want to show anything in this case
@@ -380,12 +395,17 @@ sub build_parser {
     my $this = shift;
 
     my $prd = Parse::RecDescent->new(q
-        tokens: token(s?) { $return = { tokens => $item[1] } } cruft { $return->{cruft} = $item[3] } /$/
-        cruft:  /\s*/ /.*/ { $return = $item[2] }
-        token:  word | string
+        tokens: /[!+-]{0,1}/ token(s?) cruft /$/ {
+            $return = {
+                mods   => $item[1],
+                tokens => $item[2],
+                cruft  => $item[3],
+            }
+        }
 
-        word: /[!+-]/ /[\w\d_.-]+/ { $::TF_MODS{$item[2]} = $item[1]; $return = $item[2] }
-        word:         /[\w\d_.-]+/ { delete $::TF_MODS{$item[1]};     $return = $item[1] }
+        token: word | string
+        cruft: /\s*/ /.*/   { $return = $item[2] }
+        word:  /[\w\d_.-]+/ { $return = $item[1] }
 
         string: "'" /[^']*/ "'" { $return = $item[2] }
               | '"' /[^"]*/ '"' { $return = $item[2] }

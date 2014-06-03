@@ -3,6 +3,15 @@
   - tab completion
   - '?' help key binding
 
+- hrm... I'm spending so much time getting
+  - !debug and debug on, debug off to work right
+  - shouldn't it instead be this though???
+    my-shell> config terminal
+    my-shell(config)> debug
+    my-shell(config)> no debug
+    my-shell(config)> exit
+    my-shell>
+
 - command objects should be definable in files other than their path names!!
   - more than one class per file seems minimum necessary for sanity
   - more than one command() per classname would allow
