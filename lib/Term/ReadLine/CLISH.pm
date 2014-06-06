@@ -14,10 +14,12 @@ Term::ReadLine::CLISH — command line interface shell
 =cut
 
 use Moose;
+use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use Term::ReadLine;
 use Term::ReadLine::CLISH::Parser;
 use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::InputModel;
 use File::Spec;
 use File::HomeDir;
 use Tie::YAML;
@@ -26,24 +28,23 @@ use common::sense;
 
 our $VERSION = '0.0000'; # string for the CPAN
 
-has qw(prompt is rw isa Str default) => "clish> ";
-has qw(path   is rw isa pathArray coerce 1 default) => sub {
-    my $file = __FILE__;
-       $file =~ s/.pm$//;
+subtype 'CLISHModel', as 'Term::ReadLine::CLISH::InputModel';
+subtype 'CLISHModelStack', as 'ArrayRef[CLISHModel]';
 
-    return [File::Spec->catfile($file, "Library")]
-};
-
-has qw(prefix is rw isa prefixArray coerce 1 default) => sub {['Term::ReadLine::CLISH::Library::Commands']};
 has qw(name is rw isa Str default) => "CLISH";
 has qw(version is rw isa Str default) => $VERSION;
 has qw(vdb is rw isa Tie::YAML);
 has qw(term is rw isa Term::ReadLine::Stub);
-has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
 has qw(done is rw isa Bool);
 has qw(cleanup is rw isa ArrayRef[CodeRef] default) => sub { [sub { info "bye" }] };
+has qw(models is rw isa CLISHModelStack default), sub { [Term::ReadLine::CLISH::InputModel->new] };
 
 __PACKAGE__->meta->make_immutable;
+
+sub parser { my $this = shift; return eval { @{$this->models}[-1]->parser(@_) }}
+sub prompt { my $this = shift; return eval { @{$this->models}[-1]->prompt(@_) }}
+sub path   { my $this = shift; return eval { @{$this->models}[-1]->path(@_)   }}
+sub prefix { my $this = shift; return eval { @{$this->models}[-1]->prefix(@_) }}
 
 sub var {
     my $this = shift;
