@@ -41,6 +41,26 @@ has qw(models is rw isa CLISHModelStack default), sub { [Term::ReadLine::CLISH::
 
 __PACKAGE__->meta->make_immutable;
 
+sub push_model {
+    my $this = shift;
+    my $model_class = @_ % 2 ? shift : "Term::ReadLine::CLISH::InputModel";
+    my %opt = @_;
+
+    $opt{prompt} ||= $this->prompt;
+    $opt{path}   ||= $this->path;
+    $opt{prefix} ||= $this->prefix;
+
+    my $next = Term::ReadLine::CLISH::InputModel->new(%opt);
+
+    return $this;
+}
+
+sub pop_model {
+    my $this = shift;
+    shift @{$this->models} if @{$this->models} > 1;
+    return $this;
+}
+
 sub parser { my $this = shift; return eval { @{$this->models}[-1]->parser(@_) }}
 sub prompt { my $this = shift; return eval { @{$this->models}[-1]->prompt(@_) }}
 sub path   { my $this = shift; return eval { @{$this->models}[-1]->path(@_)   }}
@@ -263,7 +283,7 @@ sub safe_talk {
     my $code = shift;
     my %opt  = @_;
     my $term = $this->term;
-    
+
     # sometimes, during global destruction, $term will be undefined
     return unless defined $term;
 
