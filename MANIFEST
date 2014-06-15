@@ -12,6 +12,7 @@ lib/Term/ReadLine/CLISH/Command/Argument.pm
 lib/Term/ReadLine/CLISH/Command/Moose.pm
 lib/Term/ReadLine/CLISH/Debug.pm
 lib/Term/ReadLine/CLISH/Error.pm
+lib/Term/ReadLine/CLISH/InputModel.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Debug.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Help.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Quit.pm
