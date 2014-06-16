@@ -426,8 +426,16 @@ sub prefix_regex {
     my $this = shift;
     my @prefixes = @{ $this->prefix };
     s{::}{/}g for @prefixes;
+    my @t = map {"\Q$_"} @prefixes;
     local $" = "|";
-    my $RE = qr{(?:@prefixes)};
+    my $RE = qr{(?:@t)[^/]+};
+
+
+    die "use Module::Pluggable";
+
+
+
+
     return $RE;
 }
 

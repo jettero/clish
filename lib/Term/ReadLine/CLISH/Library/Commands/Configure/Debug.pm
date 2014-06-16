@@ -1,4 +1,4 @@
-package Term::ReadLine::CLISH::Library::Commands::Debug;
+package Term::ReadLine::CLISH::Library::Commands::Configure::Debug;
 
 use Term::ReadLine::CLISH::Command::Moose;
 use Term::ReadLine::CLISH::MessageSystem;
