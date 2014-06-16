@@ -206,13 +206,11 @@ sub run {
         $_ = $this->term->readline($prompt);
 
         if( not defined ) {
-            if( $this->model_stackdepth > 1 ) {
-                $this->pop_model;
-                next INPUT;
 
-            } else {
-                last INPUT;
-            }
+            next INPUT
+                if $this->pop_model;
+
+            last INPUT;
         }
 
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
