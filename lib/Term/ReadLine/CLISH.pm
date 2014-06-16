@@ -50,15 +50,34 @@ sub push_model {
     $opt{path}   ||= $this->path;
     $opt{prefix} ||= $this->prefix;
 
-    my $next = Term::ReadLine::CLISH::InputModel->new(%opt);
+    push @{$this->models}, Term::ReadLine::CLISH::InputModel->new(%opt);
+
+    $this->rebuild_parser;
+
+    debug "pushed a new input model:";
+    debug " - new prefix = [" . join(", ", @{$this->prefix}) . "]";
+    debug " - new path = [" . join(", ", @{$this->path}) . "]";
+    debug " - new prompt = \"" . $this->prompt . "\"";
 
     return $this;
 }
 
 sub pop_model {
     my $this = shift;
-    shift @{$this->models} if @{$this->models} > 1;
-    return $this;
+    my $last = pop @{$this->models};
+
+    debug "popped a model off the stack:";
+
+    if( $last ) {
+        debug " - new prefix = [" . join(", ", @{$this->prefix}) . "]";
+        debug " - new path = [" . join(", ", @{$this->path}) . "]";
+        debug " - new prompt = \"" . $this->prompt . "\"";
+
+    } else {
+        debug " - (nothing left on the stack)";
+    }
+
+    return $last;
 }
 
 sub parser { my $this = shift; return eval { @{$this->models}[-1]->parser(@_) }}
@@ -180,12 +199,25 @@ sub run {
     info "Welcome to " . $this->name . " v" . $this->version;
 
     INPUT: while( not $this->done ) {
-        $::THIS_CLISH = $this;
-
         my $prompt = $this->prompt;
+
+        # XXX: $prompt = evaluate_prompt_specials( $prompt );
+
         $_ = $this->term->readline($prompt);
-        last INPUT unless defined;
+
+        if( not defined ) {
+            if( $this->model_stackdepth > 1 ) {
+                $this->pop_model;
+                next INPUT;
+
+            } else {
+                last INPUT;
+            }
+        }
+
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
+
+        $::THIS_CLISH = $this;
 
         if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
             eval {

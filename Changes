@@ -1,4 +1,9 @@
 
+0.0000: Sun Jun 15 2014
+   - started an input model stack so we can do things like:
+     - clish# config t
+     - clish(config)#
+
 0.0000: Sun Jun 01 2014
    - slept on it.  parse-for-execution shall have a final validation pass *AFTER* parse
    - parse shall always use heuristic validation
