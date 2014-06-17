@@ -17,7 +17,6 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use Term::ReadLine;
-use Term::ReadLine::CLISH::Parser;
 use Term::ReadLine::CLISH::MessageSystem;
 use Term::ReadLine::CLISH::InputModel;
 use File::Spec;
@@ -43,6 +42,12 @@ __PACKAGE__->meta->make_immutable;
 
 sub push_model {
     my $this = shift;
+
+    if( my @mobj = grep { eval { $_->isa("Term::ReadLine::CLISH::InputModel")} } @_ ) {
+        push @{$this->models}, @mobj;
+        return $this;
+    }
+
     my $model_class = @_ % 2 ? shift : "Term::ReadLine::CLISH::InputModel";
     my %opt = @_;
 
@@ -80,10 +85,21 @@ sub pop_model {
     return $last;
 }
 
-sub parser { my $this = shift; return eval { @{$this->models}[-1]->parser(@_) }}
-sub prompt { my $this = shift; return eval { @{$this->models}[-1]->prompt(@_) }}
-sub path   { my $this = shift; return eval { @{$this->models}[-1]->path(@_)   }}
-sub prefix { my $this = shift; return eval { @{$this->models}[-1]->prefix(@_) }}
+# XXX: read methods from the %{::IM} directly, rather than enumerating them like this
+for my $f (qw(parser prompt path prefix rebuild_parser path_string)) {
+    no strict 'refs';
+    *{$f} = sub {
+        my $this = shift;
+        my $mod  = eval { @{$this->models}[-1] };
+
+        unless( $mod ) {
+            my ($p,$f,$l) = caller;
+            die "tried to invoke $f on an empty model stack at $f line $l\n";
+        }
+
+        return $mod->$f(@_);
+    };
+}
 
 sub var {
     my $this = shift;
@@ -133,12 +149,6 @@ sub add_namespace {
     return $this;
 }
 
-sub path_string {
-    my $this = shift;
-
-    return join(":", @{ $this->path });
-}
-
 sub DEMOLISH {
     my $this = shift;
 
@@ -164,16 +174,6 @@ sub BUILD {
     push @{ $this->cleanup }, sub { $_[0]->save_history };
 
     return;
-}
-
-sub rebuild_parser {
-    my $this = shift;
-
-    my $parser = Term::ReadLine::CLISH::Parser->new(path=>$this->path, prefix=>$this->prefix);
-    $this->parser( $parser );
-    debug "path: " . $this->path_string if $ENV{CLISH_DEBUG};
-
-    return $this;
 }
 
 sub config {
