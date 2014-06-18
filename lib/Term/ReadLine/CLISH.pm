@@ -85,7 +85,7 @@ sub pop_model {
     return $last;
 }
 
-# XXX: read methods from the %{::IM} directly, rather than enumerating them like this
+# XXX: read methods from the CLISHModelStack directly, rather than enumerating them like this
 for my $f (qw(parser prompt path prefix rebuild_parser path_string)) {
     no strict 'refs';
     *{$f} = sub {
