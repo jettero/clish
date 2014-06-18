@@ -6,7 +6,7 @@ use namespace::autoclean;
 use Moose::Util::TypeConstraints;
 use Term::ReadLine::CLISH::MessageSystem;
 use Parse::RecDescent;
-use File::Find::Object;
+use Module::Pluggable::Object;
 use common::sense;
 use constant {
     PARSE_COMPLETE => 1,
@@ -422,70 +422,31 @@ sub command_names {
     return sort map { $_->name } grep { !$h{$_}++ } @cmd;
 }
 
-sub prefix_regex {
-    my $this = shift;
-    my @prefixes = @{ $this->prefix };
-    s{::}{/}g for @prefixes;
-    my @t = map {"\Q$_"} @prefixes;
-    local $" = "|";
-    my $RE = qr{(?:@t)[^/]+};
-
-
-    die "use Module::Pluggable";
-
-
-
-
-    return $RE;
-}
-
 sub reload_commands {
     my $this = shift;
-    my $PATH = $this->path;
-    my $prreg = $this->prefix_regex;
 
-    my $orig_warn = $SIG{__WARN__};
-    $SIG{__WARN__} = sub {
-        debug("reload_commands hid this warning: $_[0]") if $ENV{CLISH_DEBUG};
-    };
+    # XXX: 0 psh> my @prefix = qw(example::cmds
+    # Term::ReadLine::CLISH::Library::Commands); use lib 'lib'; use
+    # Module::Pluggable::Object; $finder =
+    # Module::Pluggable::Object->new(search_path=>\@prefix,
+    # search_dirs=>['example', 'lib'], only=>do { local $"="|";
+    # qr{^(?:@prefix)::[^:]+\z} }), [ $finder->plugins ];
 
-    my @cmds;
+    my $prefixar = $this->prefix;
+    my $finder = Module::Pluggable::Object->new(
+        search_dirs => $this->path,
+        search_path => $prefixar,
+        instantiate => "new",
 
-    for my $path (@$PATH) {
-        my $ffo = File::Find::Object->new({}, $path);
+        only => do { local $" = 1; qr{^(?:@$prefixar)::[^:]+\z} }
+    );
 
-        debug "trying to load commands from $path using $prreg" if $ENV{CLISH_DEBUG};
-
-        while( my $f = $ffo->next ) {
-            debug "    considering $f" if $ENV{CLISH_DEBUG};
-
-            if( -f $f and my ($ppackage) = $f =~ m{($prreg.*?)\.pm} ) {
-                my $package = $ppackage; $package =~ s{/}{::}g;
-                my $newcall = "use $package; $package" . "->new";
-                my $obj     = eval $newcall;
-
-                if( $obj ) {
-                    if( $obj->isa("Term::ReadLine::CLISH::Command") ) {
-                        debug "    loaded $ppackage as $package" if $ENV{CLISH_DEBUG};
-                        push @cmds, $obj;
-
-                    } else {
-                        debug "    loaded $ppackage as $package — but it didn't appear to be a Term::ReadLine::CLISH::Command" if $ENV{CLISH_DEBUG};
-                    }
-
-                } else {
-                    error "trying to load '$ppackage' as '$package'";
-                }
-            }
-        }
-    }
+    my @cmds = $finder->plugins;
 
     my $c = @cmds;
     my $p = $c == 1 ? "" : "s";
 
     info "[loaded $c command$p from PATH]";
-
-    $SIG{__WARN__} = $orig_warn;
 
     $this->commands(\@cmds);
 }
