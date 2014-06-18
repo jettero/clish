@@ -69,11 +69,15 @@ sub push_model {
 
 sub pop_model {
     my $this = shift;
-    my $last = pop @{$this->models};
+    my $m_ar = $this->models;
+
+    pop @$m_ar; # we don't return this like a usual pop might do because:
+     # a) what good would the returned input model do us?
+     # b) it's handier to return the current stack-depth so we can pop or exit
 
     debug "popped a model off the stack:";
 
-    if( $last ) {
+    if( @$m_ar ) {
         debug " - new prefix = [" . join(", ", @{$this->prefix}) . "]";
         debug " - new path = [" . join(", ", @{$this->path}) . "]";
         debug " - new prompt = \"" . $this->prompt . "\"";
@@ -82,7 +86,7 @@ sub pop_model {
         debug " - (nothing left on the stack)";
     }
 
-    return $last;
+    return 0 + @$m_ar;
 }
 
 # XXX: read methods from the CLISHModelStack directly, rather than enumerating them like this
