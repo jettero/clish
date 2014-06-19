@@ -447,7 +447,7 @@ sub reload_commands {
     my $p = $c == 1 ? "" : "s";
 
     info "[loaded $c command$p from PATH]";
-    debug "@cmds";
+    debug "@cmds" if $ENV{CLISH_DEBUG};
 
     $this->commands(\@cmds);
 }

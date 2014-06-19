@@ -1,6 +1,7 @@
 .git
 .gitignore
 blib
+find-bad-debugs.sh
 Makefile
 MANIFEST.SKIP
 MYMETA.json

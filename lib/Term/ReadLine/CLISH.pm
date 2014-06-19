@@ -59,12 +59,19 @@ sub push_model {
 
     $this->rebuild_parser;
 
-    debug "pushed a new input model:";
-    debug " - new prefix = [" . join(", ", @{$this->prefix}) . "]";
-    debug " - new path = [" . join(", ", @{$this->path}) . "]";
-    debug " - new prompt = \"" . $this->prompt . "\"";
+    if( $ENV{CLISH_DEBUG} ) {
+        debug "pushed a new input model:";
+        debug " - new prefix = [" . join(", ", @{$this->prefix}) . "]";
+        debug " - new path = [" . join(", ", @{$this->path}) . "]";
+        debug " - new prompt = \"" . $this->prompt . "\"";
+    }
 
     return $this;
+}
+
+{
+    sub slide_model {
+    }
 }
 
 sub pop_model {
@@ -75,15 +82,17 @@ sub pop_model {
      # a) what good would the returned input model do us?
      # b) it's handier to return the current stack-depth so we can pop or exit
 
-    debug "popped a model off the stack:";
+    if( $ENV{CLISH_DEBUG} ) {
+        debug "popped a model off the stack:";
 
-    if( @$m_ar ) {
-        debug " - new prefix = [" . join(", ", @{$this->prefix}) . "]";
-        debug " - new path = [" . join(", ", @{$this->path}) . "]";
-        debug " - new prompt = \"" . $this->prompt . "\"";
+        if( @$m_ar ) {
+            debug " - new prefix = [" . join(", ", @{$this->prefix}) . "]";
+            debug " - new path = [" . join(", ", @{$this->path}) . "]";
+            debug " - new prompt = \"" . $this->prompt . "\"";
 
-    } else {
-        debug " - (nothing left on the stack)";
+        } else {
+            debug " - (nothing left on the stack)";
+        }
     }
 
     return 0 + @$m_ar;
@@ -255,7 +264,7 @@ sub init_vdb {
         my $save_env = $this->var_defined_or_default( save_env_re => "^CLISH_" );
 
         unless ($save_env) {
-            debug "not saving any environment due to save_env_re setting";
+            debug "not saving any environment due to save_env_re setting" if $ENV{CLISH_DEBUG};
             return;
         }
 
@@ -264,7 +273,7 @@ sub init_vdb {
             $save_env = qr(^CLISH_);
         }
 
-        debug("saving environment variables that match m/$save_env/");
+        debug "saving environment variables that match m/$save_env/" if $ENV{CLISH_DEBUG};
 
         for my $k (grep { $_ =~ $save_env } keys %ENV) {
             $h->{$k} = $ENV{$k};

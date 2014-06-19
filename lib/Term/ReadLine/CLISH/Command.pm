@@ -42,7 +42,7 @@ sub validate {
     my $error_count = 0;
     for( values %$args ) {
         if( $_->has_value ) {
-            debug "$_ already has a value (" . $_->value . "), no reason to validate";
+            debug "$_ already has a value (" . $_->value . "), no reason to validate" if $ENV{CLISH_DEBUG};
             next;
 
         } elsif( $_->has_token ) {
@@ -53,7 +53,7 @@ sub validate {
             }
 
         } elsif( $_->required ) {
-            debug "$_ seems to be missing, not validating, just complaining";
+            debug "$_ seems to be missing, not validating, just complaining" if $ENV{CLISH_DEBUG};
             error "$error_count with $_", "required argument omitted";
             $error_count ++;
         }
