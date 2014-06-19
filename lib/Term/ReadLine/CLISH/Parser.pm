@@ -438,7 +438,7 @@ sub reload_commands {
         search_path => $prefixar,
         instantiate => "new",
 
-        only => do { local $" = 1; qr{^(?:@$prefixar)::[^:]+\z} }
+        only => do { local $" = "|"; qr{^(?:@$prefixar)::[^:]+\z} }
     );
 
     my @cmds = $finder->plugins;
@@ -447,6 +447,7 @@ sub reload_commands {
     my $p = $c == 1 ? "" : "s";
 
     info "[loaded $c command$p from PATH]";
+    debug "@cmds";
 
     $this->commands(\@cmds);
 }
