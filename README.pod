@@ -7,7 +7,8 @@ Term::ReadLine::CLISH — command line interface shell
 =head1 SYNOPSIS
 
 This is a bundle of OO interfaces to quickly built shells with tab completion
-and context help (via ? key binding), intended to feel like IOS.
+and context help. It is intended to feel like a certain unnamed embedded
+operating system.
 
     my-shell> ping count 1 size 1300 2001:470:1f10:456:0:56:48:42
     PING 2001:470:1f10:456:0:56:48:42(2001:470:1f10:456:0:56:48:42) 1300 data bytes
