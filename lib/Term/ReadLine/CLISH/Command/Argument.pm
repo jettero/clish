@@ -12,8 +12,6 @@ use Carp;
 subtype 'FunctionName', as 'Str', where { m/^(?:::|[\w\d_]+)*\z/ };
 subtype 'ChoiceOfFunctions', as 'ArrayRef[FunctionName]';
 
-subtype "CommandMod", as "Str", where { m/^[!+-]*\z/ };
-
 coerce 'ChoiceOfFunctions', from 'FunctionName', via { [ $_ ] };
 coerce 'ChoiceOfFunctions', from 'Undef', via { [] };
 
@@ -27,7 +25,6 @@ has qw(help is ro isa Str default ??);
 has qw(default is ro isa Str default ??);
 has qw(value is rw predicate has_value clearer no_value reader value writer _wvalue);
 has qw(token is rw predicate has_token clearer no_token reader token writer _wtoken);
-has qw(cmd_mod is rw isa CommandMod predicate has_cmd_mod);
 has qw(is_flag is rw isa Bool);
 
 __PACKAGE__->meta->make_immutable;

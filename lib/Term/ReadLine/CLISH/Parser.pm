@@ -225,19 +225,6 @@ sub parse {
 
                 $return[ PARSE_RETURN_ARGSS ][ $cidx ] = my $out_args = +{ map {($_->name,$_)} @cmd_args };
 
-                if( $tokout->{mods} ) {
-                    my @f = grep { $_->flag_matches_cmd_mods($tokout->{mods}) } @cmd_args;
-
-                    if( @f ) {
-                        $_->add_copy_with_token_to_hashref( $out_args => $_->name )
-                            for @f;
-
-                    } else {
-                        $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "command modifiers \"$tokout->{mods}\" not understood";
-                        next;
-                    }
-                }
-
                 # NOTE: it's really not clear what the best *generalized* arg
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
@@ -395,11 +382,10 @@ sub build_parser {
     my $this = shift;
 
     my $prd = Parse::RecDescent->new(q
-        tokens: /[!+-]{0,1}/ token(s?) cruft /$/ {
+        tokens: token(s?) cruft /$/ {
             $return = {
-                mods   => $item[1],
-                tokens => $item[2],
-                cruft  => $item[3],
+                tokens => $item[1],
+                cruft  => $item[2],
             }
         }
 

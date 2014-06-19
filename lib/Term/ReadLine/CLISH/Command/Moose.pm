@@ -68,6 +68,7 @@ sub optional_argument {
 
 sub flag {
     my $flag = shift;
+
     argument( $flag => undef, @_, required => 0, is_flag => 1 );
 }
 
