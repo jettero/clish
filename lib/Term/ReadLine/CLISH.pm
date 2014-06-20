@@ -197,12 +197,15 @@ sub BUILD {
 
 sub handle_qmark {
     my $this = shift;
-    my ($prompt, $line, @pe) = @_;
 
     $this->safe_talk(sub{
-        if( my ($cmds, $args) = $this->parser->parse_for_help($line) ) {
-            use Data::Dump qw(dump);
-            info dump({cmds=>$cmds, args=>$args, line=>$line});
+        my ($buffer, $point, $end) = @_;
+
+        if( my ($cmds, $args) = $this->parser->parse_for_help($buffer) ) {
+            use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
+            add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
+
+            info dump({cmds=>$cmds, args=>$args, buffer=>$buffer});
         }
     });
 }
