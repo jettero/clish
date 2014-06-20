@@ -27,9 +27,11 @@ operating system.
 =item CPAN Friendly
 
 To the extent that this can be done, I'd like for this to be CPAN friendly.  I'm
-unsure about the namespace, that's for sure, but ideally, the commands should
-all be modules, rather than xml files (or whatever).  Commands are located as
-plugins using L<Module::Pluggable>
+unsure about the namespace, that's for sure; in fact, it's not really clear CPAN
+needs more shell-kits (see L<OTHERS> below).  Ideally, the commands should all
+be modules, rather than xml files (or whatever).  Commands are located as
+plugins using L<Module::Pluggable>, so they can be installed in the usual Perl
+places rather than having to find a home for them in C</usr/share> somewhere.
 
 =item Moduler Design
 
@@ -67,5 +69,5 @@ none are what I wanted at all.  For a complete working solution full of multi
 language support look at L<Term::RouterCLI>.  I literally couldn't find the
 documentation for this module, but it seems to be pretty mature.
 
-I also found something called L<Term::UI> and L<Term::UI>.
+I also found something called L<Term::UI>, L<Term::ShellKit>, L<Term::Shell> and L<Term::TUI>.
 
