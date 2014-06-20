@@ -22,7 +22,7 @@ use Term::ReadLine::CLISH::InputModel;
 use File::Spec;
 use File::HomeDir;
 use Tie::YAML;
-use POSIX qw(sigaction SIGINT);
+use POSIX qw(sigaction SIGINT SIGTSTP);
 use common::sense;
 
 our $VERSION = '0.0000'; # string for the CPAN
@@ -208,6 +208,7 @@ sub run {
     $this->init_history;
     $this->rebuild_parser;
     $this->attach_sigint;
+    $this->attach_sigstop;
     $this->attach_completion_whirlygigs;
 
     info "Welcome to " . $this->name . " v" . $this->version;
@@ -319,10 +320,30 @@ sub safe_talk {
 
     return $this if $opt{no_restore};
 
+    $save[0] = $this->prompt;
+
     $term->modifying;
     $term->set_prompt(shift @save);
     @{ $attribs }{qw(line_buffer point end)} = @save;
     $term->redisplay;
+
+    return $this;
+}
+
+sub attach_sigstop {
+    my $this = shift;
+
+    if( $this->term->isa("Term::ReadLine::Gnu") ) {
+        my ($last, $count);
+
+        sigaction SIGTSTP, new POSIX::SigAction sub {
+            $this->safe_talk(sub{
+                $this->pop_model while $this->model_depth > 1;
+            });
+
+        } or die "Error setting SIGINT handler: $!\n";
+
+    }
 
     return $this;
 }
