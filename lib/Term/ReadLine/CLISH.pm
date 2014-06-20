@@ -183,6 +183,10 @@ sub BUILD {
 
     # XXX: I hate ornaments, but this should probably be an option later
     eval { $term->ornaments('', '', '', '') };
+
+    # $term->add_defun('handle-qmark', sub { $this->handle_qmark });
+    # $term->bind_key( 0x1a, 'handle-qmark' );
+
     $this->term( $term );
 
     push @{ $this->cleanup }, sub { $_[0]->save_history };
@@ -217,6 +221,10 @@ sub run {
         my $prompt = $this->prompt;
 
         # XXX: $prompt = evaluate_prompt_specials( $prompt );
+        # actually, we should do this in the InputModel::prompt() becaue it
+        # should really get evaluated any time we print the prompt (e.g.,
+        # safe_talk()) — or maybe we just do the evaluationin both places...
+        # hrm.
 
         $_ = $this->term->readline($prompt);
         say unless defined $_;
