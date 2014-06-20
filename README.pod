@@ -70,7 +70,11 @@ language support look at L<Term::RouterCLI>.  I literally couldn't find the
 documentation for this module, but it seems to be pretty mature.
 
 I also found some other things like L<Term::UI>, L<Term::ShellKit>,
-L<Term::Shell> and L<Term::TUI>.  I haven't really checked these out.  I did
-poke around to see if they were (as RouterCLI calls it) “Stanford style” NLP
-parsers, but that's about it.
+L<Term::Shell>, L<Term::TUI>, and even something called L<Term::ReadLine::Zoid>.
+I haven't really checked these out.  I did poke around to see if they were (as
+RouterCLI calls it) “Stanford style” NLP parsers and whether they were pluggable
+enough to get what I wanted, but that's about it.  Probably one of them would
+have been a great choice and I missed it.  I am cut and pasting heavily from
+L<AnyEvent::ReadLine::Gnu> (L<MLEHMANN|http://search.cpan.org/~mlehmann/>
+figured out a lot of stuff).
 
