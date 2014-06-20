@@ -46,6 +46,8 @@ wrong, feel free to jump in (L<https://github.com/jettero/clish>) and fix them â
 or maybe just drop me a line: L<mailto:jettero@cpan.org>,
 L<irc://chat.freenode.net/jettero,isnic>, L<http://twitter.com/spottedkangaroo>.
 
+=back
+
 =head1 NAME
 
 I loved the CLISH project, but ultimately didn't want to do this in that way.  I
