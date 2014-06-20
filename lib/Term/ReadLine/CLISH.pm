@@ -184,14 +184,22 @@ sub BUILD {
     # XXX: I hate ornaments, but this should probably be an option later
     eval { $term->ornaments('', '', '', '') };
 
-    # $term->add_defun('handle-qmark', sub { $this->handle_qmark });
-    # $term->bind_key( 0x1a, 'handle-qmark' );
+    $term->add_defun('handle-qmark', sub { $this->handle_qmark });
+    $term->bind_key( ord('?') => 'handle-qmark' );
 
     $this->term( $term );
 
     push @{ $this->cleanup }, sub { $_[0]->save_history };
 
     return;
+}
+
+sub handle_qmark {
+    my $this = shift;
+
+    $this->safe_talk(sub{
+        info "XXX: print help here";
+    });
 }
 
 sub config {
