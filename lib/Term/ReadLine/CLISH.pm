@@ -69,18 +69,10 @@ sub push_model {
     return $this;
 }
 
-{
-    sub slide_model {
-    }
-}
-
 sub pop_model {
     my $this = shift;
     my $m_ar = $this->models;
-
-    pop @$m_ar; # we don't return this like a usual pop might do because:
-     # a) what good would the returned input model do us?
-     # b) it's handier to return the current stack-depth so we can pop or exit
+    my $item = pop @$m_ar;
 
     if( $ENV{CLISH_DEBUG} ) {
         debug "popped a model off the stack:";
@@ -95,8 +87,17 @@ sub pop_model {
         }
     }
 
+    return $item;
+}
+
+sub model_depth {
+    my $this = shift;
+    my $m_ar = $this->models;
+
     return 0 + @$m_ar;
 }
+
+*has_model = \&model_depth;
 
 # XXX: read methods from the CLISHModelStack directly, rather than enumerating them like this
 for my $f (qw(parser prompt path prefix rebuild_parser path_string)) {
@@ -251,36 +252,6 @@ sub init_vdb {
     my $y = tie my %y, 'Tie::YAML' => $this->config("vdb.yaml");
 
     $this->vdb( $y );
-
-    if( my $h = $y->{ENV} ) {
-        for my $k (keys %$h) {
-            $ENV{$k} = $h->{$k};
-        }
-    }
-
-    push @{ $this->cleanup }, sub {
-        my $this = shift;
-        my $h = $this->var('ENV') || {};
-        my $save_env = $this->var_defined_or_default( save_env_re => "^CLISH_" );
-
-        unless ($save_env) {
-            debug "not saving any environment due to save_env_re setting" if $ENV{CLISH_DEBUG};
-            return;
-        }
-
-        unless( eval { qr($save_env); 1 } ) {
-            warning "with save_env_re=$save_env", scrub_last_error();
-            $save_env = qr(^CLISH_);
-        }
-
-        debug "saving environment variables that match m/$save_env/" if $ENV{CLISH_DEBUG};
-
-        for my $k (grep { $_ =~ $save_env } keys %ENV) {
-            $h->{$k} = $ENV{$k};
-        }
-
-        $this->var(ENV=>$h);
-    };
 
     return $this;
 }
