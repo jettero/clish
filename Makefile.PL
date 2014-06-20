@@ -33,7 +33,7 @@ WriteMakefile(
             META_MERGE => {
                 keywords => [qw(ios cli shell)],
                 resources=> {
-                    repository => 'http://github.com/jettero/term-readline-clish',
+                    repository => 'http://github.com/jettero/clish',
                 },
             },
 

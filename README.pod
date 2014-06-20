@@ -20,6 +20,32 @@ operating system.
 
     my-shell>
 
+=head1 GOALS
+
+=over
+
+=item CPAN Friendly
+
+To the extent that this can be done, I'd like for this to be CPAN friendly.  I'm
+unsure about the namespace, that's for sure, but ideally, the commands should
+all be modules, rather than xml files (or whatever).  Commands are located as
+plugins using L<Module::Pluggable>
+
+=item Moduler Design
+
+Where possible, I'm trying to use modules to make the shell and shell objects
+fit into home directories correctly.  I'm using things like L<File::HomeDir> to
+do this.  In fact, anywhere I can lift something from the CPAN to do things
+better than I can handroll them, I've been trying to do so.  Sometimes this
+means big refactorings, which is ok with me.
+
+=item Moose-y
+
+I'm not very good at L<Moose> and if you're seeing things that are being done
+wrong, feel free to jump in (L<https://github.com/jettero/clish>) and fix them —
+or maybe just drop me a line: L<mailto:jettero@cpan.org>,
+L<irc://chat.freenode.net/jettero,isnic>, L<http://twitter.com/spottedkangaroo>.
+
 =head1 NAME
 
 I loved the CLISH project, but ultimately didn't want to do this in that way.  I
@@ -31,3 +57,13 @@ L<http://clish.sourceforge.net/>
 I asked the author if he minded, and he did not.  We feel the names are
 sufficiently different that it wouldn't cause any confusion for anyone, and even
 if it did (he said) it's not trademarked anyway.
+
+=head1 OTHERS
+
+I'm reinventing the wheel.  There are plenty of other choices out there, but
+none are what I wanted at all.  For a complete working solution full of multi
+language support look at L<Term::RouterCLI>.  I literally couldn't find the
+documentation for this module, but it seems to be pretty mature.
+
+I also found something called L<Term::UI> and L<Term::UI>.
+

@@ -220,9 +220,10 @@ sub run {
         $_ = $this->term->readline($prompt);
 
         if( not defined ) {
-
-            next INPUT
-                if $this->pop_model;
+            if( $this->pop_model and $this->has_model ) {
+                print "\e[2K";
+                next INPUT;
+            }
 
             last INPUT;
         }
