@@ -218,10 +218,10 @@ sub run {
         # XXX: $prompt = evaluate_prompt_specials( $prompt );
 
         $_ = $this->term->readline($prompt);
+        say unless defined $_;
 
         if( not defined ) {
             if( $this->pop_model and $this->has_model ) {
-                print "\e[2K";
                 next INPUT;
             }
 
