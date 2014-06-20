@@ -1,5 +1,6 @@
-#!/usr/bin/perl -Ilib
+#!/usr/bin/perl
 
+use lib 'lib';
 use common::sense;
 use Term::ReadLine::CLISH;
 

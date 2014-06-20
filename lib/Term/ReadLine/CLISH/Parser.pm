@@ -36,6 +36,27 @@ has qw(output_prefix is rw isa Str default) => "% ";
 
 __PACKAGE__->meta->make_immutable;
 
+=head1 C<parse_for_help>
+
+  # XXX: I AM A STUB AND YOU ARE READING ME
+
+=cut
+
+sub parse_for_help {
+    my $this = shift;
+    my $line = shift;
+
+    my @things_we_could_pick;
+    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1);
+
+    if( $tokout->{cruft} ) {
+        error "miscellaneous cruft on end of line", $tokout->{cruft};
+        return;
+    }
+
+    return wantarray ? ($cmds, $argss) : [$cmds, $argss];
+}
+
 =head1 C<parse_for_tab_completion>
 
   # XXX: I AM A STUB AND YOU ARE READING ME

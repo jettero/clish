@@ -22,6 +22,7 @@ use Term::ReadLine::CLISH::InputModel;
 use File::Spec;
 use File::HomeDir;
 use Tie::YAML;
+use Text::Table;
 use POSIX qw(sigaction SIGINT SIGTSTP);
 use common::sense;
 
@@ -184,7 +185,7 @@ sub BUILD {
     # XXX: I hate ornaments, but this should probably be an option later
     eval { $term->ornaments('', '', '', '') };
 
-    $term->add_defun('handle-qmark', sub { $this->handle_qmark });
+    $term->add_defun('handle-qmark', sub { $this->handle_qmark(@_) });
     $term->bind_key( ord('?') => 'handle-qmark' );
 
     $this->term( $term );
@@ -196,9 +197,13 @@ sub BUILD {
 
 sub handle_qmark {
     my $this = shift;
+    my ($prompt, $line, @pe) = @_;
 
     $this->safe_talk(sub{
-        info "XXX: print help here";
+        if( my ($cmds, $args) = $this->parser->parse_for_help($line) ) {
+            use Data::Dump qw(dump);
+            info dump({cmds=>$cmds, args=>$args, line=>$line});
+        }
     });
 }
 
@@ -234,7 +239,7 @@ sub run {
         # safe_talk()) — or maybe we just do the evaluationin both places...
         # hrm.
 
-        $_ = $this->term->readline($prompt);
+        $_ = $this->term->readline("$prompt" || "clish>");
         say unless defined $_;
 
         if( not defined ) {
@@ -320,7 +325,7 @@ sub safe_talk {
     return unless defined $term;
 
     my $attribs = $term->Attribs;
-    my @save = @{ $attribs }{qw(prompt line_buffer point end)};
+    my @save = @{ $attribs }{qw(line_buffer point end)};
 
     # NOTE: mostly from Term::ReadLine::Gnu's eg/perlsh; but to be
     # fair, tried to copy AnyEvent::ReadLine::Gnu first — I just
@@ -328,18 +333,16 @@ sub safe_talk {
     # I think he needs to add {end} to his hide() / show().
 
     $term->modifying;
-    @{ $attribs }{qw(line_buffer point end)} = ("", 0,0,0);
+    @{ $attribs }{qw(line_buffer point end)} = ("",0,0);
     $term->set_prompt("");
     $term->redisplay;
 
-    $code->();
+    $code->(@save);
 
     return $this if $opt{no_restore};
 
-    $save[0] = $this->prompt;
-
     $term->modifying;
-    $term->set_prompt(shift @save);
+    $term->set_prompt($this->prompt);
     @{ $attribs }{qw(line_buffer point end)} = @save;
     $term->redisplay;
 

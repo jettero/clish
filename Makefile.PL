@@ -23,6 +23,8 @@ WriteMakefile(
             Parse::RecDescent
             Term::ANSIColorx::ColorNicknames
             Term::ReadLine
+            Text::Table
+            Tile::YAML
         )
 
     },

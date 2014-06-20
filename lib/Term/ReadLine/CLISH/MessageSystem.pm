@@ -67,7 +67,27 @@ sub error($;$) {
 }
 
 sub install_generic_message_handlers {
-    $SIG{__WARN__} = sub { warning "uncaught warning", "$_[0]" };
+    $SIG{__WARN__} = sub {
+        my $w = "$_[0]";
+
+        if( $ENV{CLISH_CONFESS} or ($w =~ m/line \d/ and not $w =~ m{Term/.*?/CLISH}) ) {
+            warning "uncaught warning", $w;
+            warning "warning in external package, call trace follows";
+            my $i = 0;
+            while( my @c = caller($i++) ) {
+                my ($package, $filename, $line, $subroutine, $hasargs,
+                    $wantarray, $evaltext, $is_require, $hints, $bitmask, $hinthash)
+
+                = @c;
+
+                warning "trace($i)", "pkg=$package sub=$subroutine file=$filename line=$line";
+
+            }
+
+        } else {
+            warning "uncaught warning", $w;
+        }
+    };
   # $SIG{__DIE__} = sub { warning "uncaught error", "$_[0]" };
 
     binmode STDIN,  ":utf8"; # if we're not using utf8 … we’re … on a comadore64? Slowlaris?
