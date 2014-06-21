@@ -205,7 +205,8 @@ sub handle_qmark {
             use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
             add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
 
-            info dump({cmds=>$cmds, args=>$args, buffer=>$buffer});
+            debug dump({cmds=>$cmds, args=>$args, bpe=>[$buffer, $point, $end]}) if $ENV{CLISH_DEBUG};
+            help Text::Table->new->load( map { [ $_->name, $_->help ] } @$cmds);
         }
     });
 }
