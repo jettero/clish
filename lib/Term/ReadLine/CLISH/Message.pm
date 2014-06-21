@@ -5,10 +5,10 @@ use namespace::sweep; # like autoclean, but doesn't murder overloads
 use common::sense;
 use Term::ANSIColorx::ColorNicknames;
 use Term::ANSIColor ();
-use overload '""' => \&stringify, fallback => 1;
+use overload '""' => sub { $_[0]->stringify }, fallback => 1;
 
 has qw(generated is ro isa Int default) => sub { time };
-has qw(format is rw isa Str default) => "%% %s";
+has qw(format is rw isa Str default) => "%s";
 has qw(caption is ro isa Str);
 has qw(msg is ro isa Str);
 
@@ -16,32 +16,54 @@ __PACKAGE__->meta->make_immutable;
 
 sub stringify {
     my $this = shift;
-    my $msg = $this->msg;
+    my $fmt  = $this->format;
+    my $msg  = $this->msg;
     my $cap = $this->caption;
 
-    $msg =~ s/[\x0d\x0a]+/\x0a/g;
-    $msg =~ s/[\x0d\x0a]+$//g;
-    $msg = "$cap: $msg" if $cap;
+    my $msg = $this->msg;
+       $msg =~ s/[\x0d\x0a]\z//g;
 
-    my $fmt = $this->format;
+    my @msg = split m/[\x0d\x0a]/, $msg;
 
-    if( $ENV{CLISH_NOCOLOR} ) {
-        $fmt =~ s/\%C(?:\([^()]*\))?//g;
+    if( $cap ) {
+        if( @msg == 1 ) {
+            $msg[0] = "$cap: $msg[0]";
 
-    } else {
-        $fmt =~ s/\%C(?:\(([^()]*)\))?/"$1" ? Term::ANSIColor::color("$1") : Term::ANSIColor::color('reset')/eg;
+        } else {
+            $_ = "  $_" for @msg;
+            unshift @msg, "$cap:";
+        }
     }
 
-    return sprintf($fmt, $msg);
+    return join("\x0a", _apply_format( _apply_color($fmt => @msg) ));
 }
 
 sub spew {
     my $this = shift;
+
     say $this;
 }
 
-sub colorize {
-    # overload this
+sub _apply_format {
+    my $fmt = shift;
+
+    map { sprintf($fmt, $_) } @_;
+}
+
+sub _apply_color {
+    map {
+
+        if( $ENV{CLISH_NOCOLOR} ) {
+            s/\%C(?:\([^()]*\))?//g;
+
+        } else {
+            s/\%C(?:\(([^()]*)\))?/"$1" ? Term::ANSIColor::color("$1") : Term::ANSIColor::color('reset')/eg;
+        }
+
+        $_
+    }
+
+    @_
 }
 
 1;

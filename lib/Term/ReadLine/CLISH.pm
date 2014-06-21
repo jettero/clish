@@ -22,7 +22,6 @@ use Term::ReadLine::CLISH::InputModel;
 use File::Spec;
 use File::HomeDir;
 use Tie::YAML;
-use Text::Table;
 use POSIX qw(sigaction SIGINT SIGTSTP);
 use common::sense;
 
@@ -206,7 +205,7 @@ sub handle_qmark {
             add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
 
             debug dump({cmds=>$cmds, args=>$args, bpe=>[$buffer, $point, $end]}) if $ENV{CLISH_DEBUG};
-            help Text::Table->new->load( map { [ $_->name, $_->help ] } @$cmds);
+            help [ map { [ $_->name, $_->help ] } @$cmds ];
         }
     });
 }

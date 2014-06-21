@@ -1,4 +1,4 @@
-package Term::ReadLine::CLISH::Warning;
+package Term::ReadLine::CLISH::Message::Debug;
 
 use Moose;
 use namespace::autoclean;
@@ -6,9 +6,9 @@ use common::sense;
 
 extends 'Term::ReadLine::CLISH::Message';
 
-has qw(+format default) => "%% %C(yellow)WARNING%C %s";
+has qw(+format default) => "%% %C(black)DEBUG %s%C";
 has qw(+msg default) => sub {
-    my $e = $@; undef $@; # we eat $@'s
+    my $e = $@;
     $e =~ s/\s+at\s+\(eval\s+\d+\)\s+line \d+\.//;
     $e
 };
