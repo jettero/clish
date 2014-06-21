@@ -46,7 +46,11 @@ sub parse_for_help {
     my $this = shift;
     my $line = shift;
 
-    my @things_we_could_pick;
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+
+    return $this->commands unless $line;
+
     my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1);
 
     if( $tokout->{cruft} ) {
@@ -54,7 +58,7 @@ sub parse_for_help {
         return;
     }
 
-    return wantarray ? ($cmds, $argss) : [$cmds, $argss];
+    return @$cmds;
 }
 
 =head1 C<parse_for_tab_completion>

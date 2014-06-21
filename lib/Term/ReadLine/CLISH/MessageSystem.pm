@@ -5,6 +5,7 @@ use common::sense;
 use base 'Exporter';
 use Term::ReadLine::CLISH::Message;
 use Term::ReadLine::CLISH::Message::Debug;
+use Term::ReadLine::CLISH::Message::Help;
 use Term::ReadLine::CLISH::Message::Information;
 use Term::ReadLine::CLISH::Message::Warning;
 use Term::ReadLine::CLISH::Message::Error;
@@ -86,7 +87,7 @@ sub info($;$) {
 sub help($;$) {
     my %args = _possibly_captioned_message(@_);
 
-    Term::ReadLine::CLISH::Message->new(%args)->spew;
+    Term::ReadLine::CLISH::Message::Help->new(%args)->spew;
 }
 
 sub warning($;$) {
