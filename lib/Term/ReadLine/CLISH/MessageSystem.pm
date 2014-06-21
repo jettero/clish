@@ -8,14 +8,37 @@ use Term::ReadLine::CLISH::Message::Debug;
 use Term::ReadLine::CLISH::Message::Information;
 use Term::ReadLine::CLISH::Message::Warning;
 use Term::ReadLine::CLISH::Message::Error;
+use Text::Table;
 use Carp;
 
-our @EXPORT = qw(wtf debug help info warning error install_generic_message_handlers scrub_last_error);
+our @EXPORT = qw(wtf debug help info warning error install_generic_message_handlers scrub_last_error from_table);
 
 our $FILE = __FILE__;
 our $BASE = $FILE;
     $BASE =~ s/^.*?Term/Term/;
     $BASE =~ s/CLISH.*\z/CLISH/;
+
+sub from_table(@) {
+
+    my @head;
+    if( $_[0] eq "-head" ) {
+        my (undef, $tmp) = splice @_, 0, 2;
+        @head = @{ $tmp };
+    }
+
+    my $table;
+
+    eval {
+        $table =
+
+        Text::Table
+            ->new  ( map{uc} @head )
+            ->load ( @_ )
+
+    ;1} or croak scrub_last_error();
+
+    return "$table";
+}
 
 sub scrub_last_error(;$) {
     ($@) = @_ if @_;

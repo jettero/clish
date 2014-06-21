@@ -2,9 +2,9 @@ package Term::ReadLine::CLISH::Message;
 
 use Moose;
 use namespace::sweep; # like autoclean, but doesn't murder overloads
-use common::sense;
 use Term::ANSIColorx::ColorNicknames;
 use Term::ANSIColor ();
+use common::sense;
 use overload '""' => sub { $_[0]->stringify }, fallback => 1;
 
 has qw(generated is ro isa Int default) => sub { time };
