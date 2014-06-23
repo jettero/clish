@@ -12,7 +12,12 @@ use Term::ReadLine::CLISH::Message::Error;
 use Text::Table;
 use Carp;
 
-our @EXPORT = qw(wtf debug help info warning error install_generic_message_handlers scrub_last_error from_table);
+our @MSGS = qw(debug help info warning error todo from_table);
+our @TOOL = qw(scrub_last_error from_table);
+our @BOOT = qw(install_generic_message_handlers);
+
+our @EXPORT_OK = (@MSGS, @TOOL, @BOOT);
+our %EXPORT_TAGS = ( all=>[@MSGS, @TOOL, @BOOT], msgs=>[@MSGS], tool=>[@TOOL], boot=>[@BOOT] );
 
 our $FILE = __FILE__;
 our $BASE = $FILE;
@@ -59,56 +64,14 @@ sub scrub_last_error(;$) {
     $@;
 }
 
-sub debug($;$) {
-    croak "debug called without debug ENV set" unless $ENV{CLISH_DEBUG};
-
-    my %args = _possibly_captioned_message(@_);
-    Term::ReadLine::CLISH::Message::Debug->new(%args)->spew;
-}
-
-sub wtf($;$) {
-    my ($pkg, $file, $line) = caller;
-    my %args = _possibly_captioned_message(@_);
-
-    $args{caption} = $args{caption}
-        ? "(WTF in $file at line $line) $args{caption}"
-        : "WTF in $file at line $line";
-
-    local $ENV{CLISH_DEBUG} = 1;
-    Term::ReadLine::CLISH::Message::Debug->new(%args)->spew;
-}
-
-sub info($;$) {
-    my %args = _possibly_captioned_message(@_);
-
-    Term::ReadLine::CLISH::Message::Information->new(%args)->spew;
-}
-
-sub help($;$) {
-    my %args = _possibly_captioned_message(@_);
-
-    Term::ReadLine::CLISH::Message::Help->new(%args)->spew;
-}
-
-sub warning($;$) {
-    my %args = _probably_just_a_caption(@_);
-
-    Term::ReadLine::CLISH::Message::Warning->new(%args)->spew;
-}
-
-sub error($;$) {
-    my %args = _probably_just_a_caption(@_);
-
-    Term::ReadLine::CLISH::Message::Error->new(%args)->spew;
-}
-
 sub install_generic_message_handlers {
     $SIG{__WARN__} = sub {
         my $w = "$_[0]";
 
+        warning("uncaught warning", $w);
+
         if( $ENV{CLISH_CONFESS} or ($w =~ m/line \d/ and not $w =~ m{Term/.*?/CLISH}) ) {
-            warning "uncaught warning", $w;
-            warning "warning in external package, call trace follows";
+            warning("warning in external package, call trace follows");
             my $i = 0;
             while( my @c = caller($i++) ) {
                 my ($package, $filename, $line, $subroutine, $hasargs,
@@ -116,15 +79,11 @@ sub install_generic_message_handlers {
 
                 = @c;
 
-                warning "trace($i)", "pkg=$package sub=$subroutine file=$filename line=$line";
+                warning("trace($i)", "pkg=$package sub=$subroutine file=$filename line=$line");
 
             }
-
-        } else {
-            warning "uncaught warning", $w;
         }
     };
-  # $SIG{__DIE__} = sub { warning "uncaught error", "$_[0]" };
 
     binmode STDIN,  ":utf8"; # if we're not using utf8 … we’re … on a comadore64? Slowlaris?
     binmode STDOUT, ":utf8"; # … it'd be just odd
@@ -166,6 +125,60 @@ sub _possibly_captioned_message {
     }
 
     return %args;
+}
+
+##₀        |↑
+##########|||≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡=================>
+##°        |↓
+
+
+sub debug($;$) {
+    croak "debug called without debug ENV set" unless $ENV{CLISH_DEBUG};
+
+    my %args = _possibly_captioned_message(@_);
+    Term::ReadLine::CLISH::Message::Debug->new(%args)->spew;
+}
+
+sub info($;$) {
+    my %args = _possibly_captioned_message(@_);
+
+    Term::ReadLine::CLISH::Message::Information->new(%args)->spew;
+}
+
+sub help($;$) {
+    my %args = _possibly_captioned_message(@_);
+
+    Term::ReadLine::CLISH::Message::Help->new(%args)->spew;
+}
+
+sub warning($;$) {
+    my %args = _probably_just_a_caption(@_);
+
+    Term::ReadLine::CLISH::Message::Warning->new(%args)->spew;
+}
+
+sub error($;$) {
+    my %args = _probably_just_a_caption(@_);
+
+    Term::ReadLine::CLISH::Message::Error->new(%args)->spew;
+}
+
+sub todo($;$) {
+    my %args = _possibly_captioned_message(@_);
+
+    Term::ReadLine::CLISH::Message::TODO->new(%args)->spew;
+}
+
+sub wtf($;$) {
+    my ($pkg, $file, $line) = caller;
+    my %args = _possibly_captioned_message(@_);
+
+    $args{caption} = $args{caption}
+        ? "(WTF in $file at line $line) $args{caption}"
+        : "WTF in $file at line $line";
+
+    local $ENV{CLISH_DEBUG} = 1;
+    Term::ReadLine::CLISH::Message::Debug->new(%args)->spew;
 }
 
 1;
