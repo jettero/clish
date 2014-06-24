@@ -3,7 +3,6 @@ package Term::ReadLine::CLISH::Message;
 use Moose;
 use namespace::sweep; # like autoclean, but doesn't murder overloads
 use Term::ANSIColorx::ColorNicknames;
-use Term::ANSIColor ();
 use common::sense;
 use overload '""' => sub { $_[0]->stringify }, fallback => 1;
 
@@ -57,7 +56,11 @@ sub _apply_color {
             s/\%C(?:\([^()]*\))?//g;
 
         } else {
-            s/\%C(?:\(([^()]*)\))?/"$1" ? Term::ANSIColor::color("$1") : Term::ANSIColor::color('reset')/eg;
+            s{\%C(?:\(([^()]*)\))?}{
+                "$1"
+                ? Term::ANSIColorx::ColorNicknames::color("$1")
+                : Term::ANSIColorx::ColorNicknames::color('reset')
+            }eg;
         }
 
         $_
