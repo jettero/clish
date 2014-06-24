@@ -4,7 +4,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use namespace::sweep; # like autoclean, but doesn't murder overloads
 use Carp;
-use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 use common::sense;
 use overload '""' => \&stringify, fallback => 1;
 

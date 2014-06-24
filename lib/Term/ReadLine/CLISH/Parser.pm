@@ -4,7 +4,7 @@ package Term::ReadLine::CLISH::Parser;
 use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
-use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 use Parse::RecDescent;
 use Module::Pluggable::Object;
 use common::sense;
@@ -84,7 +84,7 @@ sub parse_for_tab_completion {
             my @args_with_values;  # XXX: apply filters here, find applicable args
             my @args_without_values;
 
-            wtf("XXX: not really done even forming this idea");
+            XXX "not really done even forming this idea";
 
         } else {
             # XXX: we're matching commands in the 0 or the 1 case, so populate like this

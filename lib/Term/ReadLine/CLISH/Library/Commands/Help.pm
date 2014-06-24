@@ -48,7 +48,7 @@ the order they are specified in the command definition.
 =cut
 
 use Term::ReadLine::CLISH::Command::Moose;
-use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 use IPC::System::Simple qw(systemx);
 use namespace::autoclean;
 use common::sense;

@@ -17,7 +17,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use Term::ReadLine;
-use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::MessageSystem qw(:all);
 use Term::ReadLine::CLISH::InputModel;
 use File::Spec;
 use File::HomeDir;
@@ -204,7 +204,7 @@ sub handle_qmark {
             use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
             add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
 
-            debug dump({possibilities => $possibilities, bpe=>[$buffer, $point, $end]}) if $ENV{CLISH_DEBUG};
+            wtf "handle_qmark", "\n" . dump({possibilities => $possibilities, bpe=>[$buffer, $point, $end]}) . "\n";
 
             help from_table map { [ $_->name, $_->help ] } @$possibilities;
         }

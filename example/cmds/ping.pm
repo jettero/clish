@@ -6,7 +6,7 @@ use namespace::autoclean;
 use Net::DNS;
 use Net::IP;
 use IPC::System::Simple 'systemx';
-use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 use common::sense;
 
 command(

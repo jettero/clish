@@ -11,7 +11,7 @@ use Moose;
 use common::sense;
 use namespace::autoclean;
 use Term::ReadLine::CLISH::Parser;
-use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 
 has qw(parser is rw isa Term::ReadLine::CLISH::Parser);
 has qw(prompt is rw isa Str default) => "clish> ";

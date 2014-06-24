@@ -1,7 +1,7 @@
 package Term::ReadLine::CLISH::Library::Commands::Configure::Debug;
 
 use Term::ReadLine::CLISH::Command::Moose;
-use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 use namespace::autoclean;
 use common::sense;
 

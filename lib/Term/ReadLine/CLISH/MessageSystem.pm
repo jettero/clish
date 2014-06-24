@@ -12,7 +12,7 @@ use Term::ReadLine::CLISH::Message::Error;
 use Text::Table;
 use Carp;
 
-our @MSGS = qw(debug help info warning error todo from_table);
+our @MSGS = qw(wtf debug help info warning error XXX todo from_table);
 our @TOOL = qw(scrub_last_error from_table);
 our @BOOT = qw(install_generic_message_handlers);
 
@@ -168,6 +168,7 @@ sub todo($;$) {
 
     Term::ReadLine::CLISH::Message::TODO->new(%args)->spew;
 }
+*XXX = \&todo;
 
 sub wtf($;$) {
     my ($pkg, $file, $line) = caller;

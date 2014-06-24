@@ -4,7 +4,7 @@ package Term::ReadLine::CLISH::Command::Argument;
 use Moose;
 use namespace::sweep; # like autoclean, but doesn't murder overloads
 use Moose::Util::TypeConstraints;
-use Term::ReadLine::CLISH::MessageSystem;
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 use common::sense;
 use overload '""' => \&stringify, fallback => 1;
 use Carp;
