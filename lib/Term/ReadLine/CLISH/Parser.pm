@@ -46,11 +46,6 @@ sub parse_for_help {
     my $this = shift;
     my $line = shift;
 
-    $line =~ s/^\s+//;
-    $line =~ s/\s+$//;
-
-    return $this->commands unless $line;
-
     my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1);
 
     if( $tokout->{cruft} ) {
@@ -58,7 +53,19 @@ sub parse_for_help {
         return;
     }
 
-    return @$cmds;
+    use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
+    add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
+
+    wtf "parse_for_help result", "\n" . dump({
+        line    => $line,
+        tokout  => $tokout,
+        cmds    => $cmds,
+        argss   => $argss,
+        statuss => $statuss,
+
+    }) . "\n";
+
+    return $cmds;
 }
 
 =head1 C<parse_for_tab_completion>
@@ -87,9 +94,7 @@ sub parse_for_tab_completion {
             XXX "not really done even forming this idea";
 
         } else {
-            # XXX: we're matching commands in the 0 or the 1 case, so populate like this
-            my $m = $TOK[0];
-            @things_we_could_pick = grep { m/^\Q$m/ } @$cmds;
+            @things_we_could_pick = map { $_->name } @$cmds;
         }
     }
 
