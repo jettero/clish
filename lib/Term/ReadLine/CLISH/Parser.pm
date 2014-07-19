@@ -84,22 +84,32 @@ sub parse_for_tab_completion {
     if( $tokout->{cruft} ) {
         @things_we_could_pick = (); # we'll never figure this out, it's a string or something
 
-    } else {
+    } elsif( $line ) {
         my $did_a_k = 0;
 
-        for( 0 .. $#$cmds ) {
-            # NOTE: This might be overly simplistic, or it might be right.
-            # I think, mostly, you're ether going to have @$cmds==1 and have @k, *or* 
-            # you're going to have @$cmds != 1 and no @k
-            if( my @k = keys %{$argss->[$_]} ) {
-                push @things_we_could_pick, @k;
-                $did_a_k = 1;
+        unless( $line =~ m/^\S+$/ ) {
+            for( 0 .. $#$cmds ) {
+                # NOTE: This might be overly simplistic, or it might be right.
+                # I think, mostly, you're ether going to have @$cmds==1 and have @k, *or* 
+                # you're going to have @$cmds != 1 and no @k
+                if( my @k = keys %{$argss->[$_]} ) {
+                    push @things_we_could_pick, @k;
+                    $did_a_k = 1;
+                }
             }
         }
 
         unless( $did_a_k ) {
-            push @things_we_could_pick, map {$_->name} eval { @$cmds };
+            @things_we_could_pick = map {$_->name} eval { @$cmds };
         }
+
+        unless( $line =~ m/\s$/ ) {
+            my @tok = eval { @{ $tokout->{tokens} } };
+            @things_we_could_pick = grep { m/^\Q$tok[-1]/ } @things_we_could_pick
+        }
+
+    } else {
+        @things_we_could_pick = $this->command_names;
     }
 
     return wantarray ? @things_we_could_pick : \@things_we_could_pick;

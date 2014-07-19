@@ -410,34 +410,23 @@ sub attach_sigint {
 }
 
 THE_WHIRLYGIGS: {
-    my ($i, @m);
+    my @m;
     my $_matches = sub {
         my ($this, $attribs, $text, $state) = @_;
         my $return;
 
-        if( $state ) {
-            $i ++;
+        $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
+        $return = $m[$state];
 
-        } else {
-            $i = 0;
-            @m = map { $_->name } map {($_, @{$_->arguments})} @{ $this->parser->commands };
-            $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
-            $this->safe_talk(sub{ wtf("\$#m = ($#m); \$attribs{cac}=«$attribs->{completion_append_character}»") });
-        }
-
-        for(; $i < $#m ; $i++ ) {
-            if( $m[$i] =~ m/^(['"]*)\Q$text/ ) {
-                $return = $m[$i];
-                last;
-            }
-        }
-
-        $this->safe_talk(sub{ wtf("  \$i=$i; \$m[$i] = \$return = $return") });
+        $this->safe_talk(sub{ wtf("  \$state = $state; \$m[$state] = \$return = $return") });
         return $return;
     };
 
     sub _try_to_complete {
         my ($this, $term, $attribs, $text, $line, $start, $end) = @_;
+
+        @m = $this->parser->parse_for_tab_completion($line);
+        $this->safe_talk(sub{ wtf("  _try_to_complete \$line=\"$line\" \@m = qw(@m)") });
 
         return $term->completion_matches($text, sub { $_matches->($this, $attribs, @_) });
     }
