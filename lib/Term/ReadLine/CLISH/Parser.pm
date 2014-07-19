@@ -78,23 +78,27 @@ sub parse_for_tab_completion {
     my $this = shift;
     my $line = shift;
 
-    my @things_we_could_pick;
     my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1);
+    my @things_we_could_pick;
 
     if( $tokout->{cruft} ) {
         @things_we_could_pick = (); # we'll never figure this out, it's a string or something
 
     } else {
-        my @TOK = @{$tokout->{tokens}};
+        my $did_a_k = 0;
 
-        if( @TOK > 1 ) {
-            my @args_with_values;  # XXX: apply filters here, find applicable args
-            my @args_without_values;
+        for( 0 .. $#$cmds ) {
+            # NOTE: This might be overly simplistic, or it might be right.
+            # I think, mostly, you're ether going to have @$cmds==1 and have @k, *or* 
+            # you're going to have @$cmds != 1 and no @k
+            if( my @k = keys %{$argss->[$_]} ) {
+                push @things_we_could_pick, @k;
+                $did_a_k = 1;
+            }
+        }
 
-            XXX "not really done even forming this idea";
-
-        } else {
-            @things_we_could_pick = map { $_->name } @$cmds;
+        unless( $did_a_k ) {
+            push @things_we_could_pick, map {$_->name} eval { @$cmds };
         }
     }
 

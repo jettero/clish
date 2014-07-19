@@ -5,8 +5,6 @@ use lib 'example';
 use Term::ReadLine::CLISH;
 use Net::DNS;
 
-$ENV{CLISH_DEBUG} = 1; # this messages up the message capture if it's set
-
 my @output;
 *Term::ReadLine::CLISH::Message::spew = sub { push @output, "@_" };
 
@@ -20,10 +18,13 @@ my %LINES = (
     qui  => [ "quit" ],
     quit => [ "quit" ],
 
-    "ping " => [ qw(df count size) ],
+    "ping " => [ qw(df count size target) ],
 );
 
-plan tests => 0 + (map { @$_ } values %LINES);
+plan tests => 0 + keys %LINES;
+
+$ENV{CLISH_DEBUG} = 0; # this messages up the message capture if it's set
+@output = ();
 
 for my $line (keys %LINES) {
     my @options = sort $parser->parse_for_tab_completion($line);
