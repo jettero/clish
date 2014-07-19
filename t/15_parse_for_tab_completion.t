@@ -19,6 +19,7 @@ my %LINES = (
     quit => [ "quit" ],
 
     "ping " => [ qw(df count size target) ],
+    "ping df size" => [ qw(size) ],
 );
 
 plan tests => 0 + keys %LINES;

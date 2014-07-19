@@ -18,7 +18,7 @@ command(
         optional_argument( size  => 'validate_positive_nonzero',
             help => "size of the packets in bytes" ),
 
-        optional_argument( df => undef, help => "set the don't fragment bit" ),
+        optional_argument( df => undef, is_flag=>1, help => "set the don't fragment bit" ),
 
         required_argument(
             target => ['validate_ipv4', 'validate_ipv6', 'validate_hostname'],

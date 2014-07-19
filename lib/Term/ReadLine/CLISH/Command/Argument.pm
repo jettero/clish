@@ -118,7 +118,7 @@ sub validate {
 
     } else {
         # If there are no validators, then we can't accept arguments for this tag
-        die "incomplete argument specification (no validators)" if @$validators == 0;
+        die "$this incomplete argument specification (no validators)" if @$validators == 0;
         croak "precisely what are we validating here?" unless $that;
     }
 
