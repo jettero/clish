@@ -19,6 +19,8 @@ my %LINES = (
     qu   => [ "quit" ],
     qui  => [ "quit" ],
     quit => [ "quit" ],
+
+    "ping " => [ qw(df count size) ],
 );
 
 plan tests => 0 + (map { @$_ } values %LINES);
