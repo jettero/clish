@@ -420,7 +420,7 @@ THE_WHIRLYGIGS: {
 
         } else {
             $i = 0;
-            @m = map { $_->name } map {($_, @{$_->arguments})} @{ $this->parser->cmds };
+            @m = map { $_->name } map {($_, @{$_->arguments})} @{ $this->parser->commands };
             $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
             $this->safe_talk(sub{ wtf("\$#m = ($#m); \$attribs{cac}=«$attribs->{completion_append_character}»") });
         }
