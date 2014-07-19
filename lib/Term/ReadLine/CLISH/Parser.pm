@@ -36,6 +36,10 @@ has qw(output_prefix is rw isa Str default) => "% ";
 
 __PACKAGE__->meta->make_immutable;
 
+
+use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
+add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
+
 =head1 C<parse_for_help>
 
   # XXX: I AM A STUB AND YOU ARE READING ME
@@ -52,9 +56,6 @@ sub parse_for_help {
         error "miscellaneous cruft on end of line", $tokout->{cruft};
         return;
     }
-
-    use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
-    add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
 
     wtf "parse_for_help result", "\n" . dump({
         line    => $line,
@@ -103,8 +104,25 @@ sub parse_for_tab_completion {
             @things_we_could_pick = map {$_->name} eval { @$cmds };
         }
 
-        unless( $line =~ m/\s$/ ) {
-            my @tok = eval { @{ $tokout->{tokens} } };
+        my @tok = eval { @{ $tokout->{tokens} } };
+        warn;
+        if( $line =~ m/\s$/ ) {
+        warn;
+            if( @$cmds == 1 and @tok ) {
+        warn;
+                my $cmdaa = $cmds->[-1]->arguments;
+        warn;
+
+                if( @$cmdaa ) {
+        warn $cmdaa->[-1]->name;
+                    if( $cmdaa->[-1]->name eq $tok[-1] ) {
+        warn;
+                        @things_we_could_pick = () unless $cmdaa->[-1]->is_flag;
+                    }
+                }
+            }
+
+        } else {
             @things_we_could_pick = grep { m/^\Q$tok[-1]/ } @things_we_could_pick
         }
 

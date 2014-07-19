@@ -12,24 +12,29 @@ my $clish  = Term::ReadLine::CLISH->new->add_namespace("example::cmds") or die "
    $clish -> rebuild_parser;
 my $parser = $clish->parser or die "couldn't make parser";
 
-my %LINES = (
+my @LINES = (
     q    => [ "quit" ],
     qu   => [ "quit" ],
     qui  => [ "quit" ],
     quit => [ "quit" ],
 
-    "ping " => [ qw(df count size target) ],
-    "ping df size" => [ qw(size) ],
+    "ping "         => [ qw(df count size target) ],
+    "ping df size"  => [ qw(size) ],
+    "ping df size " => [ ], # integer next, no completion
+    "ping count "   => [ ], # integer next, no completion
 );
 
-plan tests => 0 + keys %LINES;
+my %RESULTS = @LINES;
+   @LINES = grep {!ref} @LINES;
+
+plan tests => 0 + @LINES;
 
 $ENV{CLISH_DEBUG} = 0; # this messages up the message capture if it's set
 @output = ();
 
-for my $line (keys %LINES) {
+for my $line (@LINES) {
     my @options = sort $parser->parse_for_tab_completion($line);
-    my @expect  = sort @{ $LINES{$line} };
+    my @expect  = sort @{ $RESULTS{$line} };
 
-    ok( "@options" => "@expect" );
+    ok( "$line: @options" => "$line: @expect" );
 }
