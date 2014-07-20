@@ -352,7 +352,7 @@ sub _try_to_eat_tagged_arguments {
         my ($arg) = splice @$cmd_args, $midx, 1;
         my @nom   = splice @$arg_tokens, 0, 2;
 
-        { local $" = ", "; debug "ate arg=$arg and tok=<@nom>" if $ENV{CLISH_DEBUG}; }
+        { local $" = ", "; debug "[tagged] ate arg=$arg and tok=<@nom>" if $ENV{CLISH_DEBUG}; }
 
         # populate the option in argss
         $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
@@ -399,7 +399,7 @@ sub _try_to_eat_untagged_arguments {
         my ($arg) = splice @$cmd_args, $midx, 1;
         my ($nom) = splice @$arg_tokens, 0, 1;
 
-        debug "ate arg=$arg and tok=<$nom>" if $ENV{CLISH_DEBUG};
+        debug "[untagged] ate arg=$arg and tok=<$nom>" if $ENV{CLISH_DEBUG};
 
         # populate the option in argss
         $arg->add_copy_with_token_to_hashref( $out_args => $tok );
