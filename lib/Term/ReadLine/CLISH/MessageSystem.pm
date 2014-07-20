@@ -9,6 +9,7 @@ use Term::ReadLine::CLISH::Message::Help;
 use Term::ReadLine::CLISH::Message::Information;
 use Term::ReadLine::CLISH::Message::Warning;
 use Term::ReadLine::CLISH::Message::Error;
+use Term::ReadLine::CLISH::Message::TODO;
 use Text::Table;
 use Carp;
 

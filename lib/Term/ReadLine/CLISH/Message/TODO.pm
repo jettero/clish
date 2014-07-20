@@ -1,4 +1,4 @@
-package Term::ReadLine::CLISH::Message::Error;
+package Term::ReadLine::CLISH::Message::TODO;
 
 use Moose;
 use namespace::autoclean;
