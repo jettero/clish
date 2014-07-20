@@ -24,7 +24,7 @@ WriteMakefile(
             Term::ANSIColorx::ColorNicknames
             Term::ReadLine
             Text::Table
-            Tile::YAML
+            Tie::YAML
         )
 
     },
