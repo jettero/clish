@@ -105,22 +105,9 @@ sub parse_for_tab_completion {
         }
 
         my @tok = eval { @{ $tokout->{tokens} } };
-        warn;
         if( $line =~ m/\s$/ ) {
-        warn;
-            if( @$cmds == 1 and @tok ) {
-        warn;
-                my $cmdaa = $cmds->[-1]->arguments;
-        warn;
-
-                if( @$cmdaa ) {
-        warn $cmdaa->[-1]->name;
-                    if( $cmdaa->[-1]->name eq $tok[-1] ) {
-        warn;
-                        @things_we_could_pick = () unless $cmdaa->[-1]->is_flag;
-                    }
-                }
-            }
+            warn "---- $line --";
+            #@things_we_could_pick = () if grep { m/required arg/ } @$statuss;
 
         } else {
             @things_we_could_pick = grep { m/^\Q$tok[-1]/ } @things_we_could_pick
@@ -292,6 +279,8 @@ sub parse {
                 # really dim wittedly.
 
                 $this->_try_to_eat_tok( $cmd,$out_args => \@cmd_args,\@arg_tokens, %vopt );
+
+                warn " out_args: " . dump($out_args);
 
                 # if there are remaining arguments (extra tokens), reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
