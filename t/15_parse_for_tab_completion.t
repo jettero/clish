@@ -6,7 +6,7 @@ use Term::ReadLine::CLISH;
 use Net::DNS;
 
 my @output;
-*Term::ReadLine::CLISH::Message::spew = sub { push @output, "@_" };
+*Term::ReadLine::CLISH::Message::spew = sub { warn "    @_" };
 
 my $clish  = Term::ReadLine::CLISH->new->add_namespace("example::cmds") or die "couldn't make clish";
    $clish -> rebuild_parser;
@@ -29,7 +29,6 @@ my %RESULTS = @LINES;
 
 plan tests => 0 + @LINES;
 
-$ENV{CLISH_DEBUG} = 0; # this messages up the message capture if it's set
 @output = ();
 
 for my $line (@LINES) {
