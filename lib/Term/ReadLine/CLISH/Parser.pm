@@ -79,42 +79,57 @@ sub parse_for_tab_completion {
     my $this = shift;
     my $line = shift;
 
-    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1);
+    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1, no_untagged=>1);
     my @things_we_could_pick;
 
+    my $still_working_on_current_word = $line !~ m/\s+\z/;
+    my @tok = eval{ @{ $tokout->{tokens} } };
+
+    wtf dump({tokout=>$tokout, cmds=>$cmds, argss=>$argss, statuss=>$statuss});
+
     if( $tokout->{cruft} ) {
+        debug "[pftc] has cruft, no completions";
         @things_we_could_pick = (); # we'll never figure this out, it's a string or something
 
-    } elsif( $line ) {
-        my $did_a_k = 0;
+    } elsif( not @tok ) {
+        # we're probably working on a command
+        @things_we_could_pick = $this->command_names;
+        debug "[pftc] no tokens, completions are commands", join(", ", @things_we_could_pick);
 
-        unless( $line =~ m/^\S+$/ ) {
-            for( 0 .. $#$cmds ) {
-                # NOTE: This might be overly simplistic, or it might be right.
-                # I think, mostly, you're ether going to have @$cmds==1 and have @k, *or* 
-                # you're going to have @$cmds != 1 and no @k
-                if( my @k = keys %{$argss->[$_]} ) {
-                    push @things_we_could_pick, @k;
-                    $did_a_k = 1;
-                }
-            }
-        }
+    } elsif( @tok == 1 and $still_working_on_current_word ) {
+        @things_we_could_pick = $this->command_names;
+        @things_we_could_pick = grep { m/^\Q$tok[0]/ } @things_we_could_pick;
+        debug "[pftc] commands matching token \"$tok[0]\"", join(", ", @things_we_could_pick);
 
-        unless( $did_a_k ) {
-            @things_we_could_pick = map {$_->name} eval { @$cmds };
-        }
+    } elsif( @tok > 1 or (@tok = 1 and !$still_working_on_current_word) ) {
+        todo "( tab complete args )";
+        # we're probably working on an argument to a command
 
-        my @tok = eval { @{ $tokout->{tokens} } };
-        if( $line =~ m/\s$/ ) {
-            warn "---- $line --";
-            #@things_we_could_pick = () if grep { m/required arg/ } @$statuss;
+        ##j    unless( $line =~ m/^\S+$/ ) {
+        ##j        for( 0 .. $#$cmds ) {
+        ##j            if( my @k = keys %{$argss->[$_]} ) {
+        ##j                push @things_we_could_pick, @k;
+        ##j                $did_a_k = 1;
+        ##j            }
+        ##j        }
+        ##j    }
 
-        } else {
-            @things_we_could_pick = grep { m/^\Q$tok[-1]/ } @things_we_could_pick
-        }
+        ##j    unless( $did_a_k ) {
+        ##j        @things_we_could_pick = map {$_->name} eval { @$cmds };
+        ##j    }
+
+        ##j    my @tok = eval { @{ $tokout->{tokens} } };
+        ##j    if( $line =~ m/\s$/ ) {
+        ##j        my @already_supplied = @$cmds, grep {!($_->has_value || $_->is_present)} @$args;
+        ##j
+        ##j        @things_we_could_pick =
+
+        ##j    } else {
+        ##j        @things_we_could_pick = grep { m/^\Q$tok[-1]/ } @things_we_could_pick
+        ##j    }
 
     } else {
-        @things_we_could_pick = $this->command_names;
+        error "[pftc] unexpected logical conclusion during tab-completion parsing";
     }
 
     return wantarray ? @things_we_could_pick : \@things_we_could_pick;
@@ -279,8 +294,6 @@ sub parse {
                 # really dim wittedly.
 
                 $this->_try_to_eat_tok( $cmd,$out_args => \@cmd_args,\@arg_tokens, %vopt );
-
-                warn " out_args: " . dump($out_args);
 
                 # if there are remaining arguments (extra tokens), reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {

@@ -413,20 +413,19 @@ THE_WHIRLYGIGS: {
     my @m;
     my $_matches = sub {
         my ($this, $attribs, $text, $state) = @_;
-        my $return;
+        my $return = $m[$state];
 
+        $this->safe_talk(sub{ debug("  matches text=$text; state=$state; \$m[$state]=$return;") }) if $ENV{CLISH_DEBUG};
         $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
-        $return = $m[$state];
 
-        $this->safe_talk(sub{ wtf("  \$state = $state; \$m[$state] = \$return = $return") });
         return $return;
     };
 
     sub _try_to_complete {
         my ($this, $term, $attribs, $text, $line, $start, $end) = @_;
 
+        $this->safe_talk(sub{ debug "try_to_complete text=$text; line=$line; start=$start; end=$end;" }) if $ENV{CLISH_DEBUG};
         @m = $this->parser->parse_for_tab_completion($line);
-        $this->safe_talk(sub{ wtf("  _try_to_complete \$line=\"$line\" \@m = qw(@m)") });
 
         return $term->completion_matches($text, sub { $_matches->($this, $attribs, @_) });
     }
