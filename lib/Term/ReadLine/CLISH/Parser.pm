@@ -339,8 +339,10 @@ sub _try_to_eat_tok {
                 $this->_try_to_eat_tagged_arguments( @_ )
             }
 
-            redo EATER if
-            $this->_try_to_eat_untagged_arguments( @_ )
+            unless( $vopt{no_untagged} ) {
+                redo EATER if
+                $this->_try_to_eat_untagged_arguments( @_ )
+            }
         }
     }
 }
