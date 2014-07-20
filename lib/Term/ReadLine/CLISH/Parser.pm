@@ -255,9 +255,8 @@ sub find_command_by_name {
 sub parse {
     my $this = shift;
     my $line = shift;
-    my %popt = @_;
 
-    my %vopt;
+    my %vopt = @_;
     $vopt{final_validation}   = $vopt{full_validation}      = 0;
     $vopt{initial_validation} = $vopt{heuristic_validation} = 1;
 
