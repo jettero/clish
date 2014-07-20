@@ -66,7 +66,7 @@ sub scrub_last_error(;$) {
 
 sub install_generic_message_handlers {
     $SIG{__WARN__} = sub {
-        my $w = "$_[0]";
+        my $w = join(" ", map {"$_"} grep {defined and length} @_);
 
         warning("uncaught warning", $w);
 
@@ -96,7 +96,7 @@ sub _probably_just_a_caption {
 
     if( @_ == 2 ) {
         $args{caption} = shift;
-        $args{args}    = shift;
+        $args{msg}     = shift;
 
     } elsif( @_ == 1 ) {
         $args{caption} = shift;
