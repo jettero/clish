@@ -6,7 +6,7 @@ use Term::ReadLine::CLISH;
 use Net::DNS;
 
 my @output;
-*Term::ReadLine::CLISH::Message::spew = sub { warn "    @_" };
+*Term::ReadLine::CLISH::Message::spew = sub { warn "$_\n" for @_ };
 
 my $clish  = Term::ReadLine::CLISH->new->add_namespace("example::cmds") or die "couldn't make clish";
    $clish -> rebuild_parser;
