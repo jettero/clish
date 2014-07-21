@@ -20,10 +20,10 @@ lib/Term/ReadLine/CLISH/Message/Debug.pm
 lib/Term/ReadLine/CLISH/Message/Error.pm
 lib/Term/ReadLine/CLISH/Message/Help.pm
 lib/Term/ReadLine/CLISH/Message/Information.pm
+lib/Term/ReadLine/CLISH/Message/TODO.pm
 lib/Term/ReadLine/CLISH/Message/Warning.pm
 lib/Term/ReadLine/CLISH/MessageSystem.pm
 lib/Term/ReadLine/CLISH/Parser.pm
-lib/Term/ReadLine/CLISH/TODO.pm
 LICENSE
 Makefile.PL
 MANIFEST
