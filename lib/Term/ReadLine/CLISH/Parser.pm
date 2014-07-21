@@ -85,51 +85,60 @@ sub parse_for_tab_completion {
     my $still_working_on_current_word = $line !~ m/\s+\z/;
     my @tok = eval{ @{ $tokout->{tokens} } };
 
-    wtf dump({tokout=>$tokout, cmds=>$cmds, argss=>$argss, statuss=>$statuss});
+    $tokout->{cruft} = 1 if !$still_working_on_current_word
+        and grep {!($_ == PARSE_COMPLETE or m/required arguments omitted/)} @$statuss;
+
+    wtf dump({tokout=>$tokout, cmds=>$cmds, argss=>$argss, statuss=>$statuss, swocw=>$still_working_on_current_word});
 
     if( $tokout->{cruft} ) {
-        debug "[pftc] has cruft, no completions";
+        debug "[pftc] has cruft, no completions" if $ENV{CLISH_DEBUG};
         @things_we_could_pick = (); # we'll never figure this out, it's a string or something
 
     } elsif( not @tok ) {
         # we're probably working on a command
         @things_we_could_pick = $this->command_names;
-        debug "[pftc] no tokens, completions are commands", join(", ", @things_we_could_pick);
+        debug "[pftc] no tokens, completions are commands", join(", ", @things_we_could_pick) if $ENV{CLISH_DEBUG};
 
     } elsif( @tok == 1 and $still_working_on_current_word ) {
         @things_we_could_pick = $this->command_names;
         @things_we_could_pick = grep { m/^\Q$tok[0]/ } @things_we_could_pick;
-        debug "[pftc] commands matching token \"$tok[0]\"", join(", ", @things_we_could_pick);
+        debug "[pftc] commands matching token \"$tok[0]\"", join(", ", @things_we_could_pick) if $ENV{CLISH_DEBUG};
 
-    } elsif( @tok > 1 or (@tok = 1 and !$still_working_on_current_word) ) {
-        todo "( tab complete args )";
-        # we're probably working on an argument to a command
+    } elsif( @tok ) {
+        # {argss   => [
+        #                {
+        #                  count => q«ARG[count]»,
+        #                  df => q«ARG{df}»,
+        #                  size => q«ARG[size]»,
+        #                  target => q«ARG[target]»,
+        #                },
+        #              ],
+        #   cmds    => [q«CMD[ping]»],
+        #   statuss => ["required arguments omitted (ARG[target])"],
+        #   tokout  => { cruft => "", tokens => ["ping"] },
+        # }
 
-        ##j    unless( $line =~ m/^\S+$/ ) {
-        ##j        for( 0 .. $#$cmds ) {
-        ##j            if( my @k = keys %{$argss->[$_]} ) {
-        ##j                push @things_we_could_pick, @k;
-        ##j                $did_a_k = 1;
-        ##j            }
-        ##j        }
-        ##j    }
+        my %K;
+        for my $i ( 0 .. $#$cmds ) {
+            while( my ($arg_tag, $arg_obj) = each %{ $argss->[$i] } ) {
+                $K{$arg_tag} = 1
+                    if !($arg_obj->is_flag ? $arg_obj->flag_present : $arg_obj->has_value)
+                        && (!$still_working_on_current_word || $arg_tag =~ m/^\Q$tok[-1]/);
+            }
+        }
 
-        ##j    unless( $did_a_k ) {
-        ##j        @things_we_could_pick = map {$_->name} eval { @$cmds };
-        ##j    }
+        @things_we_could_pick = keys %K;
+        if( $ENV{CLISH_DEBUG} ) {
+            if( $still_working_on_current_word ) {
+                debug "[pftc] argument tags matching token \"$tok[-1]\"", join(", ", @things_we_could_pick);
 
-        ##j    my @tok = eval { @{ $tokout->{tokens} } };
-        ##j    if( $line =~ m/\s$/ ) {
-        ##j        my @already_supplied = @$cmds, grep {!($_->has_value || $_->is_present)} @$args;
-        ##j
-        ##j        @things_we_could_pick =
-
-        ##j    } else {
-        ##j        @things_we_could_pick = grep { m/^\Q$tok[-1]/ } @things_we_could_pick
-        ##j    }
+            } else {
+                debug "[pftc] argument tags not yet filled\"$tok[-1]\"", join(", ", @things_we_could_pick);
+            }
+        }
 
     } else {
-        error "[pftc] unexpected logical conclusion during tab-completion parsing";
+        error "[pftc] unexpected logical conclusion during tab-completion parsing" if $ENV{CLISH_DEBUG};
     }
 
     return wantarray ? @things_we_could_pick : \@things_we_could_pick;
@@ -292,12 +301,13 @@ sub parse {
                 # processing strategy is best.  For now, I'm just doing it
                 # really dim wittedly.
 
-                $this->_try_to_eat_tok( $cmd,$out_args => \@cmd_args,\@arg_tokens, %vopt );
+                my $tokmap = $tokout->{tokmap}[$cidx] ||= [];
+                $this->_try_to_eat_tok( $cmd,$out_args,$tokmap => \@cmd_args,\@arg_tokens, %vopt );
 
                 # if there are remaining arguments (extra tokens), reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
                     local $" = ", ";
-                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "unrecognized tokens on line (@extra)";
+                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "unrecognized tokens (@extra) on line";
                     next;
                 }
 
@@ -307,7 +317,7 @@ sub parse {
                 # there; this is more of a hint, since we don't know if the
                 # final checks will even pass))
                 if( my @req = grep { $_->required } @cmd_args ) {
-                    local $" = ", ";
+                    local $" = ", ";                           # NOTE: used as an error code above
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "required arguments omitted (@req)";
                     next;
                 }
@@ -323,7 +333,7 @@ sub parse {
 
 sub _try_to_eat_tok {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %vopt ) = @_;
+    my ( $cmd,$out_args,$tokmap => $cmd_args,$arg_tokens, %vopt ) = @_;
 
     # $cmd is the command object we're with which we're currently working
     # $out_args is the hashref of return arguments (populated by add_copy_with_token_to_hashref)
@@ -349,7 +359,7 @@ sub _try_to_eat_tok {
 
 sub _try_to_eat_tagged_arguments {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %vopt ) = @_;
+    my ( $cmd,$out_args,$tokmap => $cmd_args,$arg_tokens, %vopt ) = @_;
 
     my $tok  = $arg_tokens->[0];
     my $ntok = $arg_tokens->[1];
@@ -371,6 +381,7 @@ sub _try_to_eat_tagged_arguments {
             debug "[is_flag] ate arg=$arg and tok-nom=<$nom>" if $ENV{CLISH_DEBUG};
 
             $arg->add_copy_with_token_to_hashref( $out_args => $tok );
+            push $tokmap, $arg;
 
         } else {
             my @nom = splice @$arg_tokens, 0, 2;
@@ -379,6 +390,7 @@ sub _try_to_eat_tagged_arguments {
 
             # populate the option in argss
             $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
+            push $tokmap, $arg,$arg;
         }
 
         return 1; # returning true reboots the _try*
@@ -405,7 +417,7 @@ sub _try_to_eat_tagged_arguments {
 
 sub _try_to_eat_untagged_arguments {
     my $this = shift;
-    my ( $cmd,$out_args => $cmd_args,$arg_tokens, %vopt ) = @_;
+    my ( $cmd,$out_args,$tokmap => $cmd_args,$arg_tokens, %vopt ) = @_;
     my $tok = $arg_tokens->[0];
 
     my @matched_cmd_args_idx = # the idexes of matching Args
@@ -427,6 +439,7 @@ sub _try_to_eat_untagged_arguments {
 
         # populate the option in argss
         $arg->add_copy_with_token_to_hashref( $out_args => $tok );
+        push $tokmap, $arg;
 
         return 1; # returning true reboots the _try*
     }
