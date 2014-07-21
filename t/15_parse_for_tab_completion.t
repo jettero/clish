@@ -18,10 +18,12 @@ my @LINES = (
     qui  => [ "quit" ],
     quit => [ "quit" ],
 
-    "ping "         => [ qw(df count size target) ],
-    "ping df size"  => [ qw(size) ],
-    "ping df size " => [ ], # integer next, no completion
-    "ping count "   => [ ], # integer next, no completion
+    "ping "            => [ qw(df count size target) ],
+    "ping df size"     => [ qw(size) ],
+    "ping df size "    => [ ], # integer next, no completion
+    "ping count "      => [ ], # integer next, no completion
+    "ping df size 1 c" => [ qw(count) ],
+    "p d s 1 c 1 "     => [ qw() ],
 );
 
 my %RESULTS = @LINES;
