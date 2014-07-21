@@ -88,8 +88,6 @@ sub parse_for_tab_completion {
     $tokout->{cruft} = 1 if !$still_working_on_current_word
         and grep {!($_ == PARSE_COMPLETE or m/required arguments omitted/)} @$statuss;
 
-    wtf dump({tokout=>$tokout, cmds=>$cmds, argss=>$argss, statuss=>$statuss, swocw=>$still_working_on_current_word});
-
     if( $tokout->{cruft} ) {
         debug "[pftc] has cruft, no completions" if $ENV{CLISH_DEBUG};
         @things_we_could_pick = (); # we'll never figure this out, it's a string or something
@@ -105,25 +103,13 @@ sub parse_for_tab_completion {
         debug "[pftc] commands matching token \"$tok[0]\"", join(", ", @things_we_could_pick) if $ENV{CLISH_DEBUG};
 
     } elsif( @tok ) {
-        # {argss   => [
-        #                {
-        #                  count => q«ARG[count]»,
-        #                  df => q«ARG{df}»,
-        #                  size => q«ARG[size]»,
-        #                  target => q«ARG[target]»,
-        #                },
-        #              ],
-        #   cmds    => [q«CMD[ping]»],
-        #   statuss => ["required arguments omitted (ARG[target])"],
-        #   tokout  => { cruft => "", tokens => ["ping"] },
-        # }
-
         my %K;
         for my $i ( 0 .. $#$cmds ) {
             while( my ($arg_tag, $arg_obj) = each %{ $argss->[$i] } ) {
                 $K{$arg_tag} = 1
-                    if !($arg_obj->is_flag ? $arg_obj->flag_present : $arg_obj->has_value)
-                        && (!$still_working_on_current_word || $arg_tag =~ m/^\Q$tok[-1]/);
+                    if $still_working_on_current_word
+                       ? $arg_tag =~ m/^\Q$tok[-1]/
+                       : !($arg_obj->is_flag ? $arg_obj->flag_present : $arg_obj->has_value)
             }
         }
 
@@ -133,7 +119,7 @@ sub parse_for_tab_completion {
                 debug "[pftc] argument tags matching token \"$tok[-1]\"", join(", ", @things_we_could_pick);
 
             } else {
-                debug "[pftc] argument tags not yet filled\"$tok[-1]\"", join(", ", @things_we_could_pick);
+                debug "[pftc] argument tags not yet filled \"$tok[-1]\"", join(", ", @things_we_could_pick);
             }
         }
 
