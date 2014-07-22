@@ -109,7 +109,7 @@ sub parse_for_tab_completion {
                 $K{$arg_tag} = 1
                     if $still_working_on_current_word
                        ? $arg_tag =~ m/^\Q$tok[-1]/
-                       : not grep {$arg_tag ne $_->name} map {@$_} @{$tokout->{tokmap}};
+                       : not grep {$arg_tag eq $_->name} map {@$_} @{$tokout->{tokmap}};
                        ;
             }
         }
