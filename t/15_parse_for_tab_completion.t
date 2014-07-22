@@ -5,6 +5,9 @@ use lib 'example';
 use Term::ReadLine::CLISH;
 use Net::DNS;
 
+binmode STDERR, ":utf8";
+binmode STDOUT, ":utf8";
+
 my @output;
 *Term::ReadLine::CLISH::Message::spew = sub { warn "$_\n" for @_ };
 
