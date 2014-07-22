@@ -25,6 +25,7 @@ my @LINES = (
     "ping df size"     => [ qw(size) ],
     "ping df size "    => [ ], # integer next, no completion
     "ping count "      => [ ], # integer next, no completion
+    "ping count 3 "    => [ qw(df size) ],
     "ping df size 1 c" => [ qw(count) ],
     "p d s 1 c 1 "     => [ qw() ],
 );
