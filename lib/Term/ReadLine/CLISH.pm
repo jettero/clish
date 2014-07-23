@@ -418,6 +418,12 @@ THE_WHIRLYGIGS: {
         $this->safe_talk(sub{ debug("  matches text=$text; state=$state; \$m[$state]=$return;") }) if $ENV{CLISH_DEBUG};
         $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
 
+        if( not $return and not $state ) {
+            # NOTE: this is only necessary when filename completion is not
+            # desired
+            $attribs->{attempted_completion_over} = 1;
+        }
+
         return $return;
     };
 
