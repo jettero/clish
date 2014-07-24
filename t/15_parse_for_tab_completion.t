@@ -28,7 +28,8 @@ my @LINES = (
     "ping count 3 "    => [ qw(df size target) ],
     "ping df size 1 c" => [ qw(count) ],
     "p d s 1 c 1 "     => [ qw(target) ],
-    "p c 1 s 1 df"     => [ qw(target) ],
+    "p c 1 s 1 df"     => [ qw(df) ],
+    "p c 1 s 1 df "    => [ qw(target) ],
 );
 
 my %RESULTS = @LINES;
