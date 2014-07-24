@@ -322,7 +322,7 @@ sub _try_to_eat_tok {
     my $this = shift;
     my ( $cmd,$out_args,$tokmap => $cmd_args,$arg_tokens, %vopt ) = @_;
 
-    # $cmd is the command object we're with which we're currently working
+    # $cmd is the command object with which we're currently working
     # $out_args is the hashref of return arguments (populated by add_copy_with_token_to_hashref)
     # $cmd_args are the command args not yet consumed by the parse (spliced out)
     # $arg_tokens are the tokens representing args not yet consumed by the parse (spliced out)
