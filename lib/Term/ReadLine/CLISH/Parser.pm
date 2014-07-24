@@ -331,17 +331,61 @@ sub _try_to_eat_tok {
 
     EATER: {
         if( @$arg_tokens ) {
-            if( @$arg_tokens > 1 ) {
-                redo EATER if
-                $this->_try_to_eat_tagged_arguments( @_ )
-            }
+            redo EATER if
+            $this->_try_to_eat_flag_arguments( @_ );
 
-            unless( $vopt{no_untagged} ) {
-                redo EATER if
-                $this->_try_to_eat_untagged_arguments( @_ )
-            }
+            redo EATER if
+            @$arg_tokens > 1 and
+            $this->_try_to_eat_tagged_arguments( @_ );
+
+            redo EATER if
+            not $vopt{no_untagged} and
+            $this->_try_to_eat_untagged_arguments( @_ );
         }
     }
+}
+
+sub _try_to_eat_flag_arguments {
+    my $this = shift;
+    my ( $cmd,$out_args,$tokmap => $cmd_args,$arg_tokens, %vopt ) = @_;
+
+    my $tok = $arg_tokens->[0];
+
+    my @matched_cmd_args_idx = # the indexes of matching Args
+      # grep { $cmd_args->[$_]->validate( undef => %vopt) }
+        grep { $cmd_args->[$_]->is_flag && substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
+        0 .. $#$cmd_args;
+
+    if( @matched_cmd_args_idx == 1 ) {
+        my $midx = $matched_cmd_args_idx[0];
+        my ($arg) = splice @$cmd_args, $midx, 1;
+        my ($nom) = splice @$arg_tokens, 0, 1;
+
+        debug "ate arg=$arg as a flag with tok-nom=<$nom>" if $ENV{CLISH_DEBUG};
+
+        $arg->add_copy_with_token_to_hashref( $out_args => $tok );
+        push $tokmap, $arg;
+
+        return 1; # returning true reboots the _try*
+    }
+
+    else {
+        # XXX: it's not clear what to do here should we explain for every
+        # (un)matching command?  how often will we really have the
+        # (non)ambiguity of options become the minimial liguistic difference
+        # between two or more commands?
+
+        if( @matched_cmd_args_idx) {
+            my @matched = map { $cmd_args->[$_] } @matched_cmd_args_idx;
+
+            warning "\"$tok\" could be any of", "@matched";
+        }
+
+        # I think we don't want to show anything in this case
+        # else { debug "$tok failed to resolve to anything" }
+    }
+
+    return;
 }
 
 sub _try_to_eat_tagged_arguments {
@@ -362,23 +406,13 @@ sub _try_to_eat_tagged_arguments {
         # consume the items
         my ($arg) = splice @$cmd_args, $midx, 1;
 
-        if( $arg->is_flag ) {
-            my ($nom) = splice @$arg_tokens, 0, 1;
+        my @nom = splice @$arg_tokens, 0, 2;
 
-            debug "[is_flag] ate arg=$arg and tok-nom=<$nom>" if $ENV{CLISH_DEBUG};
+        { local $" = ", "; debug "[tagged] ate arg=$arg and tok-nom=<@nom>" if $ENV{CLISH_DEBUG}; }
 
-            $arg->add_copy_with_token_to_hashref( $out_args => $tok );
-            push $tokmap, $arg;
-
-        } else {
-            my @nom = splice @$arg_tokens, 0, 2;
-
-            { local $" = ", "; debug "[tagged] ate arg=$arg and tok-nom=<@nom>" if $ENV{CLISH_DEBUG}; }
-
-            # populate the option in argss
-            $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
-            push $tokmap, $arg,$arg;
-        }
+        # populate the option in argss
+        $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
+        push $tokmap, $arg,$arg;
 
         return 1; # returning true reboots the _try*
     }
