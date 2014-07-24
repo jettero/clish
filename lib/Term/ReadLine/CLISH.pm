@@ -119,6 +119,7 @@ sub var {
     my $this = shift;
     my ($var, $val) = @_;
     my $vdb = $this->vdb;
+    return unless $vdb; # probably in global destruction
 
     if( @_ > 1 ) {
         if( defined $val ) {
