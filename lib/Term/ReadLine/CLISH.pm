@@ -201,13 +201,13 @@ sub handle_qmark {
     $this->safe_talk(sub{
         my ($buffer, $point, $end) = @_;
 
-        if( my $possibilities = $this->parser->parse_for_help($buffer) ) {
+        if( my @possibilities = $this->parser->parse_for_help($buffer) ) {
             use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
             add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
 
-            wtf "handle_qmark", "\n" . dump({possibilities => $possibilities, bpe=>[$buffer, $point, $end]}) . "\n";
+            wtf "handle_qmark", "\n" . dump({possibilities => \@possibilities, bpe=>[$buffer, $point, $end]}) . "\n";
 
-            help from_table map { [ $_->name, $_->help ] } @$possibilities;
+            help from_table map { [ $_->name, $_->help ] } @possibilities;
         }
     });
 }

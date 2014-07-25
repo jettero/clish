@@ -66,7 +66,7 @@ sub parse_for_help {
 
     }) . "\n";
 
-    return $cmds;
+    return @$cmds || @{$this->commands};
 }
 
 =head1 C<parse_for_tab_completion>
