@@ -43,7 +43,7 @@ plan tests => 0 + @LINES;
 @output = ();
 
 for my $line (@LINES) {
-    my @options = sort $parser->parse_for_tab_completion($line);
+    my @options = sort $parser->parse_for_help($line);
     my @expect  = sort @{ $RESULTS{$line} };
 
     ok( "$line: @options" => "$line: @expect" );

@@ -9,7 +9,9 @@ $ENV{CLISH_DEBUG} = 0; # this messages up the message capture if it's set
 my @output;
 *Term::ReadLine::CLISH::Message::spew = sub { push @output, "@_" };
 
-my $parser = Term::ReadLine::CLISH->new->add_namespace("example::cmds")->rebuild_parser->parser;
+my $clish  = Term::ReadLine::CLISH->new->add_namespace("example::cmds") or die "couldn't make clish";
+   $clish -> rebuild_parser;
+my $parser = $clish->parser or die "couldn't make parser";
 
 my %CMD = (
     q    => [ "quit" => {} ],

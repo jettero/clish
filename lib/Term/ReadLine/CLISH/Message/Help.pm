@@ -6,7 +6,7 @@ use common::sense;
 
 extends 'Term::ReadLine::CLISH::Message';
 
-has qw(+format default) => "| %s";
+has qw(+format default) => "%%   %s";
 
 __PACKAGE__->meta->make_immutable;
 
@@ -14,7 +14,7 @@ __PACKAGE__->meta->make_immutable;
 
 sub stringify {
     my $this = shift;
-    my $that = $this->SUPER::stringify(@_);
+    my $that = $this->SUPER::stringify( @_ );
 
-    return "\n$that\n";
+    return $that;
 }

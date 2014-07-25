@@ -167,6 +167,10 @@ sub add_namespace {
 sub DEMOLISH {
     my $this = shift;
 
+    # during global destruction, the warnings are really irritating
+    no warnings;
+    $SIG{__WARN__} = sub{};
+
     $this->safe_talk(sub {
 
         for my $cr (@{ $this->cleanup }) {
