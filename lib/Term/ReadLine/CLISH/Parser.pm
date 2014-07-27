@@ -50,23 +50,56 @@ sub parse_for_help {
     my $this = shift;
     my $line = shift;
 
-    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1);
+    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1, no_untagged=>1);
+    my @things_we_could_pick;
+
+    my $still_working_on_current_word = $line !~ m/\s+\z/;
+    my @tok = eval{ @{ $tokout->{tokens} } };
+
+    $tokout->{cruft} = 1 if !$still_working_on_current_word
+        and grep {!($_ == PARSE_COMPLETE or m/required arguments omitted/)} @$statuss;
 
     if( $tokout->{cruft} ) {
-        error "miscellaneous cruft on end of line", $tokout->{cruft};
-        return;
+        debug "[pfh] has cruft, no help" if $ENV{CLISH_DEBUG};
+        @things_we_could_pick = (); # we'll never figure this out, it's a string or something
+
+    } elsif( not @tok ) {
+        # we're probably working on a command
+        @things_we_could_pick = $this->commands;
+        debug "[pfh] no tokens, help objects are commands", join(", ", @things_we_could_pick) if $ENV{CLISH_DEBUG};
+
+    } elsif( @tok == 1 and $still_working_on_current_word ) {
+        @things_we_could_pick = @{ $this->commands };
+        @things_we_could_pick = grep { $_->name =~ m/^\Q$tok[0]/ } @things_we_could_pick;
+        debug "[pfh] commands matching token \"$tok[0]\"", join(", ", @things_we_could_pick) if $ENV{CLISH_DEBUG};
+
+    } elsif( @tok ) {
+        my %K;
+        for my $i ( 0 .. $#$cmds ) {
+            while( my ($arg_tag, $arg_obj) = each %{ $argss->[$i] } ) {
+                $K{$arg_tag} = $arg_obj
+                    if $still_working_on_current_word
+                       ? $arg_tag =~ m/^\Q$tok[-1]/
+                       : not grep {$arg_tag eq $_->name} map {@$_} @{$tokout->{tokmap}};
+                       ;
+            }
+        }
+
+        @things_we_could_pick = values %K;
+        if( $ENV{CLISH_DEBUG} ) {
+            if( $still_working_on_current_word ) {
+                debug "[pfh] arguments matching token \"$tok[-1]\"", join(", ", @things_we_could_pick);
+
+            } else {
+                debug "[pfh] arguments not yet filled", join(", ", @things_we_could_pick);
+            }
+        }
+
+    } else {
+        error "[pfh] unexpected logical conclusion during help candidate parsing" if $ENV{CLISH_DEBUG};
     }
 
-    wtf "parse_for_help result", "\n" . dump({
-        line    => $line,
-        tokout  => $tokout,
-        cmds    => $cmds,
-        argss   => $argss,
-        statuss => $statuss,
-
-    }) . "\n";
-
-    return @$cmds || @{$this->commands};
+    return wantarray ? @things_we_could_pick : \@things_we_could_pick;
 }
 
 =head1 C<parse_for_tab_completion>

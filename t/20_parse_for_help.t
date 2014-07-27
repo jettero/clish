@@ -19,20 +19,20 @@ my $parser = $clish->parser or die "couldn't make parser";
 $NOTHING_YET_PLEASE = 0;
 
 my @LINES = (
-    q    => [ "quit" ],
-    qu   => [ "quit" ],
-    qui  => [ "quit" ],
-    quit => [ "quit" ],
+    q    => [ "CMD[quit]" ],
+    qu   => [ "CMD[quit]" ],
+    qui  => [ "CMD[quit]" ],
+    quit => [ "CMD[quit]" ],
 
-    "ping "            => [ qw(df count size target) ],
-    "ping df size"     => [ qw(size) ],
-    "ping df size "    => [ ], # integer next, no completion
-    "ping count "      => [ ], # integer next, no completion
-    "ping count 3 "    => [ qw(df size target) ],
-    "ping df size 1 c" => [ qw(count) ],
-    "p d s 1 c 1 "     => [ qw(target) ],
-    "p c 1 s 1 df"     => [ qw(df) ],
-    "p c 1 s 1 df "    => [ qw(target) ],
+    "ping "            => [ qw(FLAG[df] ARG[count] ARG[size] ARG[target]) ],
+    "ping df size"     => [ "ARG[size]" ],
+    "ping df size "    => [ "ARG[size]" ], # we should show help for size still??
+    "ping count "      => [ "ARG[count]" ],
+    "ping count 3 "    => [ qw(FLAG[df] ARG[size] ARG[target]) ],
+    "ping df size 1 c" => [ qw(ARG[count]) ],
+    "p d s 1 c 1 "     => [ qw(ARG[target]) ],
+    "p c 1 s 1 df"     => [ qw(FLAG[df]) ],
+    "p c 1 s 1 df "    => [ qw(ARG[target]) ],
 );
 
 my %RESULTS = @LINES;
