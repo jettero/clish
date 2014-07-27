@@ -39,16 +39,16 @@ sub stringify {
     my $this = shift;
 
     if( $this->is_flag ) {
-        my $arg = "ARG{" . $this->name . "}";
+        my $arg = "FLAG[" . $this->name . "]";
 
-        $arg .= "T<" . $this->token . ">" if $this->has_token;
+      # $arg .= "T<" . $this->token . ">" if $this->has_token;
         $arg .= "<V>" if $this->flag_present;
 
         return $arg;
     }
 
     my $arg = "ARG[" . $this->name . "]";
-    $arg .= "T<" . $this->token . ">" if $this->has_token;
+  # $arg .= "T<" . $this->token . ">" if $this->has_token;
     $arg .= "V<" . $this->value . ">" if $this->has_value;
 
     return $arg;
