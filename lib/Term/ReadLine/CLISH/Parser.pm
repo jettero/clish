@@ -120,7 +120,7 @@ sub parse_for_tab_completion {
                 debug "[pftc] argument tags matching token \"$tok[-1]\"", join(", ", @things_we_could_pick);
 
             } else {
-                debug "[pftc] argument tags not yet filled \"$tok[-1]\"", join(", ", @things_we_could_pick);
+                debug "[pftc] argument tags not yet filled", join(", ", @things_we_could_pick);
             }
         }
 
