@@ -62,7 +62,9 @@ sub parse_for_help {
     my @map = eval{ @{ $tokout->{tokmap} } };
 
     $tokout->{cruft} = 1 if !$still_working_on_current_word
-        and grep {!($_ == PARSE_COMPLETE or m/required arguments omitted/)} @$statuss;
+        and grep {!($_ == PARSE_COMPLETE
+        or m/(?:required arguments omitted|requires a value)/)}
+        @$statuss;
 
     if( $tokout->{cruft} ) {
         debug "[pfh] has cruft, no help" if $ENV{CLISH_DEBUG};
@@ -73,10 +75,10 @@ sub parse_for_help {
         @things_with_relevant_help = $this->commands;
         debug "[pfh] no tokens, help objects are commands", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
 
-    } elsif( @map == 1 && !($map[0][-1]->is_flag or $map[0][-1]->has_flag) ) {
+    } elsif( @map == 1 and @{$map[0]} and !($map[0][-1]->is_flag or $map[0][-1]->has_value) ) {
         $map[0][-1];
         @things_with_relevant_help = ($map[0][-1]);
-        debug "[pfh] no tokens, help objects are commands", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
+        debug "[pfh] last token requires value", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
 
     } elsif( @tok == 1 and $still_working_on_current_word ) {
         @things_with_relevant_help = @{ $this->commands };
