@@ -40,6 +40,9 @@ has qw(models is rw isa CLISHModelStack default), sub { [Term::ReadLine::CLISH::
 
 __PACKAGE__->meta->make_immutable;
 
+use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
+add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
+
 sub push_model {
     my $this = shift;
 
@@ -206,11 +209,7 @@ sub handle_qmark {
         my ($buffer, $point, $end) = @_;
 
         if( my @possibilities = $this->parser->parse_for_help($buffer) ) {
-            use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
-            add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
-
-            wtf "handle_qmark", "\n" . dump({possibilities => \@possibilities, bpe=>[$buffer, $point, $end]}) . "\n";
-
+            wtf(dump(\@possibilities));
             help from_table map { [ $_->name, $_->help ] } @possibilities;
         }
     });
