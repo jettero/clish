@@ -213,14 +213,14 @@ sub handle_qmark {
                 grep { $_->isa("Term::ReadLine::CLISH::Command") } @possibilities;
 
             my $supz = "Help for current input";
-            if( $cmdcount == 1 ) {
-                $supz = "Help for arguments of " . $firstcmd->name;
+            if( $cmdcount and $cmdcount == @possibilities ) {
+                $supz = "Command help"
 
-            } elsif ($cmdcount > 1 and $cmdcount == @possibilities) {
-                $supz = "Help for possible commands";
+            } elsif( @possibilities and $cmdcount == 0 ) {
+                $supz = "Argument Help"
             }
 
-            help $supz, from_table map { [ $_->name, $_->help ] } @possibilities;
+            help $supz, from_table map { [ $_->name, '—', $_->help ] } @possibilities;
         }
     });
 }
