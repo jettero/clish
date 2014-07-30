@@ -209,7 +209,6 @@ sub handle_qmark {
         my ($buffer, $point, $end) = @_;
 
         if( my @possibilities = $this->parser->parse_for_help($buffer) ) {
-            wtf(dump(\@possibilities));
             help from_table map { [ $_->name, $_->help ] } @possibilities;
         }
     });
