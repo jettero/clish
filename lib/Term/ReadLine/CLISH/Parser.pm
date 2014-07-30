@@ -58,75 +58,51 @@ sub parse_for_help {
         allow_last_argument_tag_without_value=>1,
     );
 
-    my @things_with_relevant_help;
+    if( $tokout->{cruft} ) {
+        return wantarray ? () : [];
+    }
 
     my $still_working_on_current_word = $line !~ m/\s+\z/;
     my @tok = eval{ @{ $tokout->{tokens} } };
     my @map = eval{ @{ $tokout->{tokmap} } };
 
-    $tokout->{cruft} = 1 if !$still_working_on_current_word
-        and grep {!($_->{rc} ~~ [PARSE_COMPLETE, PARSE_ERROR_REQVAL, PARSE_ERROR_REQARG])}
-        @$statuss;
+    my %already;
 
-        die "… we need to think about this more … ";
-        # we cruft out when:
-        # 1. there's more than one command and we're not on the current word
-        # 2. we're on arguments that don't uniquely identifiy the word (parser does this??)
-        # 3. the tokens are real cruft, or the arguemtns can't be obviously completed
-        # 4. underpants??
-
-    if( $tokout->{cruft} ) {
-        debug "[pfh] has cruft, no help" if $ENV{CLISH_DEBUG};
-        @things_with_relevant_help = (); # we'll never figure this out, it's a string or something
-
-    } elsif( not @tok ) {
+    if( not @tok ) {
         # probably haven't typed anything yet
-        @things_with_relevant_help = @{$this->commands};
-        debug "[pfh] no tokens, help objects are commands", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
-
-    } elsif( @$statuss == 1 and $statuss->[0]{rc} == PARSE_ERROR_REQVAL ) {
-        # we're probably dealing with an arg tag without a specified value
-        # XXX: this test should probably be more rigerous
-        @things_with_relevant_help = ($map[0][-1]);
-        debug "[pfh] last token requires a value but doesn't have one set",
-            join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
-
-    } elsif( @tok == 1 and $still_working_on_current_word ) {
-        # we're probably working on a command
-        @things_with_relevant_help = @{$this->commands};
-        @things_with_relevant_help = grep { $_->name =~ m/^\Q$tok[0]/ } @things_with_relevant_help;
-        debug "[pfh] commands matching token \"$tok[0]\"", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
-
-    } elsif( @tok ) {
-        # we probably know the command, but even if we don't
-        # we're trying to describe possible args
-        my %K;
-        for my $i ( 0 .. $#$cmds ) {
-            while( my ($arg_tag, $arg_obj) = each %{ $argss->[$i] } ) {
-                $K{$arg_tag} = $arg_obj
-                    if $still_working_on_current_word
-                       ? $arg_tag =~ m/^\Q$tok[-1]/
-                       : not grep {$arg_tag eq $_->name} map {@$_} @{$tokout->{tokmap}};
-                       ;
-            }
-        }
-
-        @things_with_relevant_help = values %K;
-        if( $ENV{CLISH_DEBUG} ) {
-            if( $still_working_on_current_word ) {
-                debug "[pfh] arguments matching token \"$tok[-1]\"", join(", ", @things_with_relevant_help);
-
-            } else {
-                debug "[pfh] arguments not yet filled", join(", ", @things_with_relevant_help);
-            }
-        }
-
-    } else {
-        # seems to me we probably never print this error
-        error "[pfh] unexpected logical conclusion during help candidate parsing" if $ENV{CLISH_DEBUG};
+        my @things = sort { $a->name cmp $b->name } @{$this->commands};
+        debug "[pfh] no tokens, help objects are commands", join(", ", @things) if $ENV{CLISH_DEBUG};
+        return wantarray ? @things : \@things;
     }
 
-    return wantarray ? @things_with_relevant_help : \@things_with_relevant_help;
+    if( @tok == 1 and $still_working_on_current_word ) {
+        my @things = grep { !$already{$_}++ and $_->name =~ m/^\Q$tok[0]/ } @{$this->commands};
+        debug "[pfh] still working on first token, help is commands matching \"$tok[0]\"", join(", ", @things) if $ENV{CLISH_DEBUG};
+        return wantarray ? @things : \@things;
+    }
+
+    my @things;
+    for( 0 .. $#$cmds ) {
+        if($statuss->[$_]{rc} ~~ [ PARSE_COMPLETE, PARSE_ERROR_REQARG ]) {
+            my @tmp = grep { !$already{$_}++ } values %{ $argss->[$_] };
+
+            if( $still_working_on_current_word ) {
+                push @things, grep { $_->name =~ m/^\Q$tok[-1]/ } @tmp;
+                debug "[pfh] args matching token \"$tok[-1]\"", join(", ", @things) if $ENV{CLISH_DEBUG};
+
+            } else {
+                push @things, grep { not $_->name ~~ [ map($_->name, @{$map[$_]}) ] } @tmp;
+                debug "[pfh] unfilled args for $cmds->[$_]", join(", ", @things) if $ENV{CLISH_DEBUG};
+            }
+
+        } elsif( @tok and $statuss->[$_]{rc} == PARSE_ERROR_REQVAL ) {
+            my $item = $map[$_][-1];
+            push @things, $item unless $already{$item}++;
+            debug "[pfh] last token ($item) requires a value but doesn't have one set", "idx=$_ item=$item" if $ENV{CLISH_DEBUG};
+        }
+    }
+
+    return wantarray ? @things : \@things;
 }
 
 =head1 C<parse_for_tab_completion>
