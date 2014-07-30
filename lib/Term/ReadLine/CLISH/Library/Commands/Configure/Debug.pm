@@ -6,10 +6,10 @@ use namespace::autoclean;
 use common::sense;
 
 command(
-    help => "turn debugging on or off",
+    help => "turn debugging on, off, or toggle",
     arguments => [
-        flag( 'on',  help => "turn debugging on",  cmd_mod => '+'  ),
-        flag( 'off', help => "turn debugging off", cmd_mod => '!-' ),
+        flag( 'on',  help => "turn debugging on"  ),
+        flag( 'off', help => "turn debugging off" ),
     ],
 );
 
