@@ -66,7 +66,12 @@ sub copy_with_value {
     my $obj  = bless { %$this }, ref $this;
     my $val  = shift;
 
-    $obj->_wvalue( $val );
+    if( defined $val ) {
+        $obj->_wvalue( $val );
+
+    } else {
+        $obj->no_value;
+    }
 
     return $obj;
 }
@@ -76,7 +81,12 @@ sub copy_with_token {
     my $obj  = bless { %$this }, ref $this;
     my $tok  = shift;
 
-    $obj->_wtoken( $tok );
+    if( defined $tok ) {
+        $obj->_wtoken( $tok );
+
+    } else {
+        $obj->no_token;
+    }
 
     return $obj;
 }

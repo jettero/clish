@@ -366,7 +366,7 @@ sub parse {
 
                 if( @$tokmap ) {
                     my $ltok = $tokmap->[-1];
-                    if( !$ltok->is_flag and !$ltok->has_value ) {
+                    if( !$ltok->is_flag and !$ltok->has_token ) {
                         # NOTE: this only comes up when $vopt{allow_last_argument_tag_without_value}
                         # so it's not clear anyone will ever see this error
                         $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQVAL, rs=>"$ltok requires a value" };
@@ -493,10 +493,6 @@ sub _try_to_eat_tagged_arguments {
 
         # populate the option in argss
         my $copy = $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
-        unless( $copy->has_value ) {
-            error "something's fucky", "$copy should have a value at this point";
-            exit 1;
-        }
         push @$tokmap, $copy,$copy;
 
         return 1; # returning true reboots the _try*
