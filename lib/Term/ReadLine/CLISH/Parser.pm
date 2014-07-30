@@ -66,8 +66,6 @@ sub parse_for_help {
     my @tok = eval{ @{ $tokout->{tokens} } };
     my @map = eval{ @{ $tokout->{tokmap} } };
 
-    my %already;
-
     if( not @tok ) {
         # probably haven't typed anything yet
         my @things = sort { $a->name cmp $b->name } @{$this->commands};
@@ -76,7 +74,7 @@ sub parse_for_help {
     }
 
     if( @tok == 1 and $still_working_on_current_word ) {
-        my @things = grep { !$already{$_}++ and $_->name =~ m/^\Q$tok[0]/ } @{$this->commands};
+        my @things = grep { $_->name =~ m/^\Q$tok[0]/ } @{$this->commands};
         debug "[pfh] still working on first token, help is commands matching \"$tok[0]\"", join(", ", @things) if $ENV{CLISH_DEBUG};
         return wantarray ? @things : \@things;
     }
@@ -84,7 +82,7 @@ sub parse_for_help {
     my @things;
     for( 0 .. $#$cmds ) {
         if($statuss->[$_]{rc} ~~ [ PARSE_COMPLETE, PARSE_ERROR_REQARG ]) {
-            my @tmp = grep { !$already{$_}++ } values %{ $argss->[$_] };
+            my @tmp = values %{ $argss->[$_] };
 
             if( $still_working_on_current_word ) {
                 push @things, grep { $_->name =~ m/^\Q$tok[-1]/ } @tmp;
@@ -97,7 +95,7 @@ sub parse_for_help {
 
         } elsif( @tok and $statuss->[$_]{rc} == PARSE_ERROR_REQVAL ) {
             my $item = $map[$_][-1];
-            push @things, $item unless $already{$item}++;
+            push @things, $item;
             debug "[pfh] last token ($item) requires a value but doesn't have one set", "idx=$_ item=$item" if $ENV{CLISH_DEBUG};
         }
     }
