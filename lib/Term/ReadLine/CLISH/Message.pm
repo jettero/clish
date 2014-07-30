@@ -11,13 +11,17 @@ has qw(format is rw isa Str default) => "%s";
 has qw(caption is ro isa Str);
 has qw(msg is ro isa Str);
 
+has qw(precap is ro predicate has_precap isa Str);
+has qw(premsg is ro predicate has_premsg isa Str);
+has qw(pstmsg is ro predicate has_pstmsg isa Str);
+
 __PACKAGE__->meta->make_immutable;
 
 sub stringify {
     my $this = shift;
     my $fmt  = $this->format;
     my $msg  = $this->msg;
-    my $cap = $this->caption;
+    my $cap  = $this->caption;
 
     my $msg = $this->msg;
        $msg =~ s/[\x0d\x0a]\z//g;
@@ -30,9 +34,14 @@ sub stringify {
 
         } else {
             $_ = "  $_" for @msg;
+
+            unshift @msg, $this->premsg if $this->has_premsg; # NOTE: premsg only applies in multi-line mode
             unshift @msg, "$cap:";
         }
     }
+
+    unshift @msg, $this->precap if $this->has_precap;
+    push    @msg, $this->pstmsg if $this->has_pstmsg;
 
     return join("\x0a", _apply_format( _apply_color($fmt => @msg) ));
 }

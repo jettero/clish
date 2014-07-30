@@ -7,6 +7,9 @@ use common::sense;
 extends 'Term::ReadLine::CLISH::Message';
 
 has qw(+format default) => "%%   %s";
+has qw(+precap default) => "";
+has qw(+premsg default) => "";
+has qw(+pstmsg default) => "";
 
 __PACKAGE__->meta->make_immutable;
 

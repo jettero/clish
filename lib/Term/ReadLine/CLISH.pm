@@ -209,7 +209,18 @@ sub handle_qmark {
         my ($buffer, $point, $end) = @_;
 
         if( my @possibilities = $this->parser->parse_for_help($buffer) ) {
-            help from_table map { [ $_->name, $_->help ] } @possibilities;
+            my $cmdcount = (my $firstcmd) =
+                grep { $_->isa("Term::ReadLine::CLISH::Command") } @possibilities;
+
+            my $supz = "Help for current input";
+            if( $cmdcount == 1 ) {
+                $supz = "Help for arguments of " . $firstcmd->name;
+
+            } elsif ($cmdcount > 1 and $cmdcount == @possibilities) {
+                $supz = "Help for possible commands";
+            }
+
+            help $supz, from_table map { [ $_->name, $_->help ] } @possibilities;
         }
     });
 }
