@@ -35,7 +35,7 @@ my @LINES = (
     "p c 1 s 1 df "    => [ qw(ARG[target]) ],
 
     "t"  => [ qw(CMD[test1] CMD[test2] CMD[test3] CMD[test4]) ],
-    "t " => [ ],
+    "t " => [ "ARG[msg]" ],
 );
 
 my %RESULTS = @LINES;
