@@ -9,7 +9,10 @@ use Parse::RecDescent;
 use Module::Pluggable::Object;
 use common::sense;
 use constant {
-    PARSE_COMPLETE => 1,
+    PARSE_COMPLETE           => 0,
+    PARSE_ERROR_UNRECOGNIZED => 1,
+    PARSE_ERROR_REQVAL       => 2,
+    PARSE_ERROR_REQARG       => 3,
 
     PARSE_RETURN_TOKENS  => 0,
     PARSE_RETURN_CMDS    => 1,
@@ -50,6 +53,7 @@ sub parse_for_help {
     my $this = shift;
     my $line = shift;
 
+    my @PFFT =
     my ($tokout, $cmds, $argss, $statuss) = $this->parse($line,
         heuristic_validation=>1, no_untagged=>1,
         allow_last_argument_tag_without_value=>1,
@@ -62,8 +66,7 @@ sub parse_for_help {
     my @map = eval{ @{ $tokout->{tokmap} } };
 
     $tokout->{cruft} = 1 if !$still_working_on_current_word
-        and grep {!($_ == PARSE_COMPLETE
-        or m/(?:required arguments omitted|requires a value)/)}
+        and grep {!($_->{rc} ~~ [PARSE_COMPLETE, PARSE_ERROR_REQVAL, PARSE_ERROR_REQARG])}
         @$statuss;
 
     if( $tokout->{cruft} ) {
@@ -71,21 +74,25 @@ sub parse_for_help {
         @things_with_relevant_help = (); # we'll never figure this out, it's a string or something
 
     } elsif( not @tok ) {
-        # we're probably working on a command
+        # probably haven't typed anything yet
         @things_with_relevant_help = $this->commands;
         debug "[pfh] no tokens, help objects are commands", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
 
-    } elsif( @map == 1 and @{$map[0]} and !($map[0][-1]->is_flag or $map[0][-1]->has_value) ) {
-        $map[0][-1];
+    } elsif( @$statuss == 1 and $statuss->[0]{rc} == PARSE_ERROR_REQVAL ) {
+        # we're probably dealing with an arg tag without a specified value
+        # XXX: this test should probably be more rigerous
         @things_with_relevant_help = ($map[0][-1]);
         debug "[pfh] last token requires value", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
 
     } elsif( @tok == 1 and $still_working_on_current_word ) {
+        # we're probably working on a command
         @things_with_relevant_help = @{ $this->commands };
         @things_with_relevant_help = grep { $_->name =~ m/^\Q$tok[0]/ } @things_with_relevant_help;
         debug "[pfh] commands matching token \"$tok[0]\"", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
 
     } elsif( @tok ) {
+        # we probably know the command, but even if we don't
+        # we're trying to describe possible args
         my %K;
         for my $i ( 0 .. $#$cmds ) {
             while( my ($arg_tag, $arg_obj) = each %{ $argss->[$i] } ) {
@@ -108,6 +115,7 @@ sub parse_for_help {
         }
 
     } else {
+        # seems to me we probably never print this error
         error "[pfh] unexpected logical conclusion during help candidate parsing" if $ENV{CLISH_DEBUG};
     }
 
@@ -131,7 +139,7 @@ sub parse_for_tab_completion {
     my @tok = eval{ @{ $tokout->{tokens} } };
 
     $tokout->{cruft} = 1 if !$still_working_on_current_word
-        and grep {!($statuss->[$_] == PARSE_COMPLETE or @{$tokout->{argreg}[$_]})} $#$statuss;
+        and grep {!($statuss->[$_]{rc} == PARSE_COMPLETE or @{$tokout->{argreg}[$_]})} $#$statuss;
 
     if( $tokout->{cruft} ) {
         debug "[pftc] has cruft, no completions" if $ENV{CLISH_DEBUG};
@@ -219,14 +227,14 @@ sub parse_for_execution {
     return unless @{$tokout->{tokens}};
 
     if( @$cmds == 1 ) {
-        if( $statuss->[0] == PARSE_COMPLETE ) {
+        if( $statuss->[0]{rc} == PARSE_COMPLETE ) {
             debug "selected $cmds->[0] for execution, executing final validation" if $ENV{CLISH_DEBUG};
 
             $cmds->[0]->validate($argss->[0]) or return;
             return ($cmds->[0], $argss->[0]);
 
         } elsif ($statuss->[0]) {
-            error "parsing $cmds->[0] arguments", $statuss->[0];
+            error "parsing $cmds->[0] arguments", $statuss->[0]{rs};
             return;
         }
     }
@@ -256,15 +264,23 @@ It also returns an arrayref of possible commands in C<$cmds>, an arrayref of
 hashrefs (each hashref the parsed arguments for the commands as
 C<< tag=>value >> pairs), and an arrayref of C<$statuses>.
 
-The statuses are either the value C<PARSE_COMPLETE> or a string representing
-any errors with intepreting the line as an invocation of the command at the
-same index.
+The statuses are hashrefs.  The key C<rc> contains the
+result code (eg C<PARSE_COMPLETE>).  They also contain
+a string result under the key C<rs>.  The string will
+describe the error (or success) for the given result
+code for a given index.
 
 Example:
 
-    if( @$cmds == 1 and $statuses->[0] == PARSE_COMPLETE ) {
+    if( @$cmds == 1 and $statuses->[0]{rc} == PARSE_COMPLETE ) {
         info "executing $cmds->[0]";
         $cmds->[0]->exec( $args_star->[0] );
+
+    } elsif( $tokout ) {
+        for( 0 .. $#$cmds ) {
+            error "failed to parse as \"$cmds[$_]\",
+                $statuses->[$_]{rs};
+        }
     }
 
 Exception: if the tokenizer (an actual parser) can't make sense of the line,
@@ -343,7 +359,7 @@ sub parse {
                 # if there are remaining arguments (extra tokens), reject the command
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
                     local $" = ", ";
-                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "unrecognized tokens (@extra) on line";
+                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_UNRECOGNIZED, rs=>"unrecognized tokens (@extra) on line" };
                     next;
                 }
 
@@ -352,7 +368,7 @@ sub parse {
                     if( !$ltok->is_flag and !$ltok->has_value ) {
                         # NOTE: this only comes up when $vopt{allow_last_argument_tag_without_value}
                         # so it's not clear anyone will ever see this error
-                        $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "$ltok requires a value";
+                        $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQVAL, rs=>"$ltok requires a value" };
                         next;
                     }
                 }
@@ -364,12 +380,12 @@ sub parse {
                 # final checks will even pass))
                 if( my @req = grep { $_->required } @cmd_args ) {
                     local $" = ", ";
-                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = "required arguments omitted (@req)";
+                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQARG, rs=>"required arguments omitted (@req)" };
                     @$argreq = @req;
                     next;
                 }
 
-                $return[ PARSE_RETURN_STATUSS ][ $cidx ] = PARSE_COMPLETE;
+                $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_COMPLETE, rs=>"parse complete" };
             }
         }
     }
@@ -428,8 +444,7 @@ sub _try_to_eat_flag_arguments {
 
         debug "ate arg=$arg as a flag with tok-nom=<$nom>" if $ENV{CLISH_DEBUG};
 
-        $arg->add_copy_with_token_to_hashref( $out_args => $tok );
-        push @$tokmap, $arg;
+        push @$tokmap, $arg->add_copy_with_token_to_hashref( $out_args => $tok );
 
         return 1; # returning true reboots the _try*
     }
@@ -476,8 +491,8 @@ sub _try_to_eat_tagged_arguments {
         { local $" = ", "; debug "[tagged] ate arg=$arg and tok-nom=<@nom>" if $ENV{CLISH_DEBUG}; }
 
         # populate the option in argss
-        $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
-        push @$tokmap, $arg,$arg;
+        my $copy = $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
+        push @$tokmap, $copy,$copy;
 
         return 1; # returning true reboots the _try*
     }
@@ -517,9 +532,7 @@ sub _try_to_eat_tagged_argument_without_value {
         my ($arg) = splice @$cmd_args, $midx, 1;
         my ($nom) = splice @$arg_tokens, 0, 1;
 
-        $arg->add_copy_with_token_to_hashref( $out_args => undef );
-
-        push @$tokmap, $arg;
+        push @$tokmap, $arg->add_copy_with_token_to_hashref( $out_args => undef );
 
         return 1; # returning true reboots the _try*
     }
@@ -550,8 +563,7 @@ sub _try_to_eat_untagged_arguments {
         debug "[untagged] ate arg=$arg and tok-nom=<$nom>" if $ENV{CLISH_DEBUG};
 
         # populate the option in argss
-        $arg->add_copy_with_token_to_hashref( $out_args => $tok );
-        push @$tokmap, $arg;
+        push @$tokmap, $arg->add_copy_with_token_to_hashref( $out_args => $tok );
 
         return 1; # returning true reboots the _try*
     }
