@@ -68,6 +68,13 @@ sub parse_for_help {
         and grep {!($_->{rc} ~~ [PARSE_COMPLETE, PARSE_ERROR_REQVAL, PARSE_ERROR_REQARG])}
         @$statuss;
 
+        die "… we need to think about this more … ";
+        # we cruft out when:
+        # 1. there's more than one command and we're not on the current word
+        # 2. we're on arguments that don't uniquely identifiy the word (parser does this??)
+        # 3. the tokens are real cruft, or the arguemtns can't be obviously completed
+        # 4. underpants??
+
     if( $tokout->{cruft} ) {
         debug "[pfh] has cruft, no help" if $ENV{CLISH_DEBUG};
         @things_with_relevant_help = (); # we'll never figure this out, it's a string or something
