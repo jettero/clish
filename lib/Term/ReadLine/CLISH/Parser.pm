@@ -82,7 +82,8 @@ sub parse_for_help {
         # we're probably dealing with an arg tag without a specified value
         # XXX: this test should probably be more rigerous
         @things_with_relevant_help = ($map[0][-1]);
-        debug "[pfh] last token requires value", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
+        debug "[pfh] last token requires a value but doesn't have one set",
+            join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
 
     } elsif( @tok == 1 and $still_working_on_current_word ) {
         # we're probably working on a command
@@ -492,6 +493,10 @@ sub _try_to_eat_tagged_arguments {
 
         # populate the option in argss
         my $copy = $arg->add_copy_with_token_to_hashref( $out_args => $ntok );
+        unless( $copy->has_value ) {
+            error "something's fucky", "$copy should have a value at this point";
+            exit 1;
+        }
         push @$tokmap, $copy,$copy;
 
         return 1; # returning true reboots the _try*
