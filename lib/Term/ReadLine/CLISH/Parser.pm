@@ -75,7 +75,7 @@ sub parse_for_help {
 
     } elsif( not @tok ) {
         # probably haven't typed anything yet
-        @things_with_relevant_help = $this->commands;
+        @things_with_relevant_help = @{$this->commands};
         debug "[pfh] no tokens, help objects are commands", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
 
     } elsif( @$statuss == 1 and $statuss->[0]{rc} == PARSE_ERROR_REQVAL ) {
@@ -87,7 +87,7 @@ sub parse_for_help {
 
     } elsif( @tok == 1 and $still_working_on_current_word ) {
         # we're probably working on a command
-        @things_with_relevant_help = @{ $this->commands };
+        @things_with_relevant_help = @{$this->commands};
         @things_with_relevant_help = grep { $_->name =~ m/^\Q$tok[0]/ } @things_with_relevant_help;
         debug "[pfh] commands matching token \"$tok[0]\"", join(", ", @things_with_relevant_help) if $ENV{CLISH_DEBUG};
 
