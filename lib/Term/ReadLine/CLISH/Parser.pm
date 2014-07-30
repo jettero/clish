@@ -119,8 +119,6 @@ sub parse_for_tab_completion {
     my $still_working_on_current_word = $line !~ m/\s+\z/;
     my @tok = eval{ @{ $tokout->{tokens} } };
 
-    $tokout->{cruft} = 1 if !$still_working_on_current_word
-        and grep {!($statuss->[$_]{rc} == PARSE_COMPLETE or @{$tokout->{argreg}[$_]})} $#$statuss;
 
     if( $tokout->{cruft} ) {
         debug "[pftc] has cruft, no completions" if $ENV{CLISH_DEBUG};
@@ -130,6 +128,10 @@ sub parse_for_tab_completion {
         # we're probably working on a command
         @things_we_could_pick = $this->command_names;
         debug "[pftc] no tokens, completions are commands", join(", ", @things_we_could_pick) if $ENV{CLISH_DEBUG};
+
+    } elsif( !$still_working_on_current_word and grep { not $statuss->[$_]{rc} ~~ [PARSE_COMPLETE, PARSE_ERROR_REQARG] } $#$statuss ) {
+        debug "[pftc] bad parse conditions, no completions" if $ENV{CLISH_DEBUG};
+        @things_we_could_pick = ();
 
     } elsif( @tok == 1 and $still_working_on_current_word ) {
         @things_we_could_pick = $this->command_names;
