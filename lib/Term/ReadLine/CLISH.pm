@@ -43,6 +43,13 @@ __PACKAGE__->meta->make_immutable;
 use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
 add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
 
+sub model {
+    my $this = shift;
+    my @m = @{$this->models};
+    return $m[-1] if @m;
+    return;
+}
+
 sub push_model {
     my $this = shift;
 
@@ -271,11 +278,18 @@ sub run {
         s/^\s*//; s/\s*$//; s/[\r\n]//g;
 
         $::THIS_CLISH = $this;
+        $::THIS_MODEL = $this->model;
 
         if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
             eval {
 
+                $::THIS_MODEL->pre_exec( $cmd, $args )
+                    if $::THIS_MODEL->can("pre_exec");
+
                 $cmd->exec( $args );
+
+                $::THIS_MODEL->post_exec( $cmd, $args )
+                    if $::THIS_MODEL->can("post_exec");
 
             1} or error "executing $cmd";
         }
