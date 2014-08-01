@@ -21,6 +21,7 @@ sub exec {
        $prompt =~ s/([>:#]\s*)\z/(config)$1/;
 
     $::THIS_CLISH->push_model(
+        'Term::ReadLine::CLISH::Library::InputModels::ConfigurationModel',
         prompt => $prompt,
         prefix => [ map { $_ . "::Configure" } @{$::THIS_CLISH->prefix} ],
     );
