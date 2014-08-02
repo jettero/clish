@@ -47,7 +47,7 @@ add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ct
 
 sub model {
     my $this = shift;
-    my @m = @{$this->models};
+    my @m = @{$this->models || []};
     return $m[-1] if @m;
     return;
 }
@@ -116,7 +116,7 @@ for my $f (qw(parser prompt path prefix rebuild_parser path_string)) {
     no strict 'refs';
     *{$f} = sub {
         my $this = shift;
-        my $mod  = eval { @{$this->models}[-1] };
+        my $mod  = $this->model;
 
         unless( $mod ) {
             my ($p,$f,$l) = caller;
