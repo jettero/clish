@@ -56,6 +56,7 @@ sub push_model {
     my $this = shift;
 
     if( my @mobj = grep { eval { $_->isa("Term::ReadLine::CLISH::InputModel")} } @_ ) {
+        debug "push_model found InputModel(s) (@mobj) in arguments" if $ENV{CLISH_DEBUG};
         push @{$this->models}, @mobj;
         return $this;
     }
@@ -63,11 +64,18 @@ sub push_model {
     my $model_class = @_ % 2 ? shift : "Term::ReadLine::CLISH::InputModel";
     my %opt = @_;
 
+    debug "push_model building new InputModel from model_class=$model_class opt=(@_)" if $ENV{CLISH_DEBUG};
+
     $opt{prompt} ||= $this->prompt;
     $opt{path}   ||= $this->path;
     $opt{prefix} ||= $this->prefix;
 
-    push @{$this->models}, Term::ReadLine::CLISH::InputModel->new(%opt);
+    unless( eval qq{ require $model_class } ) {
+        error "couldn't load $model_class";
+        return $this;
+    }
+
+    push @{$this->models}, $model_class->new(%opt);
 
     $this->rebuild_parser;
 
@@ -290,6 +298,7 @@ sub run {
 
                 $cmd->exec( $args );
 
+                wtf "$::THIS_MODEL";
                 $::THIS_MODEL->post_exec( $cmd, $args )
                     if $::THIS_MODEL->can("post_exec");
 

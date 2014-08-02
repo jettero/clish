@@ -24,6 +24,17 @@ sub stringify {
     return "CMD[" . $this->name . "]";
 }
 
+sub stringify_as_command_line {
+    my $this = shift;
+    my $args = shift; # XXX: this quotifier isn't very robust
+    my $line = join(" ", map {m/\s/ ? "\"$_\"" : $_} map {$_->is_flag
+        ? ($_->flag_present ? $_->name              : ())
+        : ($_->has_value    ? ($_->name, $_->value) : ())
+        } values %$args);
+
+    return $line;
+}
+
 sub arguments {
     my $this = shift;
     croak "you can't change the arguments this way" if @_;

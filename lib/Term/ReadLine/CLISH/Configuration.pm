@@ -1,9 +1,10 @@
 package Term::ReadLine::CLISH::Configuration;
 
 use Moose;
-use common::sense;
 use File::Slurp;
 use File::Spec;
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
+use common::sense;
 
 has qw(filename is rw isa Str default) => "startup-config";
 has qw(context is rw required 1 isa Term::ReadLine::CLISH weak_ref 1);
@@ -13,23 +14,18 @@ __PACKAGE__->meta->make_immutable;
 
 sub set {
     my $this = shift;
-    my ($slot, $cmd, $args) = @_;
-    my @words = ($cmd->name);
-    for my $k (sort keys %{ $args }) {
-        if( $args->{$k}->is_flag ) {
-            push @words, $args->{$k}->name;
-        
-        } else {
-            push @words, $args->{$k}->name, $args->{$k}->value;
-        }
-    }
+    my ($slot, $line) = @_;
 
-    return $this->slots->{slot} = "@words";
+    debug "configuration set($slot => $line)" if $ENV{CLISH_DEBUG};
+
+    return $this->slots->{slot} = $line;
 }
 
 sub clear_slot {
     my $this = shift;
-    my ($slot, $cmd, $args) = @_;
+    my ($slot) = @_;
+
+    debug "configuration clear($slot)" if $ENV{CLISH_DEBUG};
 
     return delete $this->slots->{slot};
 }
