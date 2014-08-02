@@ -39,6 +39,13 @@ sub command {
     $meta->add_attribute( qw(+name      default) => $name );
     $meta->add_attribute( qw(+help      default) => $options{help} )   if exists $options{help};
     $meta->add_attribute( qw(+arguments default), sub { [@def_arg] } ) if exists $options{arguments};
+
+    if( exists $options{config_tags} ) {
+        my @def_tags = @{$options{config_tags}};
+
+        $meta->add_attribute( qw(+config_slot_no default) => $options{config_slot_no}||0 );
+        $meta->add_attribute( qw(+config_tags    default) => sub { [@def_tags] } );
+    }
 }
 
 sub argument {

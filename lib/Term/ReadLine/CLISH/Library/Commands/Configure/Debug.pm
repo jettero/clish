@@ -11,6 +11,9 @@ command(
         flag( 'on',  help => "turn debugging on"  ),
         flag( 'off', help => "turn debugging off" ),
     ],
+
+    config_slot_no => 0,
+    config_tags => [ 'debug' ],
 );
 
 __PACKAGE__->meta->make_immutable;

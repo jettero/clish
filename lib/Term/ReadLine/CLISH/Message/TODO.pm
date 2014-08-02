@@ -6,7 +6,7 @@ use common::sense;
 
 extends 'Term::ReadLine::CLISH::Message';
 
-has qw(+format default) => "%C(todo)XXX: %s";
+has qw(+format default) => "%C(todo)XXX: %s%C";
 
 __PACKAGE__->meta->make_immutable;
 

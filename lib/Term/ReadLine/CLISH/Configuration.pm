@@ -7,10 +7,15 @@ use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 use common::sense;
 
 has qw(filename is rw isa Str default) => "startup-config";
-has qw(context is rw required 1 isa Term::ReadLine::CLISH weak_ref 1);
 has qw(slots is ro isa HashRef default) => sub { +{} };
 
 __PACKAGE__->meta->make_immutable;
+
+sub read_configuration {
+    my $this = shift;
+
+    todo "read and execute configuration here";
+}
 
 sub set {
     my $this = shift;

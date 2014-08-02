@@ -243,7 +243,7 @@ sub handle_qmark {
     });
 }
 
-sub config {
+sub locate_config_file {
     my $this = shift;
     my $file = shift;
     my $dir  = File::HomeDir->my_dist_config( $this->name, { create => 1 } );
@@ -263,6 +263,9 @@ sub run {
     $this->attach_sigint;
     $this->attach_sigstop;
     $this->attach_completion_whirlygigs;
+
+    $this->configuration( Term::ReadLine::CLISH::Configuration->new );
+    $this->configuration->read_configuration;
 
     info "Welcome to " . $this->name . " v" . $this->version;
 
@@ -312,12 +315,12 @@ sub run {
 sub history_location {
     my $this = shift;
 
-    return $this->var_true_or_default( history_location => $this->config("history.txt") );
+    return $this->var_true_or_default( history_location => $this->locate_config_file("history.txt") );
 }
 
 sub init_vdb {
     my $this = shift;
-    my $y = tie my %y, 'Tie::YAML' => $this->config("vdb.yaml");
+    my $y = tie my %y, 'Tie::YAML' => $this->locate_config_file("vdb.yaml");
 
     $this->vdb( $y );
 

@@ -16,7 +16,24 @@ has qw'name is ro isa Str default' => "unfinished command";
 has qw'help is ro isa Str default' => "unfinished command";
 has qw'arguments is ro isa ArrayRef[Argument] reader _arguments default' => sub {[]};
 
+has qw'config_slot_no is ro isa Str predicate has_config_slot_no';
+has qw'config_tags    is ro isa ArrayRef[Str] predicate has_config_tags';
+
 __PACKAGE__->meta->make_immutable;
+
+sub has_configuration_slot {
+    my $this = shift;
+
+    return $this->has_config_slot_no and $this->has_config_tags;
+}
+
+sub configuration_slot {
+    my $this = shift;
+
+    return unless $this->has_configuration_slot;
+    return sprintf('%04d-%s', $this->config_slot_no, join("-", @{$this->config_tags}));
+}
+
 
 sub stringify {
     my $this = shift;

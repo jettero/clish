@@ -14,14 +14,12 @@ sub post_exec {
 
     wtf "[post_exec] $cmd";
 
-    return unless $cmd->can("configuration_slot");
-
-    my $slot = $cmd->configuartion_slot;
+    return unless my $slot = $cmd->configuration_slot;
     my $line = $cmd->stringify_as_command_line($args);
 
     wtf "[post_exec] $cmd slot=$slot line=$line";
 
-    $::CLISH->configuration->set($slot, $line);
+    $::THIS_CLISH->configuration->set($slot, $line);
 }
 
 1;
