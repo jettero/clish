@@ -20,6 +20,7 @@ use Term::ReadLine;
 use Term::ReadLine::CLISH::MessageSystem qw(:all);
 use Term::ReadLine::CLISH::InputModel;
 use Term::ReadLine::CLISH::Configuration;
+use Scalar::Util qw(blessed);
 use File::Spec;
 use File::HomeDir;
 use Tie::YAML;
@@ -55,7 +56,7 @@ sub model {
 sub push_model {
     my $this = shift;
 
-    if( my @mobj = grep { eval { $_->isa("Term::ReadLine::CLISH::InputModel")} } @_ ) {
+    if( my @mobj = grep { blessed($_) && eval { $_->isa("Term::ReadLine::CLISH::InputModel")} } @_ ) {
         debug "push_model found InputModel(s) (@mobj) in arguments" if $ENV{CLISH_DEBUG};
         push @{$this->models}, @mobj;
         return $this;
@@ -81,8 +82,8 @@ sub push_model {
 
     if( $ENV{CLISH_DEBUG} ) {
         debug "pushed a new input model:";
-        debug " - new prefix = [" . join(", ", @{$this->prefix}) . "]";
-        debug " - new path = [" . join(", ", @{$this->path}) . "]";
+        debug " - new prefix = [" . join(" /", @{$this->prefix}) . "]";
+        debug " - new path = [" . join(" / ", @{$this->path}) . "]";
         debug " - new prompt = \"" . $this->prompt . "\"";
     }
 
@@ -298,7 +299,8 @@ sub run {
 
                 $cmd->exec( $args );
 
-                wtf "$::THIS_MODEL";
+                $::THIS_MODEL = $this->model;
+                wtf "THIS_MODEL=$::THIS_MODEL";
                 $::THIS_MODEL->post_exec( $cmd, $args )
                     if $::THIS_MODEL->can("post_exec");
 
