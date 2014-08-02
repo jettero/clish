@@ -18,7 +18,10 @@ sub exec {
     my $this = shift;
 
     my $prompt = $::THIS_CLISH->prompt;
-       $prompt =~ s/([>:#]\s*)\z/(config)$1/;
+       $prompt =~ s/\\b/(config)/
+    or $prompt =~ s/([>:#](?:\s*|\e\[[\d;]+m)*)\z/(config)$1/
+    or $prompt = "$prompt(config)"
+       ;
 
     $::THIS_CLISH->push_model(
         'Term::ReadLine::CLISH::Library::InputModels::ConfigurationModel',
