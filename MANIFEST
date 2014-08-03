@@ -1,4 +1,5 @@
 Changes
+example/cmds/execute.pm
 example/cmds/mtr.pm
 example/cmds/ping.pm
 example/cmds/test1.pm
@@ -31,5 +32,6 @@ Makefile.PL
 MANIFEST
 README.pod
 t/10_parse_for_execution.t
-t/15_parse_for_tab_completion.t
+t/20_parse_for_tab_completion.t
+t/30_parse_for_help.t
 TODO

@@ -14,14 +14,17 @@ my $clish  = Term::ReadLine::CLISH->new->add_namespace("example::cmds") or die "
 my $parser = $clish->parser or die "couldn't make parser";
 
 my %CMD = (
-    q    => [ "quit" => {} ],
-    qu   => [ "quit" => {} ],
-    qui  => [ "quit" => {} ],
-    quit => [ "quit" => {} ],
+    q    => [ quit => {} ],
+    qu   => [ quit => {} ],
+    qui  => [ quit => {} ],
+    quit => [ quit => {} ],
 
-    "  ping  192.168.1.1" => [ "ping", {target=>"192.168.1.1"} ],
-    "p t     192.168.1.1" => [ "ping", {target=>"192.168.1.1"} ],
-    "p c 7 t 192.168.1.1" => [ "ping", {target=>"192.168.1.1", count=>7} ],
+    exit => [ quit => {} ],
+    "x 'say scalar localtime'" => [ execute => { code => "say scalar localtime" } ],
+
+    "  ping  192.168.1.1" => [ ping => {target=>"192.168.1.1"} ],
+    "p t     192.168.1.1" => [ ping => {target=>"192.168.1.1"} ],
+    "p c 7 t 192.168.1.1" => [ ping => {target=>"192.168.1.1", count=>7} ],
 );
 
 my %EXPECT = (

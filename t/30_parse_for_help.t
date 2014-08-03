@@ -24,6 +24,9 @@ my @LINES = (
     qui  => [ "CMD[quit]" ],
     quit => [ "CMD[quit]" ],
 
+    e => [ qw(CMD[quit] CMD[execute]) ],
+    x => [ qw(CMD[execute]) ],
+
     "ping "            => [ qw(FLAG[df] ARG[count] ARG[size] ARG[target]) ],
     "ping df size"     => [ "ARG[size]" ],
     "ping df size "    => [ "ARG[size]" ], # we should show help for size still??
