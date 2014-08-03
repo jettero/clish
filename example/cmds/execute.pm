@@ -44,8 +44,9 @@ sub exec {
         return;
     }
 
-    eval $opts->{code}->value;
-    error "while executing your code";
+    my $code = $opts->{code}->value;
+    eval $code;
+    error "while executing your code=\"$code\"" if $@;
     return;
 }
 
