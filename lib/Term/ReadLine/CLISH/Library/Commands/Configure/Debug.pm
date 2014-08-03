@@ -22,12 +22,24 @@ sub exec {
     my $this = shift;
     my $opts = shift;
 
+    my $orig = $ENV{CLISH_DEBUG};
+
        if(  $opts->{on}->flag_present ) { $ENV{CLISH_DEBUG} = 1 }
     elsif( $opts->{off}->flag_present ) { $ENV{CLISH_DEBUG} = 0 }
 
-    else { $ENV{CLISH_DEBUG} = $ENV{CLISH_DEBUG} ? 0 : 1 }
+    else {
+        if( $ENV{CLISH_DEBUG} ) {
+            $ENV{CLISH_DEBUG} = 0;
+            $opts->{off}->set_value(1);
 
-    info "debugging set to " . ($ENV{CLISH_DEBUG} ? "on" : "off");
+        } else {
+            $ENV{CLISH_DEBUG} = 1;
+            $opts->{on}->set_value(1);
+        }
+    }
+
+    info "debugging set to " . ($ENV{CLISH_DEBUG} ? "on" : "off")
+        if $orig xor $ENV{CLISH_DEBUG};
 
     return;
 }
