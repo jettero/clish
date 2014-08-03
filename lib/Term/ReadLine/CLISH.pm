@@ -303,7 +303,6 @@ sub run {
                 $cmd->exec( $args );
 
                 $::THIS_MODEL = $this->model;
-                wtf "THIS_MODEL=$::THIS_MODEL";
                 $::THIS_MODEL->post_exec( $cmd, $args )
                     if $::THIS_MODEL->can("post_exec");
 
