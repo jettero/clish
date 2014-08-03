@@ -33,7 +33,7 @@ sub rebuild_parser {
     $this->parser( $parser );
     debug "path: " . $this->path_string if $ENV{CLISH_DEBUG};
 
-    return $::THIS_CLISH;
+    return $this;
 }
 
 sub path_string {

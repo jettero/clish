@@ -120,7 +120,6 @@ sub model_depth {
 
 *has_model = \&model_depth;
 
-# XXX: read methods from the CLISHModelStack directly, rather than enumerating them like this
 for my $f (qw(parser prompt path prefix rebuild_parser path_string)) {
     no strict 'refs';
     *{$f} = sub {
@@ -265,7 +264,8 @@ sub run {
     $this->attach_completion_whirlygigs;
 
     $this->configuration( Term::ReadLine::CLISH::Configuration->new );
-    $this->configuration->read_configuration;
+    todo "read config file and tell config to execute it";
+    #this->configuration->read_configuration;
 
     info "Welcome to " . $this->name . " v" . $this->version;
 

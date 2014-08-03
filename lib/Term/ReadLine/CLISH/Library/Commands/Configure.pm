@@ -23,13 +23,10 @@ sub exec {
     or $prompt = "$prompt(config)"
        ;
 
-    $::THIS_CLISH->push_model(
-        'Term::ReadLine::CLISH::Library::InputModels::ConfigurationInputModel',
-        prompt => $prompt,
-        prefix => [ map { $_ . "::Configure" } @{$::THIS_CLISH->prefix} ],
-    );
+    $::THIS_CLISH->push_model( $::THIS_CLISH->configuration->recompute_prefix->model )
+        -> prompt( $prompt );
 
-    warning "pushed input model from empty path or something \$@=$@" if $@;
+    warning "pushed input model from empty path or something" if $@;
 
     return;
 }
