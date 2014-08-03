@@ -24,6 +24,9 @@ my @LINES = (
     qui  => [ "quit" ],
     quit => [ "quit" ],
 
+    e => [ qw(execute exit) ],
+    x => [ qw(x) ], # x is the whole word alias for execute
+
     "ping "            => [ qw(df count size target) ],
     "ping df size"     => [ qw(size) ],
     "ping df size "    => [ ], # integer next, no completion
