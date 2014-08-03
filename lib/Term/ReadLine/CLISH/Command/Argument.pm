@@ -16,6 +16,7 @@ coerce 'ChoiceOfFunctions', from 'FunctionName', via { [ $_ ] };
 coerce 'ChoiceOfFunctions', from 'Undef', via { [] };
 
 has qw(name is ro isa Str default) => "??";
+has qw'aliases is ro isa ArrayRef[Str] default' => sub {[]};
 has qw(validators is ro isa ChoiceOfFunctions coerce 1 default), sub { [] };
 has qw(context is rw weak_ref 1 isa Term::ReadLine::CLISH::Command);
 has qw(required is ro isa Bool default 0);
@@ -28,6 +29,25 @@ has qw(token is rw predicate has_token clearer no_token reader token writer set_
 has qw(is_flag is rw isa Bool);
 
 __PACKAGE__->meta->make_immutable;
+
+sub all_names {
+    my $this = shift;
+    my @names = ( $this->name, @{$this->aliases} );
+    return wantarray ? @names : \@names;
+}
+
+sub token_matches {
+    my $this = shift;
+    my $tok  = shift;
+
+    if( $tok ) {
+        for($this->name, @{ $this->aliases } ) {
+            return 1 if substr($_, 0, length $tok) eq $tok;
+        }
+    }
+
+    return;
+}
 
 sub flag_present {
     my $this = shift;

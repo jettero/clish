@@ -74,7 +74,7 @@ sub parse_for_help {
     }
 
     if( @tok == 1 and $still_working_on_current_word ) {
-        my @things = grep { $_->name =~ m/^\Q$tok[0]/ } @{$this->commands};
+        my @things = grep { $_->token_matches($tok[0]) } @{$this->commands};
         debug "[pfh] still working on first token, help is commands matching \"$tok[0]\"", join(", ", @things) if $ENV{CLISH_DEBUG};
         return wantarray ? @things : \@things;
     }
@@ -85,7 +85,7 @@ sub parse_for_help {
             my @tmp = values %{ $argss->[$_] };
 
             if( $still_working_on_current_word ) {
-                push @things, grep { $_->name =~ m/^\Q$tok[-1]/ } @tmp;
+                push @things, grep { $_->token_matches($tok[-1]) } @tmp;
                 debug "[pfh] args matching token \"$tok[-1]\"", join(", ", @things) if $ENV{CLISH_DEBUG};
 
             } else {
@@ -141,12 +141,14 @@ sub parse_for_tab_completion {
     } elsif( @tok ) {
         my %K;
         for my $i ( 0 .. $#$cmds ) {
-            while( my ($arg_tag, $arg_obj) = each %{ $argss->[$i] } ) {
-                $K{$arg_tag} = 1
-                    if $still_working_on_current_word
-                       ? $arg_tag =~ m/^\Q$tok[-1]/
-                       : not grep {$arg_tag eq $_->name} map {@$_} @{$tokout->{tokmap}};
-                       ;
+            while( my (undef, $arg_obj) = each %{ $argss->[$i] } ) {
+                for my $arg_tag ($arg_obj->all_names) {
+                    $K{$arg_tag} = 1
+                        if $still_working_on_current_word
+                           ? $arg_tag =~ m/^\Q$tok[-1]/
+                           : not grep {$arg_obj->name eq $_->name} map {@$_} @{$tokout->{tokmap}};
+                           ;
+                       }
             }
         }
 
@@ -316,7 +318,7 @@ sub parse {
         if( my @TOK = @{$tokout->{tokens}} ) {
             my ($cmd_token, @arg_tokens) = @TOK;
 
-            my @cmds = grep {substr($_->name, 0, length $cmd_token) eq $cmd_token} @{ $this->commands };
+            my @cmds = grep {$_->token_matches($cmd_token)} @{ $this->commands };
 
             $return[ PARSE_RETURN_CMDS ] = \@cmds;
 
@@ -460,7 +462,7 @@ sub _try_to_eat_tagged_arguments {
 
     my @matched_cmd_args_idx = # the indexes of matching Args
         grep { $cmd_args->[$_]->validate($ntok, %vopt) }
-        grep { substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
+        grep { $cmd_args->[$_]->token_matches($tok) }
         0 .. $#$cmd_args;
 
     if( @matched_cmd_args_idx == 1 ) {
@@ -506,7 +508,7 @@ sub _try_to_eat_tagged_argument_without_value {
     my $tok = $arg_tokens->[0];
 
     my @matched_cmd_args_idx = # the indexes of matching Args
-        grep { substr($cmd_args->[$_]->name, 0, length $tok) eq $tok }
+        grep { $cmd_args->[$_]->token_matches($tok) }
         0 .. $#$cmd_args;
 
     if( @matched_cmd_args_idx == 1 ) {
@@ -532,7 +534,7 @@ sub _try_to_eat_untagged_arguments {
         grep { $cmd_args->[$_]->validate($tok, %vopt) }
         grep { $cmd_args->[$_]->tag_optional or (
             $cmd_args->[$_]->is_flag and
-            substr($cmd_args->[$_]->name, 0, length $tok) eq $tok
+            $cmd_args->[$_]->token_matches($tok)
         ) }
         0 .. $#$cmd_args;
 
@@ -600,7 +602,7 @@ sub command_names {
     my @cmd  = @{ $this->commands };
 
     my %h;
-    return sort map { $_->name } grep { !$h{$_}++ } @cmd;
+    return sort grep { !$h{$_}++ } map { $_->all_names } @cmd;
 }
 
 sub reload_commands {

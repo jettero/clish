@@ -13,6 +13,7 @@ subtype 'Argument', as 'Term::ReadLine::CLISH::Command::Argument';
 # NOTE: use Term::ReadLine::CLISH::Command::Moose  for the command()  sugar
 
 has qw'name is ro isa Str default' => "unfinished command";
+has qw'aliases is ro isa ArrayRef[Str] default' => sub {[]};
 has qw'help is ro isa Str default' => "unfinished command";
 has qw'arguments is ro isa ArrayRef[Argument] reader _arguments default' => sub {[]};
 
@@ -20,6 +21,25 @@ has qw'config_slot_no is ro isa Str predicate has_config_slot_no';
 has qw'config_tags    is ro isa ArrayRef[Str] predicate has_config_tags';
 
 __PACKAGE__->meta->make_immutable;
+
+sub all_names {
+    my $this = shift;
+    my @names = ( $this->name, @{$this->aliases} );
+    return wantarray ? @names : \@names;
+}
+
+sub token_matches {
+    my $this = shift;
+    my $tok  = shift;
+
+    if( $tok ) {
+        for($this->name, @{ $this->aliases } ) {
+            return 1 if substr($_, 0, length $tok) eq $tok;
+        }
+    }
+
+    return;
+}
 
 sub has_configuration_slot {
     my $this = shift;

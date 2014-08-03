@@ -46,6 +46,11 @@ sub command {
         $meta->add_attribute( qw(+config_slot_no default) => $options{config_slot_no}||0 );
         $meta->add_attribute( qw(+config_tags    default) => sub { [@def_tags] } );
     }
+
+    if( my @a = grep {defined} ($options{alias}, eval {@{ $options{aliases} }}) ) {
+        my @def_aliases;
+        $meta->add_attribute( qw(+aliases default) => sub { [@def_aliases] } );
+    }
 }
 
 sub argument {
