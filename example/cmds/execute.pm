@@ -45,7 +45,13 @@ sub exec {
     }
 
     my $code = $opts->{code}->value;
-    eval $code;
+    {
+        my $ref = ref $::THIS_CLISH;
+        my $val = eval "package $ref; no strict; $code";
+
+        use Data::Dump qw(dump);
+        info "returned: " . dump($val) if defined $val;
+    }
     error "while executing your code=\"$code\"" if $@;
     return;
 }
