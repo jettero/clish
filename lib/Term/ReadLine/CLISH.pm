@@ -238,7 +238,7 @@ sub handle_qmark {
                 $supz = "Argument Help"
             }
 
-            help $supz, from_table map { [ $_->name, '—', $_->help ] } @possibilities;
+            help $supz, from_table map { [ join("/", $_->all_names), '—', $_->help ] } @possibilities;
         }
     });
 }
