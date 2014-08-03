@@ -38,7 +38,7 @@ sub exec {
 
     push @args, -c => $opts->{count}->value if $opts->{count}->has_value;
     push @args, -s => $opts->{size}->value  if $opts->{size}->has_value;
-    push @args, -M => "dont"                if $opts->{df}->has_value and $opts->{df}->value;
+    push @args, -M => "dont"                if $opts->{df}->flag_present;
 
     debug "trying to systemx( ping => @args )" if $ENV{CLISH_DEBUG};
     systemx( ping => @args );
