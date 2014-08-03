@@ -4,7 +4,7 @@ use Term::ReadLine::CLISH::Command::Moose;
 use namespace::autoclean;
 use common::sense;
 
-command( help => "exit this shell" );
+command( help => "exit this shell", alias => "exit" );
 
 __PACKAGE__->meta->make_immutable;
 
