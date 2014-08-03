@@ -23,8 +23,8 @@ has qw(tag_optional is ro isa Bool default 0);
 has qw(help is ro isa Str default ??);
 
 has qw(default is ro isa Str default ??);
-has qw(value is rw predicate has_value clearer no_value reader value writer _wvalue);
-has qw(token is rw predicate has_token clearer no_token reader token writer _wtoken);
+has qw(value is rw predicate has_value clearer no_value reader value writer set_value);
+has qw(token is rw predicate has_token clearer no_token reader token writer set_token);
 has qw(is_flag is rw isa Bool);
 
 __PACKAGE__->meta->make_immutable;
@@ -67,7 +67,7 @@ sub copy_with_value {
     my $val  = shift;
 
     if( defined $val ) {
-        $obj->_wvalue( $val );
+        $obj->set_value( $val );
 
     } else {
         $obj->no_value;
@@ -82,7 +82,7 @@ sub copy_with_token {
     my $tok  = shift;
 
     if( defined $tok ) {
-        $obj->_wtoken( $tok );
+        $obj->set_token( $tok );
 
     } else {
         $obj->no_token;
