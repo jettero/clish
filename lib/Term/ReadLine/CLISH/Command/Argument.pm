@@ -41,7 +41,7 @@ sub token_matches {
     my $tok  = shift;
 
     if( $tok ) {
-        for($this->name, @{ $this->aliases } ) {
+        for($this->all_names) {
             return 1 if substr($_, 0, length $tok) eq $tok;
         }
     }

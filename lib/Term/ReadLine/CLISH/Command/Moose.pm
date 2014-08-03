@@ -48,8 +48,7 @@ sub command {
     }
 
     if( my @a = grep {defined} ($options{alias}, eval {@{ $options{aliases} }}) ) {
-        my @def_aliases;
-        $meta->add_attribute( qw(+aliases default) => sub { [@def_aliases] } );
+        $meta->add_attribute( qw(+aliases default) => sub { [@a] } );
     }
 }
 

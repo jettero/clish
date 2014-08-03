@@ -15,6 +15,8 @@ command(
         optional_argument( shell => undef, is_flag=>1, help => "fork a shell (via the environment SHELL)" ),
         required_argument( code => 'validate_nonempty_string', tag_optional=>1, help => "the code to execute" )
     ],
+
+    alias => 'x',
 );
 
 has qw'resolver is rw isa Net::DNS::Resolver';

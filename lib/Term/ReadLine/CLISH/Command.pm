@@ -25,6 +25,7 @@ __PACKAGE__->meta->make_immutable;
 sub all_names {
     my $this = shift;
     my @names = ( $this->name, @{$this->aliases} );
+
     return wantarray ? @names : \@names;
 }
 
@@ -33,7 +34,7 @@ sub token_matches {
     my $tok  = shift;
 
     if( $tok ) {
-        for($this->name, @{ $this->aliases } ) {
+        for($this->all_names) {
             return 1 if substr($_, 0, length $tok) eq $tok;
         }
     }

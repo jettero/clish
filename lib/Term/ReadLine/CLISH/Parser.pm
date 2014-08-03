@@ -225,7 +225,8 @@ sub parse_for_execution {
     }
 
     elsif( @$cmds ) {
-        error "\"$tokout->{tokens}[0]\" could be any of these", join(", ", map { $_->name } @$cmds);
+        error "\"$tokout->{tokens}[0]\" could be any of these",
+            join(", ", grep { m/^\Q$tokout->{tokens}[0]/ } map { $_->all_names } @$cmds);
 
     } else {
         error "parsing input", "unknown command '$tokout->{tokens}[0]'";
