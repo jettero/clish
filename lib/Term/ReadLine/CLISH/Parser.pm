@@ -76,14 +76,14 @@ sub parse_for_help {
     }
 
     if( @tok == 1 and $still_working_on_current_word ) {
-        my @things = grep { $_->token_matches($tok[0]) } @{$this->commands};
+        my @things = sort { $a->name cmp $b->name } grep { $_->token_matches($tok[0]) } @{$this->commands};
         debug "[pfh] still working on first token, help is commands matching \"$tok[0]\"", join(", ", @things) if $ENV{CLISH_DEBUG};
         return wantarray ? @things : \@things;
     }
 
     my @things;
     for( 0 .. $#$cmds ) {
-        if($statuss->[$_]{rc} ~~ [ PARSE_COMPLETE, PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN  ]) {
+        if($statuss->[$_]{rc} ~~ [ PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN  ]) {
             my @tmp = values %{ $argss->[$_] };
 
             if( $still_working_on_current_word ) {
@@ -102,6 +102,7 @@ sub parse_for_help {
         }
     }
 
+    @things = sort { $a->name cmp $b->name } @things;
     return wantarray ? @things : \@things;
 }
 
@@ -115,12 +116,13 @@ sub parse_for_tab_completion {
     my $this = shift;
     my $line = shift;
 
-    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1, no_untagged=>1);
+    my ($tokout, $cmds, $argss, $statuss) = $this->parse($line, heuristic_validation=>1, no_untagged=>1, allow_last_argument_tag_without_value=>1);
     my @things_we_could_pick;
 
     my $still_working_on_current_word = $line !~ m/\s+\z/;
     my @tok = eval{ @{ $tokout->{tokens} } };
 
+    wtf dump({ statuss=>$statuss, tokout=>$tokout });
 
     if( $tokout->{cruft} ) {
         debug "[pftc] has cruft, no completions" if $ENV{CLISH_DEBUG};
@@ -131,7 +133,7 @@ sub parse_for_tab_completion {
         @things_we_could_pick = $this->command_names;
         debug "[pftc] no tokens, completions are commands", join(", ", @things_we_could_pick) if $ENV{CLISH_DEBUG};
 
-    } elsif( !$still_working_on_current_word and grep { not $statuss->[$_]{rc} ~~ [PARSE_COMPLETE, PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN] } $#$statuss ) {
+    } elsif( !$still_working_on_current_word and grep { not $statuss->[$_]{rc} ~~ [PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN] } $#$statuss ) {
         debug "[pftc] bad parse conditions, no completions" if $ENV{CLISH_DEBUG};
         @things_we_could_pick = ();
 
@@ -168,6 +170,12 @@ sub parse_for_tab_completion {
         error "[pftc] unexpected logical conclusion during tab-completion parsing" if $ENV{CLISH_DEBUG};
     }
 
+    if( eval { @{$tokout->{tokmap}} == 1 and @{$tokout->{tokmap}[0]} and $tokout->{tokmap}[0][-1]->filename_completion_desired } ) {
+        # XXX: there's a better way to handle this information, but for now it's ok
+        $::FILENAME_COMPLETION_DESIRED = 1;
+    }
+
+    @things_we_could_pick = sort @things_we_could_pick;
     return wantarray ? @things_we_could_pick : \@things_we_could_pick;
 }
 

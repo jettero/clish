@@ -23,6 +23,11 @@ has qw'config_tags    is ro isa ArrayRef[Str] predicate has_config_tags';
 
 __PACKAGE__->meta->make_immutable;
 
+sub filename_completion_desired {
+    0 # I can't think of a command that would want this, it's really more of an argument thing
+      # but it's easier if the parser can call the same things on args and commands alike
+}
+
 sub all_names {
     my $this = shift;
     my @names = ( $this->name, @{$this->aliases} );

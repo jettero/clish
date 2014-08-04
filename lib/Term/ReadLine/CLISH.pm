@@ -462,9 +462,11 @@ THE_WHIRLYGIGS: {
         $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
 
         if( not $return and not $state ) {
-            # NOTE: this is only necessary when filename completion is not
-            # desired
-            $attribs->{attempted_completion_over} = 1;
+            $attribs->{attempted_completion_over} = 1
+                # NOTE: this is only necessary when filename completion is not
+                # desired — which we decide via pure evil (parse_for_tab_comletion
+                # would have to return something other than words XXX)
+                unless $::FILENAME_COMPLETION_DESIRED;
         }
 
         return $return;
@@ -472,6 +474,8 @@ THE_WHIRLYGIGS: {
 
     sub _try_to_complete {
         my ($this, $term, $attribs, $text, $line, $start, $end) = @_;
+
+        $::FILE_COMPLETION_DESIRED = 0;
 
         $this->safe_talk(sub{ debug "try_to_complete text=$text; line=$line; start=$start; end=$end;" }) if $ENV{CLISH_DEBUG};
         @m = $this->parser->parse_for_tab_completion($line);

@@ -15,7 +15,7 @@ command(
     arguments => [
         optional_argument( 'startup-config' => undef, is_flag=>1, help => "copy to (or from) the startup configuration" ),
         optional_argument( 'running-config' => undef, is_flag=>1, help => "copy to (or from) the running configuration" ),
-        optional_argument( file => "valid_file_basename", help => "copy to (or from) a named file", tag_optional => 1 ),
+        optional_argument( file => "valid_file_basename", help => "copy to (or from) a named file", tag_optional => 1, takes_files => 1 ),
     ],
 );
 

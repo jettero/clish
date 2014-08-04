@@ -27,8 +27,15 @@ has qw(default is ro isa Str default ??);
 has qw(value is rw predicate has_value clearer no_value reader value writer set_value);
 has qw(token is rw predicate has_token clearer no_token reader token writer set_token);
 has qw(is_flag is rw isa Bool);
+has qw(takes_files is rw isa Bool);
 
 __PACKAGE__->meta->make_immutable;
+
+sub filename_completion_desired {
+    my $this = shift;
+
+    return $this->takes_files && !$this->has_token;
+}
 
 sub all_names {
     my $this = shift;
