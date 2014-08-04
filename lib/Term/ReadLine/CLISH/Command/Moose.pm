@@ -57,8 +57,9 @@ sub argument {
     my $validators = shift;
     my %options    = @_;
 
-    croak "argument name must not contain any characters that don't belong in function names (\\w\\_\\d)"
-        if $name =~ m/[^\w\_\d]/;
+    # XXX: I removed this long after I forgot why I had it ... what whas it's purpose??
+#   croak "argument name must not contain any characters that don't belong in function names (\\w\\_\\d)"
+#       if $name =~ m/[^\w\_\d]/;
 
     $validators = [] if not defined $validators;
 
