@@ -6,7 +6,7 @@ use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
 use common::sense;
 
 command(
-    help => "copy the running configuration to the startup configuration (or vice versa)",
+    help => "copy <src> <dst> — copy files or configurations",
     argument_options => {
         min_arguments => 2,
         max_arguments => 2,
