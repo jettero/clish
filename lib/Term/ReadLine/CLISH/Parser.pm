@@ -13,6 +13,8 @@ use constant {
     PARSE_ERROR_UNRECOGNIZED => 1,
     PARSE_ERROR_REQVAL       => 2,
     PARSE_ERROR_REQARG       => 3,
+    PARSE_ERROR_REQMIN       => 4,
+    PARSE_ERROR_REQMAX       => 4,
 
     PARSE_RETURN_TOKENS  => 0,
     PARSE_RETURN_CMDS    => 1,
@@ -81,7 +83,7 @@ sub parse_for_help {
 
     my @things;
     for( 0 .. $#$cmds ) {
-        if($statuss->[$_]{rc} ~~ [ PARSE_COMPLETE, PARSE_ERROR_REQARG ]) {
+        if($statuss->[$_]{rc} ~~ [ PARSE_COMPLETE, PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN  ]) {
             my @tmp = values %{ $argss->[$_] };
 
             if( $still_working_on_current_word ) {
@@ -129,7 +131,7 @@ sub parse_for_tab_completion {
         @things_we_could_pick = $this->command_names;
         debug "[pftc] no tokens, completions are commands", join(", ", @things_we_could_pick) if $ENV{CLISH_DEBUG};
 
-    } elsif( !$still_working_on_current_word and grep { not $statuss->[$_]{rc} ~~ [PARSE_COMPLETE, PARSE_ERROR_REQARG] } $#$statuss ) {
+    } elsif( !$still_working_on_current_word and grep { not $statuss->[$_]{rc} ~~ [PARSE_COMPLETE, PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN] } $#$statuss ) {
         debug "[pftc] bad parse conditions, no completions" if $ENV{CLISH_DEBUG};
         @things_we_could_pick = ();
 
@@ -368,6 +370,26 @@ sub parse {
                     local $" = ", ";
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQARG, rs=>"required arguments omitted (@req)" };
                     @$argreq = @req;
+                    next;
+                }
+
+                my %ua;
+                my @ua = grep { !$ua{$_}++ } @$tokmap;
+                my $min = $cmd->argument_options->{min_arguments};
+                my $max = $cmd->argument_options->{max_arguments};
+
+                $tokout->{positional}[$cidx] = \@ua;
+
+                my $ap = 1==@ua ? "argument" : "arguments";
+                if( $min and @ua < $min ) {
+                    local $" = ", ";
+                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQMIN, rs=>"$cmd requires at least $min $ap" };
+                    next;
+                }
+
+                if( $max and @ua > $max ) {
+                    local $" = ", ";
+                    $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQMAX, rs=>"$cmd requires at most $min $ap" };
                     next;
                 }
 
