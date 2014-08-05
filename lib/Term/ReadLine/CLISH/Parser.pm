@@ -226,7 +226,7 @@ sub parse_for_execution {
             debug "selected $cmds->[0] for execution, executing final validation" if $ENV{CLISH_DEBUG};
 
             $cmds->[0]->validate($argss->[0]) or return;
-            if( $cmds->[0]->argumental_options->{positional} ) {
+            if( $cmds->[0]->argument_options->{positional} ) {
                 return ($cmds->[0], $tokout->{positional}[0]);
 
             } else {
