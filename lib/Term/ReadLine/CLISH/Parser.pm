@@ -14,7 +14,8 @@ use constant {
     PARSE_ERROR_REQVAL       => 2,
     PARSE_ERROR_REQARG       => 3,
     PARSE_ERROR_REQMIN       => 4,
-    PARSE_ERROR_REQMAX       => 4,
+    PARSE_ERROR_REQMAX       => 5,
+    PARSE_ERROR_UNIQUE_ARGS  => 6,
 
     PARSE_RETURN_TOKENS  => 0,
     PARSE_RETURN_CMDS    => 1,
