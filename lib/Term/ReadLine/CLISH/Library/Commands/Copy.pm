@@ -10,7 +10,6 @@ command(
     argument_options => {
         min_arguments => 2,
         max_arguments => 2,
-        requre_unique => 1,
         positional => 1,
     },
     arguments => [
