@@ -294,13 +294,16 @@ sub run {
         $::THIS_CLISH = $this;
         $::THIS_MODEL = $this->model;
 
-        if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
+        if( my ($cmd, $args, $pos) = $this->parser->parse_for_execution($_) ) {
             eval {
 
                 $::THIS_MODEL->pre_exec( $cmd, $args )
                     if $::THIS_MODEL->can("pre_exec");
 
-                $cmd->exec( $args );
+                $cmd->exec(
+                    $args, # hashref args as tag=>$arg_obj pairs
+                    $pos   # arrayref args as [$arg1_obj, $arg2_obj, ... ]
+                );
 
                 $::THIS_MODEL = $this->model;
                 $::THIS_MODEL->post_exec( $cmd, $args )
