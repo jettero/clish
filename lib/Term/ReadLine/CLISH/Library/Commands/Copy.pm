@@ -11,6 +11,7 @@ command(
         min_arguments => 2,
         max_arguments => 2,
         requre_unique => 1,
+        positional => 1,
     },
     arguments => [
         optional_argument( 'startup-config' => undef, is_flag=>1, help => "copy to (or from) the startup configuration" ),

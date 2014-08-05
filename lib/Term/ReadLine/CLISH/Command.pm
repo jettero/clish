@@ -20,7 +20,6 @@ has qw'argument_options is ro isa HashRef default' => sub { +{} };
 
 has qw'config_slot_no is ro isa Str predicate has_config_slot_no';
 has qw'config_tags    is ro isa ArrayRef[Str] predicate has_config_tags';
-has qw'positional_args is ro isa Bool';
 
 __PACKAGE__->meta->make_immutable;
 
