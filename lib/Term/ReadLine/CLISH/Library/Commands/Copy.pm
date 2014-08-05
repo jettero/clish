@@ -3,6 +3,7 @@ package Term::ReadLine::CLISH::Library::Commands::Copy;
 use Term::ReadLine::CLISH::Command::Moose;
 use namespace::autoclean;
 use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
+use File::Slurp qw(slurp);
 use common::sense;
 
 command(
@@ -19,8 +20,6 @@ command(
     ],
 );
 
-has qw(startup_config_filename is rw isa Str default startup-config);
-
 __PACKAGE__->meta->make_immutable;
 
 use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
@@ -29,9 +28,21 @@ add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ct
 sub exec {
     my $this = shift;
     my $args = shift;
+    my ($src, $dst) = @$args;
 
-    use Data::Dump qw(dump);
-    todo "do something with the args", dump($args);
+    my $config_to_copy;
+    if( $src->is_flag and $src->name eq "running-config" ) {
+        $config_to_copy = $::THIS_CLISH->configuration->stringify_config;
+
+    } elsif( $src->is_flag and $src->name eq "startup-config" ) {
+        my $fname = $::THIS_CLISH->locate_config_file(
+            $::THIS_CLISH->configuration->startup_config_filename
+        );
+
+        $config_to_copy = slurp( $fname );
+    }
+
+    todo $config_to_copy;
 }
 
 sub valid_file_basename {

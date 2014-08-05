@@ -13,6 +13,8 @@ has qw(model is ro isa Term::ReadLine::CLISH::InputModel default) => sub {
     Term::ReadLine::CLISH::Library::InputModels::ConfigurationInputModel->new;
 };
 
+has qw(startup_config_filename is rw isa Str default startup-config);
+
 __PACKAGE__->meta->make_immutable;
 
 sub stringify_config {
