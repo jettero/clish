@@ -331,6 +331,7 @@ sub parse {
         debug do { local $" = "> <"; "cruft: \"$tokout->{cruft}\" tokens: <@{$tokout->{tokens}}>" }
             if $ENV{CLISH_DEBUG};
 
+        TOKEN:
         if( my @TOK = @{$tokout->{tokens}} ) {
             my ($cmd_token, @arg_tokens) = @TOK;
 
@@ -338,6 +339,7 @@ sub parse {
 
             $return[ PARSE_RETURN_CMDS ] = \@cmds;
 
+            COMMAND:
             for my $cidx ( 0 .. $#cmds ) {
                 my $cmd = $cmds[$cidx];
                 my @cmd_args = @{ $cmd->arguments };
@@ -361,7 +363,7 @@ sub parse {
                 if( my @extra = map {"\"$_\""} @arg_tokens ) {
                     local $" = ", ";
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_UNRECOGNIZED, rs=>"unrecognized tokens (@extra) on line" };
-                    next;
+                    next COMMAND;
                 }
 
                 if( @$tokmap ) {
@@ -370,7 +372,7 @@ sub parse {
                         # NOTE: this only comes up when $vopt{allow_last_argument_tag_without_value}
                         # so it's not clear anyone will ever see this error
                         $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQVAL, rs=>"$ltok requires a value" };
-                        next;
+                        next COMMAND;
                     }
                 }
 
@@ -383,7 +385,7 @@ sub parse {
                     local $" = ", ";
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQARG, rs=>"required arguments omitted (@req)" };
                     @$argreq = @req;
-                    next;
+                    next COMMAND;
                 }
 
                 my %ua;
@@ -395,15 +397,13 @@ sub parse {
 
                 my $ap = 1==@ua ? "argument" : "arguments";
                 if( $min and @ua < $min ) {
-                    local $" = ", ";
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQMIN, rs=>"$cmd requires at least $min $ap" };
-                    next;
+                    next COMMAND;
                 }
 
                 if( $max and @ua > $max ) {
-                    local $" = ", ";
                     $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_ERROR_REQMAX, rs=>"$cmd requires at most $min $ap" };
-                    next;
+                    next COMMAND;
                 }
 
                 $return[ PARSE_RETURN_STATUSS ][ $cidx ] = { rc=>PARSE_COMPLETE, rs=>"parse complete" };
