@@ -55,6 +55,10 @@ sub command {
         my %aa = %{ $options{argument_options} };
         $meta->add_attribute( qw(+argument_options default) => sub { +{ %aa } } );
     }
+
+    if( $options{positional_args} ) {
+        $meta->add_attribute( qw(+positional_args default) => 1 );
+    }
 }
 
 sub argument {
