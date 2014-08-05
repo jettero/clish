@@ -38,7 +38,10 @@ sub exec {
         my $fname = $::THIS_CLISH->locate_config_file(
             $::THIS_CLISH->configuration->startup_config_filename
         );
+        $config_to_copy = slurp( $fname );
 
+    } else {
+        my $fname = $::THIS_CLISH->locate_config_file( $src->value );
         $config_to_copy = slurp( $fname );
     }
 
