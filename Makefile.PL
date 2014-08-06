@@ -14,9 +14,12 @@ WriteMakefile(
 
         map {($_=>0)} qw( 
             common::sense
+            Data::Dump
             File::Find::Object
             File::HomeDir
+            File::Slurp
             File::Spec
+            IPC::System::Simple
             Moose
             namespace::autoclean
             namespace::sweep
