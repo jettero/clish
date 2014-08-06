@@ -17,6 +17,16 @@ has qw(startup_config_filename is rw isa Str default startup-config);
 
 __PACKAGE__->meta->make_immutable;
 
+{
+    my %CONFIGS;
+    sub value {
+        my $this = shift;
+        my $key  = shift or return;
+        $CONFIGS{$key} = shift if @_;
+        return $CONFIGS{$key};
+    }
+}
+
 sub stringify_config {
     my $this = shift;
     my $slots = $this->slots;
