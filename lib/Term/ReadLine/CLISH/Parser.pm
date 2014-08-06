@@ -80,7 +80,7 @@ sub parse_for_help {
 
     my @things;
     for( 0 .. $#$cmds ) {
-        if($statuss->[$_]{rc} ~~ [ PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN  ]) {
+        if($statuss->[$_]{rc} ~~ [ PARSE_COMPLETE, PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN  ]) {
             my @tmp = values %{ $argss->[$_] };
 
             if( $still_working_on_current_word ) {
