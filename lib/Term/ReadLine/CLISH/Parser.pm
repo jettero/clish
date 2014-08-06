@@ -119,8 +119,6 @@ sub parse_for_tab_completion {
     my $still_working_on_current_word = $line !~ m/\s+\z/;
     my @tok = eval{ @{ $tokout->{tokens} } };
 
-    wtf dump({ statuss=>$statuss, tokout=>$tokout });
-
     if( $tokout->{cruft} ) {
         debug "[pftc] has cruft, no completions" if $ENV{CLISH_DEBUG};
         @things_we_could_pick = (); # we'll never figure this out, it's a string or something

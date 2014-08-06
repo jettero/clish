@@ -171,13 +171,18 @@ sub todo($;$) {
 }
 *XXX = \&todo;
 
+use Data::Dump::Filtered qw(add_dump_filter);
+use Data::Dump qw(dump);
+
+add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
+
 sub wtf($;$) {
     my ($pkg, $file, $line) = caller;
-    my %args = _possibly_captioned_message(@_);
 
-    $args{caption} = $args{caption}
-        ? "(WTF in $file at line $line) $args{caption}"
-        : "WTF in $file at line $line";
+    my %args = (
+        caption => "WTF in $file at line $line",
+        msg     => dump(@_),
+    );
 
     local $ENV{CLISH_DEBUG} = 1;
     Term::ReadLine::CLISH::Message::Debug->new(%args)->spew;

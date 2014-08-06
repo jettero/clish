@@ -42,7 +42,7 @@ sub exec {
         $config_to_copy = slurp( $fname );
     }
 
-    todo $config_to_copy;
+    todo Data::Dump::dump( $config_to_copy );
 }
 
 sub valid_file_basename {
