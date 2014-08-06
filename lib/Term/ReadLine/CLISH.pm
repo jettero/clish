@@ -43,9 +43,6 @@ has qw(models is rw isa CLISHModelStack default), sub { [Term::ReadLine::CLISH::
 
 __PACKAGE__->meta->make_immutable;
 
-use Data::Dump::Filtered qw(add_dump_filter); use Data::Dump qw(dump);
-add_dump_filter(sub{ my ($ctx, $obj) = @_; return { dump => "q«$obj»" } if $ctx->is_blessed; });
-
 sub model {
     my $this = shift;
     my @m = @{$this->models || []};
