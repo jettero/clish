@@ -242,7 +242,7 @@ sub handle_qmark {
 sub locate_config_file {
     my $this = shift;
     my $file = shift;
-    my $dir  = File::HomeDir->my_dist_config( $this->name, { create => 1 } );
+    my $dir  = $ENV{CLISH_CONFIG_DIRECTORY} || File::HomeDir->my_dist_config( $ENV{CLISH_CONFIG_FOLDER} || $this->name, { create => 1 } );
 
     return $dir unless $file;
     return File::Spec->catfile($dir, $file);
