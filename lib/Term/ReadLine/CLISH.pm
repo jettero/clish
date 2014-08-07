@@ -455,24 +455,27 @@ THE_WHIRLYGIGS: {
         my ($this, $attribs, $text, $state) = @_;
         my $return = $m[$state];
 
-        $this->safe_talk(sub{ debug("  matches text=$text; state=$state; \$m[$state]=$return;") }) if $ENV{CLISH_DEBUG};
-        $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
+        $this->safe_talk(sub{
+             debug("  matches text=$text; state=$state; \$m[$state]=$return;") if $ENV{CLISH_DEBUG};
 
-        if( not $return and not $state ) {
-            if( $::FILENAME_COMPLETION_DESIRED ) {
-                my ($before, $after) =
-                ref $::FILENAME_COMPLETION_DESIRED eq "ARRAY" ?
-                @{$::FILENAME_COMPLETION_DESIRED} : ();
+            $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
 
-                $before->($this);
+            if( not $return and not $state ) {
+                if( $::FILENAME_COMPLETION_DESIRED ) {
+                    my ($before, $after) =
+                    ref $::FILENAME_COMPLETION_DESIRED eq "ARRAY" ?
+                    @{$::FILENAME_COMPLETION_DESIRED} : ();
 
-            } else {
-                # NOTE: this is only necessary when filename completion is not
-                # desired — which we decide via pure evil (parse_for_tab_comletion
-                # would have to return something other than words XXX)
-                $attribs->{attempted_completion_over} = 1
+                    $before->($this);
+
+                } else {
+                    # NOTE: this is only necessary when filename completion is not
+                    # desired — which we decide via pure evil (parse_for_tab_comletion
+                    # would have to return something other than words XXX)
+                    $attribs->{attempted_completion_over} = 1
+                }
             }
-        }
+        });
 
         return $return;
     };
@@ -483,10 +486,10 @@ THE_WHIRLYGIGS: {
         $::THIS_CLISH = $this;
         $::FILE_COMPLETION_DESIRED = 0;
 
-        $this->safe_talk(sub{ debug "try_to_complete text=$text; line=$line; start=$start; end=$end;" })
-            if $ENV{CLISH_DEBUG};
-
-        @m = $this->parser->parse_for_tab_completion($line);
+        $this->safe_talk(sub{
+            debug "try_to_complete text=$text; line=$line; start=$start; end=$end;" if $ENV{CLISH_DEBUG};
+            @m = $this->parser->parse_for_tab_completion($line);
+        });
 
         return $term->completion_matches($text, sub { $_matches->($this, $attribs, @_) });
     }
@@ -506,7 +509,9 @@ sub attach_completion_whirlygigs {
         ref $::FILENAME_COMPLETION_DESIRED eq "ARRAY" ?
         @{$::FILENAME_COMPLETION_DESIRED} : ();
 
-        $after->($this);
+        $this->safe_talk(sub{
+            $after->($this);
+        });
 
         $term->display_match_list($matches);
         $term->forced_update_display;
