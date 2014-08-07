@@ -55,7 +55,7 @@ sub execute_configuration {
     my $this = shift;
     my $config = shift;
 
-    my $parser = $this->recompute_prefix->rebuild_parser->parser;
+    my $parser = $this->recompute_prefix->model->rebuild_parser->parser;
 
     for my $line ( split m/\s*\x0d?\x0a\s*/, $config ) {
         next if $line =~ m/^\s*\!/; # comment line

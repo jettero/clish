@@ -679,8 +679,7 @@ sub reload_commands {
     my $c = @cmds;
     my $p = $c == 1 ? "" : "s";
 
-    info "[loaded $c command$p from PATH]";
-    debug "@cmds" if $ENV{CLISH_DEBUG};
+    debug "[loaded $c command$p from PATH]", "@cmds" if $ENV{CLISH_DEBUG};
 
     $this->commands(\@cmds);
 }
