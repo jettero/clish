@@ -21,6 +21,7 @@ use Term::ReadLine::CLISH::MessageSystem qw(:all);
 use Term::ReadLine::CLISH::InputModel;
 use Term::ReadLine::CLISH::Configuration;
 use Scalar::Util qw(blessed);
+use File::Slurp qw(slurp);
 use File::Spec;
 use File::HomeDir;
 use Tie::YAML;
@@ -260,9 +261,10 @@ sub run {
     $this->attach_sigstop;
     $this->attach_completion_whirlygigs;
 
+    $::THIS_CLISH = $this;
+
     $this->configuration( Term::ReadLine::CLISH::Configuration->new );
-    todo "read config file and tell config to execute it";
-    #this->configuration->read_configuration;
+    $this->configuration->read_configuration;
 
     info "Welcome to " . $this->name . " v" . $this->version;
 

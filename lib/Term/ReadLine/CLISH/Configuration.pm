@@ -1,9 +1,9 @@
 package Term::ReadLine::CLISH::Configuration;
 
 use Moose;
-use File::Slurp;
+use File::Slurp qw(slurp);
 use File::Spec;
-use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs :tool);
 use Term::ReadLine::CLISH::Library::InputModels::ConfigurationInputModel;
 use common::sense;
 
@@ -51,6 +51,18 @@ sub recompute_prefix {
     return $this;
 }
 
+sub read_configuration {
+    my $this = shift;
+    my $config = eval { slurp( $::THIS_CLISH->locate_config_file( $this->startup_config_filename )) };
+
+    debug "couldn't read config", scrub_last_error() unless $config;
+
+    return $this unless $config;
+
+    info "read configuration from " . $this->startup_config_filename;
+    return $this->execute_configuration($config);
+}
+
 sub execute_configuration {
     my $this = shift;
     my $config = shift;
@@ -58,10 +70,18 @@ sub execute_configuration {
     my $parser = $this->recompute_prefix->model->rebuild_parser->parser;
 
     for my $line ( split m/\s*\x0d?\x0a\s*/, $config ) {
+        chomp $line;
         next if $line =~ m/^\s*\!/; # comment line
         next unless $line =~ m/\S/;
-        todo "actually execute the configs: $line";
+
+        if( my ($cmd, $args) = $parser->parse_for_execution( $line ) ) {
+            debug "config-exec( $line )" if $ENV{CLISH_DEBUG};
+            $cmd->exec( $args );
+        }
     }
+
+    info "merged configuration";
+    return $this;
 }
 
 sub set {
