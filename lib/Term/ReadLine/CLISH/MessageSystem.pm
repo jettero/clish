@@ -59,9 +59,8 @@ sub scrub_last_error(;$) {
     # Don't reveal the location of this error.  The error is with the user, or
     # with perldoc (at least when scrub_last_error is called, that's the idea).
 
-    wtf($@ . " —- " . $BASE);
-    $@ =~ s{\s+at\s+.+?\Q$BASE\E.+?\s+line\d+\.}{};
-    die "wtf"  if $@ =~ m{$BASE};
+    1 while $@ =~ s{\s+at\s+\S+\Q$BASE\E\S+\s+line\s+\d+\.}{};
+    die "internal error scrubbing error (BASE)"  if $@ =~ m{$BASE};
 
     $@;
 }
