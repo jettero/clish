@@ -220,11 +220,19 @@ sub parse_for_execution {
         if( $statuss->[0]{rc} == PARSE_COMPLETE ) {
             debug "selected $cmds->[0] for execution, executing final validation" if $ENV{CLISH_DEBUG};
 
-            $cmds->[0]->validate($argss->[0]) or return;
             if( $cmds->[0]->argument_options->{positional} ) {
+                # XXX: should there be a validation routine for this right in Command?
+                # probably.
+                my $x = 0;
+                my %tmp = map { ($x++ => $_) } @{ $tokout->{positional}[0] };
+                return unless $cmds->[0]->validate(\%tmp);
+                while( my ($i,$v) = each %tmp ) {
+                    $tokout->{positional}[0][$i] = $v;
+                }
                 return ($cmds->[0], $tokout->{positional}[0]);
 
             } else {
+                return unless $cmds->[0]->validate($argss->[0]);
                 return ($cmds->[0], $argss->[0]);
             }
 

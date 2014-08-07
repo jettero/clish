@@ -50,7 +50,7 @@ sub valid_file_basename {
     my $arg  = shift;
 
     return if $arg =~ m{/};
-    return 1;
+    return $arg;
 }
 
 1;
