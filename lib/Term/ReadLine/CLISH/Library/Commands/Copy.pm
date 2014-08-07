@@ -2,8 +2,9 @@ package Term::ReadLine::CLISH::Library::Commands::Copy;
 
 use Term::ReadLine::CLISH::Command::Moose;
 use namespace::autoclean;
-use Term::ReadLine::CLISH::MessageSystem qw(:msgs);
+use Term::ReadLine::CLISH::MessageSystem qw(:msgs :tool);
 use File::Slurp qw(slurp);
+use Cwd;
 use common::sense;
 
 command(
@@ -16,7 +17,13 @@ command(
     arguments => [
         optional_argument( 'startup-config' => undef, is_flag=>1, help => "copy to (or from) the startup configuration" ),
         optional_argument( 'running-config' => undef, is_flag=>1, help => "copy to (or from) the running configuration" ),
-        optional_argument( file => "valid_file_basename", help => "copy to (or from) a named file", tag_optional => 1, takes_files => 1 ),
+        optional_argument( file => "valid_file_basename",
+            help => "copy to (or from) a named file",
+            tag_optional => 1,
+            takes_files => 1,
+            before_completion => sub { $::OLD_CURDIR = getcwd; chdir $::THIS_CLISH->locate_config_file },
+             after_completion => sub { chdir $::OLD_CURDIR },
+        ),
     ],
 );
 

@@ -28,6 +28,8 @@ has qw(value is rw predicate has_value clearer no_value reader value writer set_
 has qw(token is rw predicate has_token clearer no_token reader token writer set_token);
 has qw(is_flag is rw isa Bool);
 has qw(takes_files is rw isa Bool);
+has qw(before_completion is rw isa CodeRef);
+has qw(after_completion is rw isa CodeRef);
 
 __PACKAGE__->meta->make_immutable;
 

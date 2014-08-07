@@ -459,11 +459,19 @@ THE_WHIRLYGIGS: {
         $attribs->{completion_append_character} = $text =~ m/^(["'])/ ? "$1 " : ' ';
 
         if( not $return and not $state ) {
-            $attribs->{attempted_completion_over} = 1
+            if( $::FILENAME_COMPLETION_DESIRED ) {
+                my ($before, $after) =
+                ref $::FILENAME_COMPLETION_DESIRED eq "ARRAY" ?
+                @{$::FILENAME_COMPLETION_DESIRED} : ();
+
+                $before->($this);
+
+            } else {
                 # NOTE: this is only necessary when filename completion is not
                 # desired — which we decide via pure evil (parse_for_tab_comletion
                 # would have to return something other than words XXX)
-                unless $::FILENAME_COMPLETION_DESIRED;
+                $attribs->{attempted_completion_over} = 1
+            }
         }
 
         return $return;
@@ -472,9 +480,12 @@ THE_WHIRLYGIGS: {
     sub _try_to_complete {
         my ($this, $term, $attribs, $text, $line, $start, $end) = @_;
 
+        $::THIS_CLISH = $this;
         $::FILE_COMPLETION_DESIRED = 0;
 
-        $this->safe_talk(sub{ debug "try_to_complete text=$text; line=$line; start=$start; end=$end;" }) if $ENV{CLISH_DEBUG};
+        $this->safe_talk(sub{ debug "try_to_complete text=$text; line=$line; start=$start; end=$end;" })
+            if $ENV{CLISH_DEBUG};
+
         @m = $this->parser->parse_for_tab_completion($line);
 
         return $term->completion_matches($text, sub { $_matches->($this, $attribs, @_) });
@@ -491,7 +502,11 @@ sub attach_completion_whirlygigs {
     $attribs->{completion_display_matches_hook} = sub {
         my($matches, $num_matches, $max_length) = @_;
 
-        # XXX: reformatting is done here I guess
+        my ($before, $after) =
+        ref $::FILENAME_COMPLETION_DESIRED eq "ARRAY" ?
+        @{$::FILENAME_COMPLETION_DESIRED} : ();
+
+        $after->($this);
 
         $term->display_match_list($matches);
         $term->forced_update_display;

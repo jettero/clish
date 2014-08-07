@@ -166,8 +166,19 @@ sub parse_for_tab_completion {
     }
 
     if( eval { @{$tokout->{tokmap}} == 1 and @{$tokout->{tokmap}[0]} and $tokout->{tokmap}[0][-1]->filename_completion_desired } ) {
+        my $ret = 1;
+
+        if( $tokout->{tokmap}[0][-1]->can("before_completion")
+                or $tokout->{tokmap}[0][-1]->can("after_completion") ) {
+
+            $ret = [
+                $tokout->{tokmap}[0][-1]->before_completion,
+                $tokout->{tokmap}[0][-1]->after_completion,
+            ];
+        }
+
         # XXX: there's a better way to handle this information, but for now it's ok
-        $::FILENAME_COMPLETION_DESIRED = 1;
+        $::FILENAME_COMPLETION_DESIRED = $ret;
     }
 
     @things_we_could_pick = sort @things_we_could_pick;
