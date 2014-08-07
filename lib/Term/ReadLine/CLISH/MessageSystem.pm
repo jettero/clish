@@ -47,6 +47,7 @@ sub from_table(@) {
     return "$table";
 }
 
+# error_strip error_clean, blah
 sub scrub_last_error(;$) {
     ($@) = @_ if @_;
 
