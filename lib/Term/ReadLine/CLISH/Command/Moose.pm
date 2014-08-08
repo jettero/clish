@@ -51,6 +51,10 @@ sub command {
         $meta->add_attribute( qw(+aliases default) => sub { [@a] } );
     }
 
+    if( exists $options{uses_pager} ) {
+        $meta->add_attribute( qw(+uses_pager default), !!$options{uses_pager} );
+    }
+
     if( exists $options{argument_options} ) {
         my %aa = %{ $options{argument_options} };
         $meta->add_attribute( qw(+argument_options default) => sub { +{ %aa } } );

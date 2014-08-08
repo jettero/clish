@@ -19,7 +19,7 @@ __PACKAGE__->meta->make_immutable;
 
 {
     my %CONFIGS;
-    sub value {
+    sub setting {
         my $this = shift;
         my $key  = shift or return;
         $CONFIGS{$key} = shift if @_;
@@ -27,7 +27,7 @@ __PACKAGE__->meta->make_immutable;
     }
 }
 
-sub stringify_config {
+sub stringify_configuration {
     my $this = shift;
     my $slots = $this->slots;
     my @lines = map {$slots->{$_}} sort keys %$slots;

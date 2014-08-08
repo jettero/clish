@@ -30,6 +30,7 @@ has qw(is_flag is rw isa Bool);
 has qw(takes_files is rw isa Bool);
 has qw(before_completion is rw isa CodeRef);
 has qw(after_completion is rw isa CodeRef);
+has qw(valid_after is rw isa ArrayRef[Str]);
 
 __PACKAGE__->meta->make_immutable;
 

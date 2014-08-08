@@ -39,7 +39,7 @@ sub exec {
     # SRC
     if( $src->is_flag and $src->name eq "running-config" ) {
         info "building configuration";
-        $config_to_copy = $::THIS_CLISH->configuration->stringify_config;
+        $config_to_copy = $::THIS_CLISH->configuration->stringify_configuration;
 
     } elsif( $src->is_flag and $src->name eq "startup-config" ) {
         my $fname = $::THIS_CLISH->locate_config_file(

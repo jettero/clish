@@ -294,18 +294,26 @@ sub run {
         $::THIS_MODEL = $this->model;
 
         if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
+            my $pager_stream;
+            if( $cmd->uses_pager ) {
+                my $pager = $this->configuration->setting("pager") || [qw(less -nXReSz-4)];
+                open $pager_stream, "|-", @$pager or die "couldn't use system pager: $!";
+            }
+
             eval {
 
                 $::THIS_MODEL->pre_exec( $cmd, $args )
                     if $::THIS_MODEL->can("pre_exec");
 
-                $cmd->exec($args);
+                $cmd->exec($args, $pager_stream);
 
                 $::THIS_MODEL = $this->model;
                 $::THIS_MODEL->post_exec( $cmd, $args )
                     if $::THIS_MODEL->can("post_exec");
 
             1} or error "executing $cmd";
+
+            close $pager_stream if $pager_stream;
         }
     }
 }
