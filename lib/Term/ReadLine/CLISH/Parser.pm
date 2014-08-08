@@ -51,7 +51,6 @@ sub parse_for_help {
     my $this = shift;
     my $line = shift;
 
-    my @PFFT =
     my ($tokout, $cmds, $argss, $statuss) = $this->parse($line,
         heuristic_validation=>1, no_untagged=>1,
         allow_last_argument_tag_without_value=>1,
@@ -79,8 +78,12 @@ sub parse_for_help {
     }
 
     my @things;
+    CMD:
     for( 0 .. $#$cmds ) {
         if($statuss->[$_]{rc} ~~ [ PARSE_COMPLETE, PARSE_ERROR_REQARG, PARSE_ERROR_REQMIN  ]) {
+            my $max = $cmds->[$_]->argument_options->{max_arguments};
+            next CMD if $max and @{$tokout->{tokmap}[$_]} >= $max;
+
             my @tmp = values %{ $argss->[$_] };
 
             if( $still_working_on_current_word ) {
