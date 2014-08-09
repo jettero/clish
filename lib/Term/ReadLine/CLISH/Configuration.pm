@@ -75,8 +75,13 @@ sub execute_configuration {
         next unless $line =~ m/\S/;
 
         if( my ($cmd, $args) = $parser->parse_for_execution( $line ) ) {
-            debug "config-exec( $line )" if $ENV{CLISH_DEBUG};
+            debug "configuration exec($line)" if $ENV{CLISH_DEBUG};
+
             $cmd->exec( $args );
+
+            if( my $slot = $cmd->configuration_slot ) {
+                $this->set($slot, $line);
+            }
         }
     }
 
