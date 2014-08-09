@@ -677,7 +677,7 @@ sub reload_commands {
         only => do { local $" = "|"; qr{^(?:@$prefixar)::[^:]+\z} }
     );
 
-    my @cmds = $finder->plugins;
+    my @cmds = grep {eval { $_->isa("Term::ReadLine::CLISH::Command")}} $finder->plugins;
 
     my $c = @cmds;
     my $p = $c == 1 ? "" : "s";
