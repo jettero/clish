@@ -15,8 +15,10 @@ lib/Term/ReadLine/CLISH/Configuration.pm
 lib/Term/ReadLine/CLISH/InputModel.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Configure.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Configure/Debug.pm
+lib/Term/ReadLine/CLISH/Library/Commands/Copy.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Help.pm
 lib/Term/ReadLine/CLISH/Library/Commands/Quit.pm
+lib/Term/ReadLine/CLISH/Library/Commands/Show.pm
 lib/Term/ReadLine/CLISH/Library/InputModels/ConfigurationInputModel.pm
 lib/Term/ReadLine/CLISH/Message.pm
 lib/Term/ReadLine/CLISH/Message/Debug.pm
