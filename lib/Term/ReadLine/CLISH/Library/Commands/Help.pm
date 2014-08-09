@@ -53,8 +53,6 @@ use IPC::System::Simple qw(systemx);
 use namespace::autoclean;
 use common::sense;
 
-BEGIN { $ENV{PAGER} //= "more" }
-
 command(
     help => "launch the perldoc (aka pod) for a command",
     arguments => [
@@ -69,6 +67,11 @@ __PACKAGE__->meta->make_immutable;
 sub exec {
     my $this = shift;
     my $opts = shift;
+
+    my $pager = eval { $::THIS_CLISH->configuration->setting("pager") || [qw(less -nXRESz-4)] };
+       $page ||= [ 'more' ];
+
+    local $ENV{PAGER} = "@$pager";
 
     my $pod = $opts->{pod}->value_or_default;
     systemx( perldoc => $pod );

@@ -296,7 +296,7 @@ sub run {
         if( my ($cmd, $args) = $this->parser->parse_for_execution($_) ) {
             my $pager_stream;
             if( $cmd->uses_pager ) {
-                my $pager = $this->configuration->setting("pager") || [qw(less -nXReSz-4)];
+                my $pager = $this->configuration->setting("pager") || [qw(less -nXRESz-4)];
                 open $pager_stream, "|-", @$pager or die "couldn't use system pager: $!";
             }
 
