@@ -87,7 +87,7 @@ sub install_generic_message_handlers {
     };
 
     binmode STDIN,  ":utf8"; # if we're not using utf8 … we’re … on a comadore64? Slowlaris?
-    binmode STDOUT, ":utf8"; # … it'd be just odd
+    binmode STDOUT, ":utf8"; # … it'd be just odd to not have wide characters
 }
 
 sub _probably_just_a_caption {
