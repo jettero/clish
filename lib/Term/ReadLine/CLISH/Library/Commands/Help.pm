@@ -69,7 +69,7 @@ sub exec {
     my $opts = shift;
 
     my $pager = eval { $::THIS_CLISH->configuration->setting("pager") || [qw(less -nXRESz-4)] };
-       $page ||= [ 'more' ];
+       $pager ||= [ 'more' ];
 
     local $ENV{PAGER} = "@$pager";
 
