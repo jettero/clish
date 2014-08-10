@@ -222,20 +222,24 @@ sub handle_qmark {
 
     $this->safe_talk(sub{
         my ($buffer, $point, $end) = @_;
+        my ($possibilities, $statuss) = $this->parser->parse_for_help($buffer);
 
-        if( my @possibilities = $this->parser->parse_for_help($buffer) ) {
+        if( @$possibilities ) {
             my $cmdcount = (my $firstcmd) =
-                grep { $_->isa("Term::ReadLine::CLISH::Command") } @possibilities;
+                grep { $_->isa("Term::ReadLine::CLISH::Command") } @$possibilities;
 
             my $supz = "Help for current input";
-            if( $cmdcount and $cmdcount == @possibilities ) {
+            if( $cmdcount and $cmdcount == @$possibilities ) {
                 $supz = "Command help"
 
-            } elsif( @possibilities and $cmdcount == 0 ) {
+            } elsif( $cmdcount == 0 ) {
                 $supz = "Argument Help"
             }
 
-            help $supz, from_table map { [ join("/", $_->all_names), '—', $_->help ] } @possibilities;
+            help $supz, from_table map { [ join("/", $_->all_names), '—', $_->help ] } @$possibilities;
+
+        } else {
+            info $_->{rs} for @$statuss;
         }
     });
 }

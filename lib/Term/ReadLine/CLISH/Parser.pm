@@ -57,7 +57,11 @@ sub parse_for_help {
     );
 
     if( $tokout->{cruft} ) {
-        return wantarray ? () : [];
+        return ([], [{rc=>-1, rs=>"unrecognized tokens on line"}]);
+    }
+
+    unless( @$cmds ) {
+        return ([], [$statuss]);
     }
 
     my $still_working_on_current_word = $line !~ m/\s+\z/;
@@ -68,13 +72,17 @@ sub parse_for_help {
         # probably haven't typed anything yet
         my @things = sort { $a->name cmp $b->name } @{$this->commands};
         debug "[pfh] no tokens, help objects are commands", join(", ", @things) if $ENV{CLISH_DEBUG};
-        return wantarray ? @things : \@things;
+        return (\@things, $statuss);
     }
 
     if( @tok == 1 and $still_working_on_current_word ) {
         my @things = sort { $a->name cmp $b->name } grep { $_->token_matches($tok[0]) } @{$this->commands};
         debug "[pfh] still working on first token, help is commands matching \"$tok[0]\"", join(", ", @things) if $ENV{CLISH_DEBUG};
-        return wantarray ? @things : \@things;
+        return (\@things, $statuss);
+    }
+
+    if( @tok and not @$cmds ) {
+        return ([], $statuss);
     }
 
     my @things;
@@ -103,7 +111,7 @@ sub parse_for_help {
     }
 
     @things = sort { $a->name cmp $b->name } @things;
-    return wantarray ? @things : \@things;
+    return (\@things, $statuss);
 }
 
 =head1 C<parse_for_tab_completion>
@@ -355,6 +363,12 @@ sub parse {
             my @cmds = grep {$_->token_matches($cmd_token)} @{ $this->commands };
 
             $return[ PARSE_RETURN_CMDS ] = \@cmds;
+            unless( @cmds ) {
+                $return[ PARSE_RETURN_STATUSS ]
+                # [ $cidx ]
+                = { rc=>PARSE_ERROR_UNRECOGNIZED, rs=>"unrecognized command '$TOK[0]'" };
+                # XXX: special case where $#$cmds is -1, so where does the return status go?
+            }
 
             COMMAND:
             for my $cidx ( 0 .. $#cmds ) {
