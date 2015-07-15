@@ -2,7 +2,8 @@
 
 use ExtUtils::MakeMaker;
 
-my $value = prompt("include modules required for the examples? [N/y] ");
+my $value = exists $ENV{REQMOD_YES} ? $ENV{REQMOD_YES}
+          : prompt("include modules required for the examples? [N/y] ");
 
 WriteMakefile(
 
